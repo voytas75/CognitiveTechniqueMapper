@@ -1,19 +1,19 @@
 workflows:
   detect_technique:
-    model: "gpt-5"
+    model: "azure/gpt-5"
     temperature: 0.2
   summarize_result:
-    model: "claude-3-opus"
+    model: "azure/gpt-4.1"
     temperature: 0.3
   explain_logic:
-    model: "gpt-4o"
+    model: "azure/gpt-4o"
     temperature: 0.4
   feedback_loop:
-    model: "gpt-4o-mini"
+    model: "azure/gpt-4o-mini"
     temperature: 0.5
 embeddings:
-  model: "text-embedding-3-large"
-  provider: "openai"
+  model: "UDTEMBED3L"
+  provider: "azure"
 defaults:
-  provider: "openai"
-  max_tokens: 2048
+  provider: "azure"
+  max_tokens: 128000
