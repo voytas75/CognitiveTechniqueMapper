@@ -2,14 +2,23 @@ from __future__ import annotations
 
 import hashlib
 import math
+import logging
 from typing import Iterable, List, Sequence
 
 try:
+    import litellm
     from litellm import embedding as litellm_embedding
 except ImportError:  # pragma: no cover - optional dependency
     litellm_embedding = None
+else:  # pragma: no cover - attribute may not exist on older versions
+    try:
+        litellm.drop_params = True
+    except AttributeError:
+        pass
 
 from .config_service import ConfigService
+
+logger = logging.getLogger(__name__)
 
 
 class EmbeddingGateway:
@@ -31,9 +40,10 @@ class EmbeddingGateway:
 
         try:
             return self._invoke_litellm(texts_list)
-        except Exception:
+        except Exception as exc:
+            logger.warning("Embedding generation failed (%s); using fallback.", exc)
             if not self._use_fallback:
-                raise
+                raise RuntimeError(f"Embedding generation failed: {exc}") from exc
             return [self._fallback_embedding(text) for text in texts_list]
 
     def _invoke_litellm(self, texts: Sequence[str]) -> List[List[float]]:
@@ -49,9 +59,11 @@ class EmbeddingGateway:
 
                 api_key = environ.get(api_key_env)
                 if not api_key:
-                    raise RuntimeError(
+                    message = (
                         f"Environment variable '{api_key_env}' required for embeddings provider '{self._config.provider}'."
                     )
+                    logger.error(message)
+                    raise RuntimeError(message)
                 params.setdefault("api_key", api_key)
             for key, value in provider_config.items():
                 if key not in {"api_key_env"}:
@@ -61,6 +73,11 @@ class EmbeddingGateway:
         data = response.get("data")
         if not data:
             raise RuntimeError("Embedding API returned no data")
+        logger.debug(
+            "Received %s embedding vectors from %s",
+            len(data),
+            self._config.model,
+        )
         return [item.get("embedding", []) for item in data]
 
     def _fallback_embedding(self, text: str, dimensions: int = 12) -> List[float]:

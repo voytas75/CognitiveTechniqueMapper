@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
@@ -22,6 +23,7 @@ STATE_PATH = Path(os.environ.get("CTM_STATE_PATH", PROJECT_ROOT / "data" / "stat
 from .core.feedback_manager import FeedbackManager
 from .core.llm_gateway import LLMGateway
 from .core.orchestrator import Orchestrator
+from .core.logging_setup import configure_logging
 from .db.sqlite_client import SQLiteClient
 from .services.config_service import ConfigService
 from .services.data_initializer import TechniqueDataInitializer
@@ -41,6 +43,7 @@ except RuntimeError:
 
 console = Console()
 app = typer.Typer(add_completion=False, help="Cognitive Technique Mapper CLI")
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -77,6 +80,8 @@ class AppState:
 
 def initialize_runtime() -> tuple[Orchestrator, AppState]:
     config_service = ConfigService()
+    configure_logging(config_service.logging_config)
+    logger.debug("Runtime initialization starting.")
     db_config = config_service.database_config
 
     sqlite_client = SQLiteClient(db_config.get("sqlite_path", "./data/techniques.db"))
@@ -101,6 +106,7 @@ def initialize_runtime() -> tuple[Orchestrator, AppState]:
         chroma_client=chroma_client,
     )
     initializer.initialize()
+    logger.debug("Initialization completed (Chroma enabled=%s).", bool(chroma_client))
 
     selector = TechniqueSelector(
         sqlite_client=sqlite_client,
@@ -136,6 +142,7 @@ def describe(problem: str = typer.Argument(..., help="Describe your problem or c
     state.problem_description = problem
     state.context_history.append({"problem_description": problem})
     state.save()
+    logger.info("Problem description captured (length=%s)", len(problem))
     console.print(Panel(f"[bold]Problem captured:[/]\n{problem}", title="Describe"))
 
 
@@ -154,6 +161,7 @@ def analyze() -> None:
     state.last_recommendation = result
     state.context_history.append(result)
     state.save()
+    logger.info("Analysis completed.")
     console.print(Panel(result.get("suggested_technique", "No recommendation"), title="Suggested Technique"))
 
 
@@ -175,6 +183,7 @@ def explain() -> None:
     except RuntimeError as exc:
         console.print(f"[red]Explain failed: {exc}[/]")
         raise typer.Exit(code=1) from exc
+    logger.info("Explain workflow executed.")
     console.print(Panel(llm_output, title="Explain Logic"))
 
 
@@ -198,6 +207,7 @@ def feedback(
     except RuntimeError as exc:
         console.print(f"[red]Feedback failed: {exc}[/]")
         raise typer.Exit(code=1) from exc
+    logger.info("Feedback recorded (rating=%s)", rating)
     console.print(Panel(summary.get("summary", "No summary available."), title="Feedback Summary"))
 
 

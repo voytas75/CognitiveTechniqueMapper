@@ -1,13 +1,19 @@
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, List
 
 try:
+    import litellm
     from litellm import completion
 except ImportError as exc:  # pragma: no cover - guidance for missing dependency
     raise RuntimeError("litellm is required for LLMGateway. Install via `pip install litellm`.") from exc
 
+litellm.drop_params = True
+
 from ..services.config_service import ConfigService, WorkflowModelConfig
+
+logger = logging.getLogger(__name__)
 
 
 class LLMGateway:
@@ -29,8 +35,10 @@ class LLMGateway:
         params = self._build_params(config, kwargs)
 
         try:
+            logger.debug("Invoking workflow=%s model=%s", workflow, params.get("model"))
             response = completion(messages=messages, **params)
         except Exception as exc:  # pragma: no cover - network/credential issues
+            logger.error("LLM invocation failed for %s: %s", workflow, exc)
             raise RuntimeError(f"LLM invocation failed for workflow '{workflow}': {exc}") from exc
         return response["choices"][0]["message"]["content"]
 
@@ -64,9 +72,11 @@ class LLMGateway:
 
                 api_key = environ.get(api_key_env)
                 if not api_key:
-                    raise RuntimeError(
+                    message = (
                         f"Environment variable '{api_key_env}' required for provider '{provider_name}'."
                     )
+                    logger.error(message)
+                    raise RuntimeError(message)
                 params.setdefault("api_key", api_key)
 
         params.update(overrides)
