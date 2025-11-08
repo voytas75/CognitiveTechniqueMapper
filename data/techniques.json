@@ -38,5 +38,69 @@
     "creator": "Albert Humphrey",
     "category": "Strategic Planning",
     "core_principles": "Holistic situational awareness to guide action."
+  },
+  {
+    "name": "Gibbs Reflective Cycle",
+    "description": "Six-stage reflective learning cycle: Description, Feelings, Evaluation, Analysis, Conclusion, and Action Plan.",
+    "origin_year": 1988,
+    "creator": "Graham Gibbs",
+    "category": "Reflection",
+    "core_principles": "Combine descriptive recall, emotional awareness, and analysis to generate conclusions and plan improvements."
+  },
+  {
+    "name": "GROW Model",
+    "description": "Coaching framework: Goal, Reality, Options, Way Forward to structure progress-oriented conversations.",
+    "origin_year": 1988,
+    "creator": "John Whitmore",
+    "category": "Coaching",
+    "core_principles": "Socratic questioning builds awareness, ownership, and accountability for action."
+  },
+  {
+    "name": "Kolb Experiential Learning Cycle",
+    "description": "Four-stage learning model: Concrete Experience, Reflective Observation, Abstract Conceptualization, Active Experimentation.",
+    "origin_year": 1984,
+    "creator": "David Kolb",
+    "category": "Experiential Learning",
+    "core_principles": "Learning emerges from a complete cycle linking experience, reflection, conceptualization, and experimentation."
+  },
+  {
+    "name": "Driscoll Model (What? So What? Now What?)",
+    "description": "Three-question reflective structure connecting description, significance, and next actions.",
+    "origin_year": 1990,
+    "creator": "John Driscoll",
+    "category": "Reflection",
+    "core_principles": "Minimal three-step inquiry to extract meaning and define actions from experience."
+  },
+  {
+    "name": "Schön Reflective Practice",
+    "description": "Dual modes of reflection: Reflection-in-Action during work and Reflection-on-Action after the event.",
+    "origin_year": 1983,
+    "creator": "Donald Schön",
+    "category": "Reflection",
+    "core_principles": "Practitioners think-in-action and reflect-on-action to adapt and improve professional practice."
+  },
+  {
+    "name": "OSKAR Model",
+    "description": "Solution-focused coaching model: Outcome, Scaling, Know-how, Affirm and Action, Review.",
+    "origin_year": 1990,
+    "creator": "Paul Z. Jackson and Mark McKergow",
+    "category": "Coaching",
+    "core_principles": "Focus on resources and preferred future; use scaling and affirmation to build momentum."
+  },
+  {
+    "name": "PDCA Cycle",
+    "description": "Continuous improvement loop: Plan, Do, Check, Act for iterative change.",
+    "origin_year": 1950,
+    "creator": "W. Edwards Deming",
+    "category": "Continuous Improvement",
+    "core_principles": "Small experiments with feedback and standardization to reduce risk and drive quality."
+  },
+  {
+    "name": "STAR Model",
+    "description": "Behavioral narration format: Situation, Task, Action, Result to communicate competency.",
+    "origin_year": 1980,
+    "creator": "Behavioral interviewing practice (various)",
+    "category": "Career Coaching",
+    "core_principles": "Structured storytelling to evidence capability and outcomes."
   }
 ]
