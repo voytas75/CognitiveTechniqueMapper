@@ -23,7 +23,7 @@ STATE_PATH = Path(os.environ.get("CTM_STATE_PATH", PROJECT_ROOT / "data" / "stat
 from .core.feedback_manager import FeedbackManager
 from .core.llm_gateway import LLMGateway
 from .core.orchestrator import Orchestrator
-from .core.logging_setup import configure_logging
+from .core.logging_setup import configure_logging, set_runtime_level
 from .db.sqlite_client import SQLiteClient
 from .services.config_service import ConfigService
 from .services.data_initializer import TechniqueDataInitializer
@@ -76,6 +76,16 @@ class AppState:
         }
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(_json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def _apply_log_override(log_level: Optional[str]) -> None:
+    if not log_level:
+        return
+    try:
+        set_runtime_level(log_level)
+        logger.info("Log level overridden to %s", log_level.upper())
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc))
 
 
 def initialize_runtime() -> tuple[Orchestrator, AppState]:
@@ -137,8 +147,18 @@ orchestrator, state = initialize_runtime()
 
 
 @app.command()
-def describe(problem: str = typer.Argument(..., help="Describe your problem or challenge.")) -> None:
+def describe(
+    problem: str = typer.Argument(..., help="Describe your problem or challenge."),
+    log_level: str = typer.Option(
+        None,
+        "--log-level",
+        "-l",
+        help="Override logging level for this invocation (e.g., DEBUG, INFO).",
+    ),
+) -> None:
     """Store the user's problem description for subsequent workflows."""
+    _apply_log_override(log_level)
+
     state.problem_description = problem
     state.context_history.append({"problem_description": problem})
     state.save()
@@ -147,10 +167,19 @@ def describe(problem: str = typer.Argument(..., help="Describe your problem or c
 
 
 @app.command()
-def analyze() -> None:
+def analyze(
+    log_level: str = typer.Option(
+        None,
+        "--log-level",
+        "-l",
+        help="Override logging level for this invocation.",
+    )
+) -> None:
     """Trigger the detect_technique workflow."""
     if not state.problem_description:
         raise typer.BadParameter("No problem description found. Use `describe` first.")
+
+    _apply_log_override(log_level)
 
     context = {"problem_description": state.problem_description}
     try:
@@ -166,10 +195,19 @@ def analyze() -> None:
 
 
 @app.command()
-def explain() -> None:
+def explain(
+    log_level: str = typer.Option(
+        None,
+        "--log-level",
+        "-l",
+        help="Override logging level for this invocation.",
+    )
+) -> None:
     """Explain the logic behind the last recommendation via the explain_logic workflow."""
     if not state.last_recommendation:
         raise typer.BadParameter("No recommendation available. Run `analyze` first.")
+
+    _apply_log_override(log_level)
 
     prompt = (
         "Explain the reasoning that led to the following recommendation.\n"
@@ -198,8 +236,15 @@ def settings() -> None:
 def feedback(
     message: str = typer.Argument(..., help="Feedback message."),
     rating: Optional[int] = typer.Option(None, help="Optional rating 1-5."),
+    log_level: str = typer.Option(
+        None,
+        "--log-level",
+        "-l",
+        help="Override logging level for this invocation.",
+    ),
 ) -> None:
     """Record user feedback and display the summary of recent entries."""
+    _apply_log_override(log_level)
     context = {"action": "record", "message": message, "rating": rating, "workflow": "detect_technique"}
     try:
         orchestrator.execute("feedback_loop", context)

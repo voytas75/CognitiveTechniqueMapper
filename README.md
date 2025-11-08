@@ -75,6 +75,7 @@ python -m src.cli analyze
 python -m src.cli explain
 python -m src.cli settings
 python -m src.cli feedback "Loved the recommendation" --rating 5
+python -m src.cli analyze --log-level DEBUG  # temporary verbose logging
 ```
 
 Notes:

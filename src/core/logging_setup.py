@@ -7,11 +7,12 @@ from rich.console import Console
 from rich.logging import RichHandler
 
 _configured = False
+_handler: RichHandler | None = None
 
 
 def configure_logging(config: dict[str, Any] | None = None) -> None:
     """Configure application-wide logging with Rich handler."""
-    global _configured
+    global _configured, _handler
     if _configured:
         return
 
@@ -33,4 +34,19 @@ def configure_logging(config: dict[str, Any] | None = None) -> None:
     root_logger.handlers.clear()
     root_logger.addHandler(handler)
 
+    _handler = handler
     _configured = True
+
+
+def set_runtime_level(level_name: str) -> None:
+    """Adjust logging level at runtime."""
+    if not level_name:
+        return
+    level = getattr(logging, level_name.upper(), None)
+    if level is None:
+        raise ValueError(f"Invalid log level: {level_name}")
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(level)
+    if _handler:
+        _handler.setLevel(level)
