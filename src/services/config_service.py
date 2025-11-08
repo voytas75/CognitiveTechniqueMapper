@@ -16,6 +16,12 @@ class WorkflowModelConfig:
     max_tokens: int | None = None
 
 
+@dataclass(slots=True, frozen=True)
+class EmbeddingModelConfig:
+    model: str
+    provider: str | None = None
+
+
 class ConfigService:
     """Loads and exposes configuration for CTM components."""
 
@@ -61,3 +67,9 @@ class ConfigService:
     def iter_workflow_configs(self) -> dict[str, WorkflowModelConfig]:
         workflows = self._models.get("workflows", {})
         return {name: self.get_workflow_model_config(name) for name in workflows}
+
+    def get_embedding_config(self) -> EmbeddingModelConfig:
+        data = self._models.get("embeddings")
+        if not data:
+            raise KeyError("Embedding configuration missing in config/models.yaml")
+        return EmbeddingModelConfig(model=data.get("model"), provider=data.get("provider"))

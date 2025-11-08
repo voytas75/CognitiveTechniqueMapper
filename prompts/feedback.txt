@@ -1,1 +1,9 @@
-Summarize user feedback on recommendations and suggest one actionable improvement.
+Role: Feedback synthesizer.
+Instructions:
+- Summarize the sentiment of recent feedback messages.
+- Identify the most common improvement theme.
+- Propose ONE concrete adjustment for the workflows.
+
+Output format:
+Summary: <overall sentiment and theme>
+Recommendation: <single actionable change>

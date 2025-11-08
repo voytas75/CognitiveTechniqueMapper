@@ -28,7 +28,10 @@ class LLMGateway:
         messages = self._build_messages(prompt, system_prompt)
         params = self._build_params(config, kwargs)
 
-        response = completion(messages=messages, **params)
+        try:
+            response = completion(messages=messages, **params)
+        except Exception as exc:  # pragma: no cover - network/credential issues
+            raise RuntimeError(f"LLM invocation failed for workflow '{workflow}': {exc}") from exc
         return response["choices"][0]["message"]["content"]
 
     def _build_messages(self, prompt: str, system_prompt: str | None) -> List[Dict[str, str]]:
@@ -39,16 +42,15 @@ class LLMGateway:
         return messages
 
     def _build_params(self, config: WorkflowModelConfig, overrides: Dict[str, Any]) -> Dict[str, Any]:
-        params: Dict[str, Any] = {
-            "model": config.model,
-            "temperature": config.temperature,
-        }
-        if config.max_tokens:
+        params: Dict[str, Any] = {"model": config.model}
+        if config.temperature is not None:
+            params["temperature"] = config.temperature
+        if config.max_tokens is not None:
             params["max_tokens"] = config.max_tokens
 
         provider_name = config.provider
         if provider_name:
-            provider_config = self._config_service.providers.get(provider_name, {})
+            provider_config = dict(self._config_service.providers.get(provider_name, {}))
             api_key_env = provider_config.pop("api_key_env", None)
             params.update(
                 {
@@ -61,8 +63,11 @@ class LLMGateway:
                 from os import environ
 
                 api_key = environ.get(api_key_env)
-                if api_key:
-                    params.setdefault("api_key", api_key)
+                if not api_key:
+                    raise RuntimeError(
+                        f"Environment variable '{api_key_env}' required for provider '{provider_name}'."
+                    )
+                params.setdefault("api_key", api_key)
 
         params.update(overrides)
         return params

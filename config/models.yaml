@@ -11,6 +11,9 @@ workflows:
   feedback_loop:
     model: "gpt-4o-mini"
     temperature: 0.5
+embeddings:
+  model: "text-embedding-3-large"
+  provider: "openai"
 defaults:
   provider: "openai"
   max_tokens: 2048

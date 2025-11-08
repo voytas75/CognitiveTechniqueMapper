@@ -13,6 +13,8 @@ from src.core.llm_gateway import LLMGateway
 from src.core.orchestrator import Orchestrator
 from src.db.sqlite_client import SQLiteClient
 from src.services.config_service import ConfigService
+from src.services.data_initializer import TechniqueDataInitializer
+from src.services.embedding_gateway import EmbeddingGateway
 from src.services.feedback_service import FeedbackService
 from src.services.plan_generator import PlanGenerator
 from src.services.technique_selector import TechniqueSelector
@@ -57,7 +59,21 @@ def initialize_runtime() -> tuple[Orchestrator, AppState]:
             chroma_client = None
 
     llm_gateway = LLMGateway(config_service=config_service)
-    selector = TechniqueSelector(sqlite_client=sqlite_client, llm_gateway=llm_gateway, chroma_client=chroma_client)
+    embedding_gateway = EmbeddingGateway(config_service=config_service)
+    initializer = TechniqueDataInitializer(
+        sqlite_client=sqlite_client,
+        embedder=embedding_gateway,
+        chroma_client=chroma_client,
+    )
+    initializer.initialize()
+
+    selector = TechniqueSelector(
+        sqlite_client=sqlite_client,
+        llm_gateway=llm_gateway,
+        preprocessor=None,
+        embedder=embedding_gateway,
+        chroma_client=chroma_client,
+    )
     plan_generator = PlanGenerator(llm_gateway=llm_gateway)
     feedback_manager = FeedbackManager()
     feedback_service = FeedbackService(feedback_manager=feedback_manager, llm_gateway=llm_gateway)
@@ -93,7 +109,11 @@ def analyze() -> None:
         raise typer.BadParameter("No problem description found. Use `describe` first.")
 
     context = {"problem_description": state.problem_description}
-    result = orchestrator.execute("detect_technique", context)
+    try:
+        result = orchestrator.execute("detect_technique", context)
+    except RuntimeError as exc:
+        console.print(f"[red]Analyze failed: {exc}[/]")
+        raise typer.Exit(code=1) from exc
     state.last_recommendation = result
     state.context_history.append(result)
     console.print(Panel(result.get("suggested_technique", "No recommendation"), title="Suggested Technique"))
@@ -112,7 +132,11 @@ def explain() -> None:
     if not state.llm_gateway:
         raise typer.BadParameter("LLM gateway not initialized.")
 
-    llm_output = state.llm_gateway.invoke("explain_logic", prompt)
+    try:
+        llm_output = state.llm_gateway.invoke("explain_logic", prompt)
+    except RuntimeError as exc:
+        console.print(f"[red]Explain failed: {exc}[/]")
+        raise typer.Exit(code=1) from exc
     console.print(Panel(llm_output, title="Explain Logic"))
 
 
@@ -130,8 +154,12 @@ def feedback(
 ) -> None:
     """Record user feedback and display the summary of recent entries."""
     context = {"action": "record", "message": message, "rating": rating, "workflow": "detect_technique"}
-    orchestrator.execute("feedback_loop", context)
-    summary = orchestrator.execute("feedback_loop", {})
+    try:
+        orchestrator.execute("feedback_loop", context)
+        summary = orchestrator.execute("feedback_loop", {})
+    except RuntimeError as exc:
+        console.print(f"[red]Feedback failed: {exc}[/]")
+        raise typer.Exit(code=1) from exc
     console.print(Panel(summary.get("summary", "No summary available."), title="Feedback Summary"))
 
 

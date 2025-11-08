@@ -1,0 +1,42 @@
+[
+  {
+    "name": "Decisional Balance",
+    "description": "Evaluating pros and cons of options to clarify preferences and consequences.",
+    "origin_year": 1979,
+    "creator": "Janet Bavelas",
+    "category": "Decision-Making",
+    "core_principles": "Structured comparison of benefits and costs across choices."
+  },
+  {
+    "name": "Six Thinking Hats",
+    "description": "Parallel thinking framework using six perspectives to explore a topic.",
+    "origin_year": 1985,
+    "creator": "Edward de Bono",
+    "category": "Creativity",
+    "core_principles": "Segregate thinking modes to reduce conflict and broaden insight."
+  },
+  {
+    "name": "Root Cause Analysis",
+    "description": "Technique focused on identifying the underlying cause of a problem.",
+    "origin_year": 1950,
+    "creator": "Sakichi Toyoda",
+    "category": "Problem-Solving",
+    "core_principles": "Five Whys questioning and causal mapping to reach the root issue."
+  },
+  {
+    "name": "SMART Goals",
+    "description": "Goal-setting framework ensuring objectives are Specific, Measurable, Achievable, Relevant, and Time-bound.",
+    "origin_year": 1981,
+    "creator": "George T. Doran",
+    "category": "Planning",
+    "core_principles": "Structured criteria enhance clarity and accountability."
+  },
+  {
+    "name": "SWOT Analysis",
+    "description": "Assessing Strengths, Weaknesses, Opportunities, and Threats for strategic decisions.",
+    "origin_year": 1960,
+    "creator": "Albert Humphrey",
+    "category": "Strategic Planning",
+    "core_principles": "Holistic situational awareness to guide action."
+  }
+]
