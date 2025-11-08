@@ -4,7 +4,9 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
+import json as _json
 
+import os
 import typer
 from rich.console import Console
 from rich.panel import Panel
@@ -14,6 +16,8 @@ import sys
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+
+STATE_PATH = Path(os.environ.get("CTM_STATE_PATH", PROJECT_ROOT / "data" / "state.json"))
 
 from .core.feedback_manager import FeedbackManager
 from .core.llm_gateway import LLMGateway
@@ -44,7 +48,31 @@ class AppState:
     problem_description: Optional[str] = None
     last_recommendation: Optional[dict] = None
     context_history: list[dict] = field(default_factory=list)
-    llm_gateway: Optional[LLMGateway] = None
+    llm_gateway: Optional[LLMGateway] = field(default=None, repr=False, compare=False)
+
+    @classmethod
+    def load(cls, path: Path = STATE_PATH) -> "AppState":
+        if path.exists():
+            try:
+                data = _json.loads(path.read_text(encoding="utf-8"))
+            except Exception:
+                data = {}
+        else:
+            data = {}
+        return cls(
+            problem_description=data.get("problem_description"),
+            last_recommendation=data.get("last_recommendation"),
+            context_history=data.get("context_history", []),
+        )
+
+    def save(self, path: Path = STATE_PATH) -> None:
+        payload = {
+            "problem_description": self.problem_description,
+            "last_recommendation": self.last_recommendation,
+            "context_history": self.context_history,
+        }
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(_json.dumps(payload, indent=2), encoding="utf-8")
 
 
 def initialize_runtime() -> tuple[Orchestrator, AppState]:
@@ -94,7 +122,8 @@ def initialize_runtime() -> tuple[Orchestrator, AppState]:
         }
     )
 
-    state = AppState(llm_gateway=llm_gateway)
+    state = AppState.load()
+    state.llm_gateway = llm_gateway
     return orchestrator, state
 
 
@@ -106,6 +135,7 @@ def describe(problem: str = typer.Argument(..., help="Describe your problem or c
     """Store the user's problem description for subsequent workflows."""
     state.problem_description = problem
     state.context_history.append({"problem_description": problem})
+    state.save()
     console.print(Panel(f"[bold]Problem captured:[/]\n{problem}", title="Describe"))
 
 
@@ -123,6 +153,7 @@ def analyze() -> None:
         raise typer.Exit(code=1) from exc
     state.last_recommendation = result
     state.context_history.append(result)
+    state.save()
     console.print(Panel(result.get("suggested_technique", "No recommendation"), title="Suggested Technique"))
 
 
