@@ -1,3 +1,9 @@
+"""Command-line interface for the Cognitive Technique Mapper.
+
+Updates:
+    v0.1.0 - 2025-11-09 - Added module metadata and Google-style docstrings.
+"""
+
 from __future__ import annotations
 
 import json
@@ -18,7 +24,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-STATE_PATH = Path(os.environ.get("CTM_STATE_PATH", PROJECT_ROOT / "data" / "state.json"))
+STATE_PATH = Path(
+    os.environ.get("CTM_STATE_PATH", PROJECT_ROOT / "data" / "state.json")
+)
 
 from .core.feedback_manager import FeedbackManager
 from .core.llm_gateway import LLMGateway
@@ -48,6 +56,8 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class AppState:
+    """Serializable CLI runtime state."""
+
     problem_description: Optional[str] = None
     last_recommendation: Optional[dict] = None
     context_history: list[dict] = field(default_factory=list)
@@ -55,6 +65,15 @@ class AppState:
 
     @classmethod
     def load(cls, path: Path = STATE_PATH) -> "AppState":
+        """Load application state from disk.
+
+        Args:
+            path (Path): Path to the state JSON file.
+
+        Returns:
+            AppState: Restored state instance.
+        """
+
         if path.exists():
             try:
                 data = _json.loads(path.read_text(encoding="utf-8"))
@@ -69,6 +88,12 @@ class AppState:
         )
 
     def save(self, path: Path = STATE_PATH) -> None:
+        """Persist application state to disk.
+
+        Args:
+            path (Path): Destination path for the state JSON file.
+        """
+
         payload = {
             "problem_description": self.problem_description,
             "last_recommendation": self.last_recommendation,
@@ -79,6 +104,15 @@ class AppState:
 
 
 def _apply_log_override(log_level: Optional[str]) -> None:
+    """Override logging level for the current invocation.
+
+    Args:
+        log_level (str | None): Logging level name to apply.
+
+    Raises:
+        typer.BadParameter: If the provided level is invalid.
+    """
+
     if not log_level:
         return
     try:
@@ -89,6 +123,12 @@ def _apply_log_override(log_level: Optional[str]) -> None:
 
 
 def initialize_runtime() -> tuple[Orchestrator, AppState]:
+    """Initialize core services and hydrated state for CLI usage.
+
+    Returns:
+        tuple[Orchestrator, AppState]: Configured orchestrator and application state.
+    """
+
     config_service = ConfigService()
     configure_logging(config_service.logging_config)
     logger.debug("Runtime initialization starting.")
@@ -127,7 +167,9 @@ def initialize_runtime() -> tuple[Orchestrator, AppState]:
     )
     plan_generator = PlanGenerator(llm_gateway=llm_gateway)
     feedback_manager = FeedbackManager()
-    feedback_service = FeedbackService(feedback_manager=feedback_manager, llm_gateway=llm_gateway)
+    feedback_service = FeedbackService(
+        feedback_manager=feedback_manager, llm_gateway=llm_gateway
+    )
 
     orchestrator = Orchestrator(
         workflows={
@@ -156,7 +198,15 @@ def describe(
         help="Override logging level for this invocation (e.g., DEBUG, INFO).",
     ),
 ) -> None:
-    """Store the user's problem description for subsequent workflows."""
+    """Store the user's problem description for subsequent workflows.
+
+    Args:
+        problem (str): Problem description supplied by the user.
+        log_level (str | None): Logging level override for this invocation.
+
+    Raises:
+        typer.BadParameter: If the provided log level is invalid.
+    """
     _apply_log_override(log_level)
 
     state.problem_description = problem
@@ -175,7 +225,15 @@ def analyze(
         help="Override logging level for this invocation.",
     )
 ) -> None:
-    """Trigger the detect_technique workflow."""
+    """Trigger the detect_technique workflow.
+
+    Args:
+        log_level (str | None): Logging level override for this invocation.
+
+    Raises:
+        typer.BadParameter: If no problem description has been captured.
+        typer.Exit: When analysis fails due to runtime errors.
+    """
     if not state.problem_description:
         raise typer.BadParameter("No problem description found. Use `describe` first.")
 
@@ -191,7 +249,12 @@ def analyze(
     state.context_history.append(result)
     state.save()
     logger.info("Analysis completed.")
-    console.print(Panel(result.get("suggested_technique", "No recommendation"), title="Suggested Technique"))
+    console.print(
+        Panel(
+            result.get("suggested_technique", "No recommendation"),
+            title="Suggested Technique",
+        )
+    )
 
 
 @app.command()
@@ -203,7 +266,15 @@ def explain(
         help="Override logging level for this invocation.",
     )
 ) -> None:
-    """Explain the logic behind the last recommendation via the explain_logic workflow."""
+    """Explain the logic behind the last recommendation via the explain_logic workflow.
+
+    Args:
+        log_level (str | None): Logging level override for this invocation.
+
+    Raises:
+        typer.BadParameter: If no recommendation is available or the gateway is missing.
+        typer.Exit: When the explain workflow fails.
+    """
     if not state.last_recommendation:
         raise typer.BadParameter("No recommendation available. Run `analyze` first.")
 
@@ -227,7 +298,11 @@ def explain(
 
 @app.command()
 def settings() -> None:
-    """Display current application configuration values."""
+    """Display current application configuration values.
+
+    Returns:
+        None: This command prints configuration details to the console.
+    """
     config_summary = orchestrator.execute("config_update", {})
     console.print_json(data=config_summary)
 
@@ -243,9 +318,23 @@ def feedback(
         help="Override logging level for this invocation.",
     ),
 ) -> None:
-    """Record user feedback and display the summary of recent entries."""
+    """Record user feedback and display the summary of recent entries.
+
+    Args:
+        message (str): Feedback body supplied by the user.
+        rating (int | None): Optional rating between 1 and 5.
+        log_level (str | None): Logging level override for this invocation.
+
+    Raises:
+        typer.Exit: When feedback operations fail.
+    """
     _apply_log_override(log_level)
-    context = {"action": "record", "message": message, "rating": rating, "workflow": "detect_technique"}
+    context = {
+        "action": "record",
+        "message": message,
+        "rating": rating,
+        "workflow": "detect_technique",
+    }
     try:
         orchestrator.execute("feedback_loop", context)
         summary = orchestrator.execute("feedback_loop", {})
@@ -253,10 +342,13 @@ def feedback(
         console.print(f"[red]Feedback failed: {exc}[/]")
         raise typer.Exit(code=1) from exc
     logger.info("Feedback recorded (rating=%s)", rating)
-    console.print(Panel(summary.get("summary", "No summary available."), title="Feedback Summary"))
+    console.print(
+        Panel(summary.get("summary", "No summary available."), title="Feedback Summary")
+    )
 
 
 def main() -> None:
+    """CLI entry point."""
     app()
 
 

@@ -12,7 +12,7 @@ workflows:
     model: "azure/gpt-4o-mini"
     temperature: 0.5
 embeddings:
-  model: "azure/UDTEMBED3L"
+  model: "UDTEMBED3L"
   provider: "azure"
 defaults:
   provider: "azure"
