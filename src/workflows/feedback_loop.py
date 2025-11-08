@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from src.services.feedback_service import FeedbackService
+from ..services.feedback_service import FeedbackService
 
 
 @dataclass

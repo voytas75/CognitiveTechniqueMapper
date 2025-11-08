@@ -4,12 +4,12 @@ import json
 from pathlib import Path
 from typing import Iterable, List
 
-from src.db.sqlite_client import SQLiteClient
-from src.services.embedding_gateway import EmbeddingGateway
-from src.services.technique_utils import compose_embedding_text
+from ..db.sqlite_client import SQLiteClient
+from .embedding_gateway import EmbeddingGateway
+from .technique_utils import compose_embedding_text
 
 try:
-    from src.db.chroma_client import ChromaClient, EmbeddingRecord
+    from ..db.chroma_client import ChromaClient, EmbeddingRecord
 except RuntimeError:
     ChromaClient = None  # type: ignore
     EmbeddingRecord = None  # type: ignore

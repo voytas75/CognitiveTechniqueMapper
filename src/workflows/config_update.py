@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from src.services.config_service import ConfigService
+from ..services.config_service import ConfigService
 
 
 @dataclass

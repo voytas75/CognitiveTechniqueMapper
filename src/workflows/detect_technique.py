@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from src.services.technique_selector import TechniqueSelector
+from ..services.technique_selector import TechniqueSelector
 
 
 @dataclass

@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from src.core.preprocessor import ProblemPreprocessor
-from src.core.llm_gateway import LLMGateway
-from src.db.sqlite_client import SQLiteClient
-from src.services.embedding_gateway import EmbeddingGateway
-from src.services.technique_utils import compose_embedding_text
+from ..core.preprocessor import ProblemPreprocessor
+from ..core.llm_gateway import LLMGateway
+from ..db.sqlite_client import SQLiteClient
+from .embedding_gateway import EmbeddingGateway
+from .technique_utils import compose_embedding_text
 
 try:
-    from src.db.chroma_client import ChromaClient
+    from ..db.chroma_client import ChromaClient
 except RuntimeError:
     ChromaClient = None  # type: ignore
 

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from src.core.config_loader import ConfigLoader
+from ..core.config_loader import ConfigLoader
 
 
 @dataclass(slots=True, frozen=True)

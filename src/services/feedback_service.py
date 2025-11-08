@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Dict, List
 
-from src.core.feedback_manager import FeedbackManager
-from src.core.llm_gateway import LLMGateway
+from ..core.feedback_manager import FeedbackManager
+from ..core.llm_gateway import LLMGateway
 
 
 class FeedbackService:

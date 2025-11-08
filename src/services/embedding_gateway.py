@@ -9,7 +9,7 @@ try:
 except ImportError:  # pragma: no cover - optional dependency
     litellm_embedding = None
 
-from src.services.config_service import ConfigService
+from .config_service import ConfigService
 
 
 class EmbeddingGateway:

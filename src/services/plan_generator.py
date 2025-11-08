@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, List
 
-from src.core.llm_gateway import LLMGateway
+from ..core.llm_gateway import LLMGateway
 
 
 class PlanGenerator:

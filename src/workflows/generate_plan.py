@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from src.services.plan_generator import PlanGenerator
+from ..services.plan_generator import PlanGenerator
 
 
 @dataclass

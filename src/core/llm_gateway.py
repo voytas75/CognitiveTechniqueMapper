@@ -7,7 +7,7 @@ try:
 except ImportError as exc:  # pragma: no cover - guidance for missing dependency
     raise RuntimeError("litellm is required for LLMGateway. Install via `pip install litellm`.") from exc
 
-from src.services.config_service import ConfigService, WorkflowModelConfig
+from ..services.config_service import ConfigService, WorkflowModelConfig
 
 
 class LLMGateway:

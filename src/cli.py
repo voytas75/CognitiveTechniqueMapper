@@ -15,23 +15,23 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.core.feedback_manager import FeedbackManager
-from src.core.llm_gateway import LLMGateway
-from src.core.orchestrator import Orchestrator
-from src.db.sqlite_client import SQLiteClient
-from src.services.config_service import ConfigService
-from src.services.data_initializer import TechniqueDataInitializer
-from src.services.embedding_gateway import EmbeddingGateway
-from src.services.feedback_service import FeedbackService
-from src.services.plan_generator import PlanGenerator
-from src.services.technique_selector import TechniqueSelector
-from src.workflows.config_update import ConfigUpdateWorkflow
-from src.workflows.detect_technique import DetectTechniqueWorkflow
-from src.workflows.feedback_loop import FeedbackWorkflow
-from src.workflows.generate_plan import GeneratePlanWorkflow
+from .core.feedback_manager import FeedbackManager
+from .core.llm_gateway import LLMGateway
+from .core.orchestrator import Orchestrator
+from .db.sqlite_client import SQLiteClient
+from .services.config_service import ConfigService
+from .services.data_initializer import TechniqueDataInitializer
+from .services.embedding_gateway import EmbeddingGateway
+from .services.feedback_service import FeedbackService
+from .services.plan_generator import PlanGenerator
+from .services.technique_selector import TechniqueSelector
+from .workflows.config_update import ConfigUpdateWorkflow
+from .workflows.detect_technique import DetectTechniqueWorkflow
+from .workflows.feedback_loop import FeedbackWorkflow
+from .workflows.generate_plan import GeneratePlanWorkflow
 
 try:
-    from src.db.chroma_client import ChromaClient
+    from .db.chroma_client import ChromaClient
 except RuntimeError:
     ChromaClient = None  # type: ignore
 
