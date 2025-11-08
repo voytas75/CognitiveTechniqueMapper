@@ -27,7 +27,6 @@ tmp/
 static/
 groupchat/
 logs/
-db/
 local_cache/
 config.py
 knowledge/
@@ -44,7 +43,6 @@ __pycache__/
 *.db
 *.log
 knowledge/
-db/
 knowledge_extraction_results/
 programming_project_roadmaps/
 .gradio/
