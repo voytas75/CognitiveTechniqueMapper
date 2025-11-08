@@ -1,3 +1,9 @@
+"""Configuration service for Cognitive Technique Mapper.
+
+Updates:
+    v0.1.0 - 2025-11-09 - Added module and method docstrings.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -9,6 +15,8 @@ from ..core.config_loader import ConfigLoader
 
 @dataclass(slots=True, frozen=True)
 class WorkflowModelConfig:
+    """Workflow-specific model parameters."""
+
     workflow: str
     model: str
     temperature: float | None = None
@@ -18,6 +26,8 @@ class WorkflowModelConfig:
 
 @dataclass(slots=True, frozen=True)
 class EmbeddingModelConfig:
+    """Embedding model parameters."""
+
     model: str
     provider: str | None = None
 
@@ -26,6 +36,12 @@ class ConfigService:
     """Loads and exposes configuration for CTM components."""
 
     def __init__(self, config_path: Path | None = None) -> None:
+        """Initialize configuration caches.
+
+        Args:
+            config_path (Path | None): Optional override for the configuration directory.
+        """
+
         self._loader = ConfigLoader(base_path=config_path)
         self._settings = self._loader.load("settings")
         self._database = self._loader.load("database")
@@ -34,21 +50,37 @@ class ConfigService:
 
     @property
     def app_metadata(self) -> dict[str, Any]:
+        """Return general application metadata."""
         return self._settings.get("app", {})
 
     @property
     def logging_config(self) -> dict[str, Any]:
+        """Return logging configuration settings."""
         return self._settings.get("logging", {})
 
     @property
     def database_config(self) -> dict[str, Any]:
+        """Return database configuration values."""
         return self._database.get("database", {})
 
     @property
     def providers(self) -> dict[str, Any]:
+        """Return provider configuration registry."""
         return self._providers.get("providers", {})
 
     def get_workflow_model_config(self, workflow: str) -> WorkflowModelConfig:
+        """Return configuration for the requested workflow.
+
+        Args:
+            workflow (str): Name of the workflow to retrieve.
+
+        Returns:
+            WorkflowModelConfig: Workflow-specific model settings.
+
+        Raises:
+            KeyError: If the workflow configuration is missing.
+        """
+
         workflows = self._models.get("workflows", {})
         defaults = self._models.get("defaults", {})
         data = workflows.get(workflow)
@@ -65,11 +97,28 @@ class ConfigService:
         )
 
     def iter_workflow_configs(self) -> dict[str, WorkflowModelConfig]:
+        """Return mapping of workflow names to configuration data.
+
+        Returns:
+            dict[str, WorkflowModelConfig]: Workflow configurations keyed by name.
+        """
+
         workflows = self._models.get("workflows", {})
         return {name: self.get_workflow_model_config(name) for name in workflows}
 
     def get_embedding_config(self) -> EmbeddingModelConfig:
+        """Return the embedding configuration used for vector generation.
+
+        Returns:
+            EmbeddingModelConfig: Embedding model name and provider metadata.
+
+        Raises:
+            KeyError: If the embedding configuration is missing.
+        """
+
         data = self._models.get("embeddings")
         if not data:
             raise KeyError("Embedding configuration missing in config/models.yaml")
-        return EmbeddingModelConfig(model=data.get("model"), provider=data.get("provider"))
+        return EmbeddingModelConfig(
+            model=data.get("model"), provider=data.get("provider")
+        )

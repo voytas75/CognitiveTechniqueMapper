@@ -1,3 +1,9 @@
+"""Logging configuration helpers.
+
+Updates:
+    v0.1.0 - 2025-11-09 - Added module docstrings and Google-style documentation.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -11,7 +17,13 @@ _handler: RichHandler | None = None
 
 
 def configure_logging(config: dict[str, Any] | None = None) -> None:
-    """Configure application-wide logging with Rich handler."""
+    """Configure application-wide logging with a Rich handler.
+
+    Args:
+        config (dict[str, Any] | None): Optional logging configuration dictionary.
+            Supports a `level` key indicating the minimum log level.
+    """
+
     global _configured, _handler
     if _configured:
         return
@@ -39,7 +51,15 @@ def configure_logging(config: dict[str, Any] | None = None) -> None:
 
 
 def set_runtime_level(level_name: str) -> None:
-    """Adjust logging level at runtime."""
+    """Adjust logging level at runtime.
+
+    Args:
+        level_name (str): Desired logging level name (e.g., `DEBUG`, `INFO`).
+
+    Raises:
+        ValueError: If the level name is not recognized by the logging module.
+    """
+
     if not level_name:
         return
     level = getattr(logging, level_name.upper(), None)

@@ -1,3 +1,9 @@
+"""Technique data initialization routines.
+
+Updates:
+    v0.1.0 - 2025-11-09 - Added module and method docstrings.
+"""
+
 from __future__ import annotations
 
 import json
@@ -28,12 +34,22 @@ class TechniqueDataInitializer:
         chroma_client: ChromaClient | None = None,
         dataset_path: Path | str = DEFAULT_DATASET_PATH,
     ) -> None:
+        """Initialize the initializer with its dependencies.
+
+        Args:
+            sqlite_client (SQLiteClient): Database client for persistent storage.
+            embedder (EmbeddingGateway): Embedding generator for records.
+            chroma_client (ChromaClient | None): Optional Chroma client for vector sync.
+            dataset_path (Path | str): Source dataset file to load.
+        """
+
         self._sqlite = sqlite_client
         self._embedder = embedder
         self._chroma = chroma_client
         self._dataset_path = Path(dataset_path)
 
     def initialize(self) -> None:
+        """Populate the SQLite database and optionally synchronize embeddings."""
         dataset = self._load_dataset()
         if not dataset:
             return
@@ -47,6 +63,15 @@ class TechniqueDataInitializer:
                 self._chroma.upsert_embeddings(records)
 
     def _load_dataset(self) -> List[dict]:
+        """Load the technique dataset from disk.
+
+        Returns:
+            list[dict]: Technique entries parsed from the dataset file.
+
+        Raises:
+            ValueError: If the dataset file does not contain a list.
+        """
+
         if not self._dataset_path.exists():
             return []
         with self._dataset_path.open("r", encoding="utf-8") as handle:
@@ -55,7 +80,18 @@ class TechniqueDataInitializer:
                 raise ValueError("Technique dataset is not a list of objects")
             return data
 
-    def _build_embedding_records(self, dataset: Iterable[dict]) -> List[EmbeddingRecord]:
+    def _build_embedding_records(
+        self, dataset: Iterable[dict]
+    ) -> List[EmbeddingRecord]:
+        """Build embedding records for Chroma synchronization.
+
+        Args:
+            dataset (Iterable[dict]): Technique entries to embed.
+
+        Returns:
+            list[EmbeddingRecord]: Embedding records ready for upsert.
+        """
+
         records: List[EmbeddingRecord] = []
         texts: List[str] = []
         metadata_list: List[dict] = []
@@ -97,4 +133,13 @@ class TechniqueDataInitializer:
         return records
 
     def _compose_embedding_text(self, item: dict) -> str:
+        """Compose embedding text for a dataset entry.
+
+        Args:
+            item (dict): Technique metadata.
+
+        Returns:
+            str: Structured text used for embedding generation.
+        """
+
         return compose_embedding_text(item)
