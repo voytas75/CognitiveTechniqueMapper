@@ -1,0 +1,16 @@
+workflows:
+  detect_technique:
+    model: "gpt-5"
+    temperature: 0.2
+  summarize_result:
+    model: "claude-3-opus"
+    temperature: 0.3
+  explain_logic:
+    model: "gpt-4o"
+    temperature: 0.4
+  feedback_loop:
+    model: "gpt-4o-mini"
+    temperature: 0.5
+defaults:
+  provider: "openai"
+  max_tokens: 2048

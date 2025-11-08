@@ -1,0 +1,4 @@
+database:
+  sqlite_path: "./data/techniques.db"
+  chromadb_path: "./embeddings/"
+  chromadb_collection: "techniques"

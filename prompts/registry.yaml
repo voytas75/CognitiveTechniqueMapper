@@ -1,0 +1,3 @@
+detect_technique: prompts/detect_technique.txt
+generate_plan: prompts/generate_plan.txt
+feedback: prompts/feedback.txt

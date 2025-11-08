@@ -1,0 +1,2 @@
+Given a recommended technique detail, create a structured follow-up plan.
+Include sequencing, key considerations, and checkpoints for reflection.
