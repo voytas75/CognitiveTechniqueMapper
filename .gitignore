@@ -66,3 +66,4 @@ core/__pycache__/
 chromadb/
 build/
 config/config.json
+.uv-cache

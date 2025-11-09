@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=67.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cognitive-technique-mapper"
+version = "0.1.0"
+description = "CLI tool that maps problem descriptions to cognitive techniques using LLM-driven workflows."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "litellm>=1.35.9",
+    "chromadb>=0.5.0",
+    "pydantic>=2.7",
+    "pyyaml>=6.0.1",
+    "typer>=0.12.3",
+    "rich>=13.7",
+    "sqlite-utils>=3.36",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2",
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+

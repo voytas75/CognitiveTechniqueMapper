@@ -37,10 +37,16 @@ Cognitive Technique Mapper (CTM) is a modular CLI application that pairs problem
 
 - Python 3.11+ (recommended 3.12)
 - Virtual environment (`python -m venv .venv` then activate)
-- Install dependencies:
+- Install dependencies with [uv](https://github.com/astral-sh/uv):
 
 ```bash
-pip install -r requirements.txt
+uv pip sync requirements.lock
+```
+
+- For development tools (e.g., pytest) install the `dev` extras:
+
+```bash
+uv pip sync --extra dev requirements.lock
 ```
 
 - Set provider credentials (example `.env` entry):
@@ -103,7 +109,7 @@ To extend the library:
 
 ## 🧪 Testing
 
-Run the test suite with:
+After syncing development dependencies (`uv pip sync --extra dev requirements.lock`), run:
 
 ```bash
 pytest
