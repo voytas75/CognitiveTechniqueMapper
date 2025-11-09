@@ -2,22 +2,46 @@
 
 Updates:
     v0.1.0 - 2025-11-09 - Added module docstring and method documentation.
+    v0.2.0 - 2025-11-09 - Integrated prompt registry and structured recommendation parsing.
 """
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+import json
+from dataclasses import dataclass
+from typing import Any, Dict, List, Sequence
 
 from ..core.preprocessor import ProblemPreprocessor
 from ..core.llm_gateway import LLMGateway
 from ..db.sqlite_client import SQLiteClient
 from .embedding_gateway import EmbeddingGateway
 from .technique_utils import compose_embedding_text
+from .prompt_service import PromptService
 
 try:
     from ..db.chroma_client import ChromaClient
 except RuntimeError:
     ChromaClient = None  # type: ignore
+
+
+@dataclass(slots=True)
+class TechniqueRecommendation:
+    """Structured recommendation payload returned by the LLM."""
+
+    suggested_technique: str | None
+    why_it_fits: str | None
+    steps: List[str]
+    raw_response: str
+
+    def as_dict(self) -> Dict[str, Any]:
+        """Return a JSON-serializable representation of the recommendation."""
+
+        return {
+            "suggested_technique": self.suggested_technique,
+            "why_it_fits": self.why_it_fits,
+            "steps": self.steps,
+            "raw_response": self.raw_response,
+        }
 
 
 class TechniqueSelector:
@@ -27,6 +51,7 @@ class TechniqueSelector:
         self,
         sqlite_client: SQLiteClient,
         llm_gateway: LLMGateway,
+        prompt_service: PromptService,
         preprocessor: ProblemPreprocessor | None = None,
         embedder: EmbeddingGateway | None = None,
         chroma_client: ChromaClient | None = None,
@@ -36,6 +61,7 @@ class TechniqueSelector:
         Args:
             sqlite_client (SQLiteClient): Accessor for the techniques database.
             llm_gateway (LLMGateway): Gateway responsible for workflow prompts.
+            prompt_service (PromptService): Loader supplying prompt templates.
             preprocessor (ProblemPreprocessor | None): Text normalizer for user inputs.
             embedder (EmbeddingGateway | None): Embedding provider for vector searches.
             chroma_client (ChromaClient | None): Optional ChromaDB client for semantic search.
@@ -44,6 +70,7 @@ class TechniqueSelector:
         self._sqlite = sqlite_client
         self._chroma = chroma_client
         self._llm = llm_gateway
+        self._prompts = prompt_service
         self._preprocessor = preprocessor or ProblemPreprocessor()
         self._embedder = embedder
 
@@ -177,18 +204,24 @@ class TechniqueSelector:
         """
 
         if not candidates:
+            empty = TechniqueRecommendation(
+                suggested_technique=None,
+                why_it_fits="No techniques found. Please populate the database.",
+                steps=[],
+                raw_response="",
+            )
             return {
                 "workflow": "detect_technique",
-                "suggested_technique": None,
-                "reasoning": "No techniques found. Please populate the database.",
-                "steps": [],
+                "recommendation": empty.as_dict(),
+                "matches": [],
             }
 
         prompt = self._build_prompt(normalized_text, candidates)
-        response = self._llm.invoke("detect_technique", prompt)
+        response = self._invoke_llm(prompt)
+        recommendation = self._parse_recommendation(response)
         return {
             "workflow": "detect_technique",
-            "suggested_technique": response,
+            "recommendation": recommendation.as_dict() if recommendation else None,
             "matches": candidates,
         }
 
@@ -205,16 +238,101 @@ class TechniqueSelector:
             str: Prompt string summarizing the problem and candidate techniques.
         """
 
-        buffer = ["User problem:", normalized_text, "\nCandidate techniques:"]
+        instructions = self._prompts.get_prompt("detect_technique").strip()
+        buffer = [instructions, "", "Problem:", normalized_text, "", "Candidates:"]
         for candidate in candidates:
             metadata = candidate.get("metadata", {}) or {}
-            name = metadata.get("name") or candidate.get(
-                "document", "Unknown technique"
+            if not metadata and isinstance(candidate, dict):
+                metadata = {key: candidate.get(key) for key in candidate.keys()}
+
+            name = (
+                metadata.get("name")
+                or candidate.get("name")
+                or candidate.get("document", "Unknown technique")
             )
-            description = metadata.get("description") or candidate.get("document", "")
-            buffer.append(f"- {name}: {description}")
+            description = (
+                metadata.get("description")
+                or candidate.get("description")
+                or candidate.get("document", "")
+            )
+            principles = metadata.get("core_principles") or candidate.get(
+                "core_principles", ""
+            )
+            buffer.append(
+                f"- name: {name}\n  description: {description}\n  core_principles: {principles}"
+            )
 
         buffer.append(
-            "\nReturn the best matching technique, explain why it fits, and outline application steps."
+            "\nReply strictly in JSON with keys 'suggested_technique', 'why_it_fits', and 'steps' (array)."
+        )
+        buffer.append(
+            "Ensure 'steps' includes concrete, user-facing actions and limit to 5 entries."
         )
         return "\n".join(buffer)
+
+    def _invoke_llm(self, prompt: str) -> str:
+        """Invoke the LLM with JSON response enforcement and fallback."""
+
+        try:
+            return self._llm.invoke(
+                "detect_technique",
+                prompt,
+                response_format={"type": "json_object"},
+            )
+        except RuntimeError:
+            return self._llm.invoke("detect_technique", prompt)
+
+    def _parse_recommendation(self, response: str) -> TechniqueRecommendation | None:
+        """Parse the LLM response into a structured recommendation."""
+
+        parsed = self._parse_json_response(response)
+        if not parsed:
+            return None
+        steps = self._coerce_steps(parsed.get("steps"))
+        return TechniqueRecommendation(
+            suggested_technique=self._coerce_string(parsed.get("suggested_technique")),
+            why_it_fits=self._coerce_string(parsed.get("why_it_fits")),
+            steps=steps,
+            raw_response=response,
+        )
+
+    @staticmethod
+    def _parse_json_response(response: str) -> Dict[str, Any] | None:
+        """Attempt to parse the response as JSON, handling markdown fences."""
+
+        cleaned = response.strip()
+        if cleaned.startswith("```"):
+            parts = cleaned.split("\n", 1)
+            cleaned = parts[1] if len(parts) > 1 else ""
+            if cleaned.endswith("```"):
+                cleaned = cleaned.rsplit("```", 1)[0].strip()
+        try:
+            return json.loads(cleaned)
+        except json.JSONDecodeError:
+            return None
+
+    @staticmethod
+    def _coerce_string(value: Any) -> str | None:
+        """Convert value to string when possible."""
+
+        if value is None:
+            return None
+        if isinstance(value, str):
+            return value.strip()
+        return str(value)
+
+    @staticmethod
+    def _coerce_steps(value: Any) -> List[str]:
+        """Normalize the steps collection into a list of strings."""
+
+        if isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
+            steps: List[str] = []
+            for entry in value:
+                if entry is None:
+                    continue
+                steps.append(str(entry).strip())
+            return steps
+        if isinstance(value, str):
+            segments = [segment.strip() for segment in value.split("\n") if segment]
+            return segments
+        return []

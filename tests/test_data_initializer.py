@@ -8,7 +8,9 @@ from src.services.data_initializer import TechniqueDataInitializer
 
 def _write_config(dir_path: Path) -> None:
     (dir_path / "settings.yaml").write_text("app: {name: test}\n", encoding="utf-8")
-    (dir_path / "database.yaml").write_text("database: {sqlite_path: ':memory:'}\n", encoding="utf-8")
+    (dir_path / "database.yaml").write_text(
+        "database: {sqlite_path: ':memory:'}\n", encoding="utf-8"
+    )
     (dir_path / "models.yaml").write_text(
         """
 workflows: {detect_technique: {model: dummy}}
@@ -62,3 +64,59 @@ def test_data_initializer_populates_sqlite(tmp_path: Path, monkeypatch) -> None:
     rows = sqlite_client.fetch_all()
     assert len(rows) == 1
     assert rows[0]["name"] == "Test Technique"
+
+
+def test_refresh_replaces_dataset(tmp_path: Path, monkeypatch) -> None:
+    config_dir = tmp_path / "config"
+    config_dir.mkdir()
+    _write_config(config_dir)
+
+    initial_dataset = [
+        {
+            "name": "Initial Technique",
+            "description": "Original description.",
+            "origin_year": 2020,
+            "creator": "Initial",
+            "category": "Demo",
+            "core_principles": "Initial principle",
+        }
+    ]
+    updated_dataset = [
+        {
+            "name": "Updated Technique",
+            "description": "Updated description.",
+            "origin_year": 2025,
+            "creator": "Updater",
+            "category": "Demo",
+            "core_principles": "Updated principle",
+        }
+    ]
+
+    dataset_path = tmp_path / "techniques.json"
+
+    import json
+
+    dataset_path.write_text(json.dumps(initial_dataset), encoding="utf-8")
+
+    monkeypatch.setenv("CTM_CONFIG_PATH", str(config_dir))
+    config_service = ConfigService(config_path=config_dir)
+    embedder = EmbeddingGateway(config_service=config_service, use_fallback=True)
+
+    db_path = tmp_path / "techniques.db"
+    sqlite_client = SQLiteClient(db_path)
+    sqlite_client.initialize_schema()
+
+    initializer = TechniqueDataInitializer(
+        sqlite_client=sqlite_client,
+        embedder=embedder,
+        chroma_client=None,
+        dataset_path=dataset_path,
+    )
+    initializer.initialize()
+
+    dataset_path.write_text(json.dumps(updated_dataset), encoding="utf-8")
+    initializer.refresh(rebuild_embeddings=False)
+
+    rows = sqlite_client.fetch_all()
+    assert len(rows) == 1
+    assert rows[0]["name"] == "Updated Technique"

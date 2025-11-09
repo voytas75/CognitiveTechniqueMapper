@@ -8,9 +8,12 @@ Cognitive Technique Mapper (CTM) is a modular CLI application that pairs problem
 
 - **Technique Knowledge Base:** SQLite schema for storing named techniques with descriptions, origins, categories, and core principles. Optional Chroma collection holds vector embeddings for semantic search.
 - **Workflow-Oriented Reasoning:** `litellm` gateway routes requests to different models per workflow (detection, explanation, summarization, feedback).
-- **CLI Experience:** `describe`, `analyze`, `explain`, `settings`, and `feedback` commands guide users from problem input to actionable recommendations.
+- **Structured Recommendations:** `analyze` now parses LLM replies into technique, rationale, and concrete steps, and automatically generates an implementation plan.
+- **CLI Experience:** `describe`, `analyze`, `explain`, `settings`, `refresh`, and `feedback` commands guide users from problem input to actionable recommendations.
 - **Config-Driven:** YAML files under `config/` define app metadata, database paths, model mappings, and providers.
 - **Bootstrap & Persistence:** `TechniqueDataInitializer` seeds the database (and Chroma) from `data/techniques.json`, while CLI state persistence (`data/state.json`) allows multi-command sessions.
+- **Interactive Configuration:** `settings show`, `settings update-workflow`, and `settings update-provider` offer in-CLI editing with optional interactive prompts.
+- **Dataset Refresh:** `refresh` rebuilds the SQLite dataset and (optionally) regenerates vector embeddings without manual file management.
 
 ---
 
@@ -75,7 +78,9 @@ All files are loaded through `ConfigService` and cached for reuse.
 python -m src.cli describe "I can't decide between two great job offers."
 python -m src.cli analyze
 python -m src.cli explain
-python -m src.cli settings
+python -m src.cli settings show
+python -m src.cli settings update-workflow detect_technique --model openai/gpt-4.1 --temperature 0.4
+python -m src.cli refresh --skip-embeddings
 python -m src.cli feedback "Loved the recommendation" --rating 5
 python -m src.cli analyze --log-level DEBUG  # temporary verbose logging
 ```
@@ -84,8 +89,9 @@ Notes:
 - `describe` saves the problem description and persists it to `data/state.json`.
 - `analyze` runs the `detect_technique` workflow (LLM + vector search).
 - `explain` requests the `explain_logic` workflow to justify the recommendation.
-- `settings` prints a JSON snapshot of the current config values.
+- `settings show` prints a JSON snapshot of the current config values. Use `update-workflow` and `update-provider` to make inline edits (supports `--interactive`).
 - `feedback` stores feedback and summarizes recent entries via LLM.
+- `refresh` reloads `data/techniques.json`, replaces existing rows, and optionally rebuilds embeddings.
 
 If the LLM provider rejects a parameter (e.g., unsupported temperature), adjust `config/models.yaml` or set `litellm.drop_params = True` before running the CLI.
 
@@ -99,7 +105,7 @@ If the LLM provider rejects a parameter (e.g., unsupported temperature), adjust 
 
 To extend the library:
 - Add rows to `data/techniques.json`.
-- Re-run the CLI (it automatically re-seeds if the DB is empty). For full refresh scenarios, delete `data/techniques.db` and the Chroma directory, then restart the CLI.
+- Run `python -m src.cli refresh` to reload the dataset (use `--skip-embeddings` when you only need SQLite updates).
 
 ---
 
@@ -121,7 +127,6 @@ Coverage includes config loading, SQLite operations, prompt registry validation,
 - Avoid committing provider secrets. `.env` is listed for guidance only.
 - The project favors clear, traceable service layers; keep additions modular and register new workflows with the orchestrator.
 - For future enhancements consider:
-  - A refresh CLI command to re-embed techniques.
   - Additional workflows (e.g., scenario simulation).
   - Extended prompts and richer feedback analysis.
 

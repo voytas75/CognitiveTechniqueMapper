@@ -3,6 +3,7 @@
 Updates:
     v0.1.1 - 2025-11-09 - Remove shared max_tokens default to rely on per-model limits.
     v0.1.0 - 2025-11-09 - Added module and method docstrings.
+    v0.2.0 - 2025-11-09 - Added cache invalidation helper for runtime refreshes.
 """
 
 from __future__ import annotations
@@ -123,3 +124,9 @@ class ConfigService:
         return EmbeddingModelConfig(
             model=data.get("model"), provider=data.get("provider")
         )
+
+    @staticmethod
+    def clear_cache() -> None:
+        """Clear cached configuration to reflect file updates."""
+
+        ConfigLoader.load.cache_clear()

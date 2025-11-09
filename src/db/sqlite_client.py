@@ -2,6 +2,7 @@
 
 Updates:
     v0.1.0 - 2025-11-09 - Added module and method docstrings.
+    v0.2.0 - 2025-11-09 - Added replace_all helper for dataset refresh workflows.
 """
 
 from __future__ import annotations
@@ -110,6 +111,32 @@ class SQLiteClient:
                 """,
                 rows,
             )
+
+    def replace_all(self, techniques: Iterable[dict]) -> None:
+        """Replace all technique rows with the supplied collection."""
+
+        rows = [
+            (
+                item.get("name"),
+                item.get("description"),
+                item.get("origin_year"),
+                item.get("creator"),
+                item.get("category"),
+                item.get("core_principles"),
+            )
+            for item in techniques
+        ]
+
+        with self.connection as conn:
+            conn.execute("DELETE FROM techniques")
+            if rows:
+                conn.executemany(
+                    """
+                    INSERT INTO techniques (name, description, origin_year, creator, category, core_principles)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    rows,
+                )
 
     def fetch_all(self) -> list[sqlite3.Row]:
         """Fetch all technique records from the database.

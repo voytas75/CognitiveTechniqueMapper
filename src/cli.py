@@ -2,6 +2,7 @@
 
 Updates:
     v0.1.0 - 2025-11-09 - Added module metadata and Google-style docstrings.
+    v0.2.0 - 2025-11-09 - Added settings editor, refresh command, and structured outputs.
 """
 
 from __future__ import annotations
@@ -10,7 +11,7 @@ import json
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 import json as _json
 
 import os
@@ -33,11 +34,13 @@ from .core.llm_gateway import LLMGateway
 from .core.orchestrator import Orchestrator
 from .core.logging_setup import configure_logging, set_runtime_level
 from .db.sqlite_client import SQLiteClient
+from .services.config_editor import ConfigEditor
 from .services.config_service import ConfigService
 from .services.data_initializer import TechniqueDataInitializer
 from .services.embedding_gateway import EmbeddingGateway
 from .services.feedback_service import FeedbackService
 from .services.plan_generator import PlanGenerator
+from .services.prompt_service import PromptService
 from .services.technique_selector import TechniqueSelector
 from .workflows.config_update import ConfigUpdateWorkflow
 from .workflows.detect_technique import DetectTechniqueWorkflow
@@ -51,6 +54,9 @@ except RuntimeError:
 
 console = Console()
 app = typer.Typer(add_completion=False, help="Cognitive Technique Mapper CLI")
+settings_app = typer.Typer(
+    add_completion=False, help="Inspect and edit application configuration."
+)
 logger = logging.getLogger(__name__)
 
 
@@ -122,6 +128,21 @@ def _apply_log_override(log_level: Optional[str]) -> None:
         raise typer.BadParameter(str(exc))
 
 
+def _compose_plan_summary(recommendation: dict[str, Any]) -> str:
+    """Compose a concise summary for the plan generator from a recommendation."""
+
+    technique = recommendation.get("suggested_technique") or ""
+    why_it_fits = recommendation.get("why_it_fits") or ""
+    steps = recommendation.get("steps") or []
+    joined_steps = "; ".join(step for step in steps if step)
+    segments = [
+        f"Technique: {technique}" if technique else "",
+        f"Why it fits: {why_it_fits}" if why_it_fits else "",
+        f"Suggested steps: {joined_steps}" if joined_steps else "",
+    ]
+    return "\n".join(segment for segment in segments if segment)
+
+
 def initialize_runtime() -> tuple[Orchestrator, AppState]:
     """Initialize core services and hydrated state for CLI usage.
 
@@ -158,9 +179,12 @@ def initialize_runtime() -> tuple[Orchestrator, AppState]:
     initializer.initialize()
     logger.debug("Initialization completed (Chroma enabled=%s).", bool(chroma_client))
 
+    prompt_service = PromptService()
+
     selector = TechniqueSelector(
         sqlite_client=sqlite_client,
         llm_gateway=llm_gateway,
+        prompt_service=prompt_service,
         preprocessor=None,
         embedder=embedding_gateway,
         chroma_client=chroma_client,
@@ -245,16 +269,55 @@ def analyze(
     except RuntimeError as exc:
         console.print(f"[red]Analyze failed: {exc}[/]")
         raise typer.Exit(code=1) from exc
+    recommendation = result.get("recommendation") or {}
+
+    plan_output: dict[str, Any] | None = None
+    if recommendation:
+        plan_summary = _compose_plan_summary(recommendation)
+        if plan_summary:
+            try:
+                plan_output = orchestrator.execute(
+                    "summarize_result", {"technique_summary": plan_summary}
+                )
+            except (RuntimeError, ValueError) as exc:  # pragma: no cover - LLM issues
+                logger.warning("Plan generation failed: %s", exc)
+
+    if plan_output and plan_output.get("plan"):
+        result["plan"] = plan_output.get("plan")
+
     state.last_recommendation = result
     state.context_history.append(result)
     state.save()
     logger.info("Analysis completed.")
-    console.print(
-        Panel(
-            result.get("suggested_technique", "No recommendation"),
-            title="Suggested Technique",
-        )
-    )
+    _render_analysis_output(recommendation, result.get("plan"))
+
+
+def _render_analysis_output(recommendation: dict[str, Any], plan: Any) -> None:
+    """Display structured recommendation and optional plan to the console."""
+
+    if not recommendation:
+        console.print(Panel("No recommendation returned.", title="Suggested Technique"))
+        return
+
+    technique = recommendation.get("suggested_technique") or "No recommendation"
+    why_it_fits = recommendation.get("why_it_fits") or "No justification provided."
+    steps = recommendation.get("steps") or []
+
+    lines = [
+        f"[bold]Suggested:[/]\n{technique}",
+        f"[bold]Why it fits:[/]\n{why_it_fits}",
+    ]
+
+    if steps:
+        lines.append("[bold]How to apply:[/]")
+        for idx, step in enumerate(steps, start=1):
+            lines.append(f"{idx}. {step}")
+
+    if plan:
+        lines.append("\n[bold]Implementation plan:[/]")
+        lines.append(str(plan))
+
+    console.print(Panel("\n".join(lines), title="Suggested Technique"))
 
 
 @app.command()
@@ -293,18 +356,171 @@ def explain(
         console.print(f"[red]Explain failed: {exc}[/]")
         raise typer.Exit(code=1) from exc
     logger.info("Explain workflow executed.")
-    console.print(Panel(llm_output, title="Explain Logic"))
+
+
+console.print(Panel(llm_output, title="Explain Logic"))
+
+
+@settings_app.callback(invoke_without_command=True)
+def settings_callback(ctx: typer.Context) -> None:
+    """Default behaviour for the settings command when no subcommand is passed."""
+
+    if ctx.invoked_subcommand is None:
+        _show_settings()
+
+
+@settings_app.command("show")
+def settings_show() -> None:
+    """Display the current configuration payload."""
+
+    _show_settings()
+
+
+@settings_app.command("update-workflow")
+def settings_update_workflow(
+    workflow: str = typer.Argument(..., help="Workflow name to modify."),
+    model: str | None = typer.Option(None, help="Updated model identifier."),
+    temperature: float | None = typer.Option(
+        None, help="Temperature parameter between 0.0 and 2.0."
+    ),
+    provider: str | None = typer.Option(
+        None, help="Provider key to associate with the workflow."
+    ),
+    max_tokens: int | None = typer.Option(
+        None, help="Maximum completion tokens for the workflow."
+    ),
+    clear_max_tokens: bool = typer.Option(
+        False, help="Remove the max_tokens entry for the workflow."
+    ),
+    interactive: bool = typer.Option(
+        False,
+        "--interactive",
+        "-i",
+        help="Prompt for values that were not supplied via options.",
+    ),
+) -> None:
+    """Update workflow configuration in models.yaml and refresh runtime services."""
+
+    config_service = ConfigService()
+    try:
+        current = config_service.get_workflow_model_config(workflow)
+    except KeyError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    if interactive:
+        model = model or _prompt_value("Model", current.model)
+        temperature = _prompt_float("Temperature", current.temperature)
+        provider = provider or _prompt_value("Provider", current.provider)
+        if not clear_max_tokens:
+            max_tokens = _prompt_int("Max tokens", current.max_tokens)
+            if max_tokens is None and current.max_tokens is not None:
+                clear_max_tokens = True
+
+    editor = ConfigEditor()
+    try:
+        editor.update_workflow_model(
+            workflow,
+            model=model,
+            temperature=temperature,
+            provider=provider,
+            max_tokens=max_tokens,
+            clear_max_tokens=clear_max_tokens,
+        )
+    except (KeyError, FileNotFoundError) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    ConfigService.clear_cache()
+    _refresh_runtime()
+    console.print(f"[green]Updated workflow '{workflow}'.[/]")
+    _show_settings()
+
+
+@settings_app.command("update-provider")
+def settings_update_provider(
+    provider: str = typer.Argument(..., help="Provider name to update."),
+    api_base: str | None = typer.Option(None, help="HTTP base URL for the provider."),
+    api_version: str | None = typer.Option(None, help="Optional API version."),
+    api_key_env: str | None = typer.Option(
+        None, help="Environment variable holding the API key."
+    ),
+    clear_api_version: bool = typer.Option(
+        False, help="Remove the api_version entry for the provider."
+    ),
+    interactive: bool = typer.Option(
+        False,
+        "--interactive",
+        "-i",
+        help="Prompt for provider fields that were not supplied.",
+    ),
+) -> None:
+    """Update provider metadata in providers.yaml and refresh runtime services."""
+
+    config_service = ConfigService()
+    providers = config_service.providers
+    current = providers.get(provider, {})
+
+    if interactive:
+        api_base = api_base or _prompt_value("API base", current.get("api_base"))
+        api_version = _prompt_value("API version", current.get("api_version"))
+        api_key_env = api_key_env or _prompt_value(
+            "API key env", current.get("api_key_env")
+        )
+        if api_version is None and current.get("api_version") and not clear_api_version:
+            clear_api_version = True
+
+    editor = ConfigEditor()
+    try:
+        editor.update_provider(
+            provider,
+            api_base=api_base,
+            api_version=api_version,
+            api_key_env=api_key_env,
+            clear_api_version=clear_api_version,
+        )
+    except FileNotFoundError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    ConfigService.clear_cache()
+    _refresh_runtime()
+    console.print(f"[green]Updated provider '{provider}'.[/]")
+    refreshed = ConfigService().providers.get(provider, {})
+    console.print_json(data={"provider": provider, "config": refreshed})
+
+
+app.add_typer(settings_app, name="settings")
 
 
 @app.command()
-def settings() -> None:
-    """Display current application configuration values.
+def refresh(
+    rebuild_embeddings: bool = typer.Option(
+        True,
+        "--rebuild-embeddings/--skip-embeddings",
+        help="Recompute and sync embeddings with the vector store.",
+    ),
+    log_level: str = typer.Option(
+        None,
+        "--log-level",
+        "-l",
+        help="Override logging level for this invocation.",
+    ),
+) -> None:
+    """Reload the techniques dataset and optionally rebuild embeddings."""
 
-    Returns:
-        None: This command prints configuration details to the console.
-    """
-    config_summary = orchestrator.execute("config_update", {})
-    console.print_json(data=config_summary)
+    _apply_log_override(log_level)
+
+    initializer, sqlite_client = _create_initializer()
+    try:
+        initializer.refresh(rebuild_embeddings=rebuild_embeddings)
+    except Exception as exc:  # pragma: no cover - dependent on external services
+        console.print(f"[red]Refresh failed: {exc}[/]")
+        raise typer.Exit(code=1) from exc
+    finally:
+        sqlite_client.close()
+
+    _refresh_runtime()
+    console.print(
+        Panel("Dataset refreshed with latest configuration.", title="Refresh")
+    )
 
 
 @app.command()
@@ -345,6 +561,76 @@ def feedback(
     console.print(
         Panel(summary.get("summary", "No summary available."), title="Feedback Summary")
     )
+
+
+def _show_settings() -> None:
+    config_summary = orchestrator.execute("config_update", {})
+    console.print_json(data=config_summary)
+
+
+def _refresh_runtime() -> None:
+    global orchestrator, state
+
+    orchestrator, refreshed_state = initialize_runtime()
+    refreshed_state.problem_description = state.problem_description
+    refreshed_state.last_recommendation = state.last_recommendation
+    refreshed_state.context_history = state.context_history
+    state = refreshed_state
+
+
+def _prompt_value(label: str, current: str | None) -> str | None:
+    default_display = current if current is not None else ""
+    response = typer.prompt(label, default=default_display)
+    return response.strip() or current
+
+
+def _prompt_float(label: str, current: float | None) -> float | None:
+    default_display = "" if current is None else str(current)
+    response = typer.prompt(label, default=default_display).strip()
+    if not response:
+        return current
+    try:
+        return float(response)
+    except ValueError as exc:  # pragma: no cover - input validation
+        raise typer.BadParameter(f"Invalid float for {label}: {response}") from exc
+
+
+def _prompt_int(label: str, current: int | None) -> int | None:
+    default_display = "" if current is None else str(current)
+    response = typer.prompt(label, default=default_display).strip()
+    if not response:
+        return current
+    try:
+        return int(response)
+    except ValueError as exc:  # pragma: no cover - input validation
+        raise typer.BadParameter(f"Invalid integer for {label}: {response}") from exc
+
+
+def _create_initializer() -> tuple[TechniqueDataInitializer, SQLiteClient]:
+    config_service = ConfigService()
+    db_config = config_service.database_config
+
+    sqlite_client = SQLiteClient(db_config.get("sqlite_path", "./data/techniques.db"))
+    sqlite_client.initialize_schema()
+
+    chroma_client = None
+    if ChromaClient:
+        try:
+            chroma_client = ChromaClient(
+                persist_directory=db_config.get("chromadb_path", "./embeddings"),
+                collection_name=db_config.get("chromadb_collection", "techniques"),
+            )
+        except Exception as exc:  # pragma: no cover - optional dependency
+            console.print(f"[yellow]ChromaDB disabled: {exc}[/]")
+            chroma_client = None
+
+    embedder = EmbeddingGateway(config_service=config_service)
+    initializer = TechniqueDataInitializer(
+        sqlite_client=sqlite_client,
+        embedder=embedder,
+        chroma_client=chroma_client,
+    )
+    return initializer, sqlite_client
 
 
 def main() -> None:

@@ -2,11 +2,13 @@
 
 Updates:
     v0.1.0 - 2025-11-09 - Added module and method docstrings.
+    v0.2.0 - 2025-11-09 - Added dataset refresh capability with embedding rebuild toggle.
 """
 
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Iterable, List
 
@@ -20,6 +22,8 @@ except RuntimeError:
     ChromaClient = None  # type: ignore
     EmbeddingRecord = None  # type: ignore
 
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_DATASET_PATH = Path("data/techniques.json")
 
@@ -61,6 +65,27 @@ class TechniqueDataInitializer:
             records = self._build_embedding_records(dataset)
             if records:
                 self._chroma.upsert_embeddings(records)
+
+    def refresh(self, *, rebuild_embeddings: bool = True) -> None:
+        """Reload the dataset and rebuild embeddings if requested."""
+
+        dataset = self._load_dataset()
+        if not dataset:
+            logger.warning("No dataset available for refresh at %s", self._dataset_path)
+            return
+
+        self._sqlite.replace_all(dataset)
+
+        if self._chroma and EmbeddingRecord and rebuild_embeddings:
+            records = self._build_embedding_records(dataset)
+            if not records:
+                return
+            identifiers = [record.identifier for record in records]
+            try:
+                self._chroma.delete(ids=identifiers)
+            except Exception as exc:  # pragma: no cover - Chroma optional
+                logger.warning("Failed to delete existing embeddings: %s", exc)
+            self._chroma.upsert_embeddings(records)
 
     def _load_dataset(self) -> List[dict]:
         """Load the technique dataset from disk.

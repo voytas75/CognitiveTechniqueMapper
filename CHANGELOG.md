@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- Structured `detect_technique` responses with JSON parsing and automatic plan generation.
+- `settings` subcommands to edit workflow models and provider metadata with optional interactive prompts.
+- `refresh` CLI command to reload the techniques dataset and rebuild embeddings on demand.
+
 ### Changed
 - Align `max_tokens` handling with LiteLLM per-model limits to avoid provider rejections.
 - Fix `settings` CLI command by serializing workflow configs via dataclass helpers.
