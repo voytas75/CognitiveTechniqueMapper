@@ -43,11 +43,7 @@ Cognitive Technique Mapper (CTM) is a modular CLI application that pairs problem
 uv pip sync requirements.lock
 ```
 
-- For development tools (e.g., pytest) install the `dev` extras:
-
-```bash
-uv pip sync --extra dev requirements.lock
-```
+- The lock file already captures both runtime and development dependencies (e.g., pytest).
 
 - Set provider credentials (example `.env` entry):
 
@@ -109,7 +105,7 @@ To extend the library:
 
 ## 🧪 Testing
 
-After syncing development dependencies (`uv pip sync --extra dev requirements.lock`), run:
+After syncing dependencies with `uv pip sync requirements.lock`, run:
 
 ```bash
 pytest
