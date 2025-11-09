@@ -1,6 +1,7 @@
 """Configuration service for Cognitive Technique Mapper.
 
 Updates:
+    v0.1.1 - 2025-11-09 - Remove shared max_tokens default to rely on per-model limits.
     v0.1.0 - 2025-11-09 - Added module and method docstrings.
 """
 
@@ -93,7 +94,7 @@ class ConfigService:
             model=data.get("model"),
             temperature=data.get("temperature", defaults.get("temperature")),
             provider=data.get("provider", defaults.get("provider")),
-            max_tokens=data.get("max_tokens", defaults.get("max_tokens")),
+            max_tokens=data.get("max_tokens"),
         )
 
     def iter_workflow_configs(self) -> dict[str, WorkflowModelConfig]:

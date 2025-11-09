@@ -1,13 +1,14 @@
 """LLM gateway for workflow-specific completions.
 
 Updates:
+    v0.1.1 - 2025-11-09 - Resolve max_tokens from LiteLLM metadata when available.
     v0.1.0 - 2025-11-09 - Added Google-style docstrings and update metadata.
 """
 
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 try:
     import litellm
@@ -111,8 +112,10 @@ class LLMGateway:
         params: Dict[str, Any] = {"model": config.model}
         if config.temperature is not None:
             params["temperature"] = config.temperature
-        if config.max_tokens is not None:
-            params["max_tokens"] = config.max_tokens
+
+        max_tokens = self._resolve_max_tokens(config)
+        if max_tokens is not None:
+            params["max_tokens"] = max_tokens
 
         provider_name = config.provider
         if provider_name:
@@ -139,3 +142,104 @@ class LLMGateway:
 
         params.update(overrides)
         return params
+
+    def _resolve_max_tokens(self, config: WorkflowModelConfig) -> Optional[int]:
+        """Determine the max_tokens parameter for the configured model.
+
+        Args:
+            config (WorkflowModelConfig): Workflow-specific configuration values.
+
+        Returns:
+            int | None: LiteLLM-suggested maximum tokens or configuration override.
+        """
+
+        if config.max_tokens is not None:
+            return config.max_tokens
+
+        suggested = self._suggested_max_tokens(config.model)
+        if suggested is not None:
+            logger.debug(
+                "Resolved max_tokens=%s from LiteLLM metadata for model=%s",
+                suggested,
+                config.model,
+            )
+        return suggested
+
+    def _suggested_max_tokens(self, model: str) -> Optional[int]:
+        """Look up LiteLLM metadata for the provided model identifier.
+
+        Args:
+            model (str): Model identifier supplied to LiteLLM.
+
+        Returns:
+            int | None: Max token suggestion when available.
+        """
+
+        candidates = [model]
+        if "/" in model:
+            candidates.append(model.split("/", 1)[1])
+
+        for name in candidates:
+            suggested = self._lookup_litellm_max_tokens(name)
+            if suggested is not None:
+                return suggested
+        return None
+
+    def _lookup_litellm_max_tokens(self, model: str) -> Optional[int]:
+        """Extract a max token value from LiteLLM metadata registries.
+
+        Args:
+            model (str): Model identifier to inspect.
+
+        Returns:
+            int | None: Max tokens when reported by LiteLLM.
+        """
+
+        for accessor in (
+            getattr(litellm, "get_model_info", None),
+            getattr(getattr(litellm, "utils", None), "get_model_info", None),
+        ):
+            if callable(accessor):
+                try:
+                    info = accessor(model)  # type: ignore[arg-type]
+                except TypeError:
+                    try:
+                        info = accessor(model=model)
+                    except Exception as exc:  # pragma: no cover - noisy debug path
+                        logger.debug(
+                            "LiteLLM get_model_info(%s) failed: %s", model, exc
+                        )
+                        continue
+                except Exception as exc:  # pragma: no cover - noisy debug path
+                    logger.debug("LiteLLM get_model_info(%s) failed: %s", model, exc)
+                    continue
+                suggestion = self._extract_max_tokens(info)
+                if suggestion is not None:
+                    return suggestion
+
+        registry = getattr(litellm, "model_cost", None)
+        if isinstance(registry, dict):
+            suggestion = self._extract_max_tokens(registry.get(model))
+            if suggestion is not None:
+                return suggestion
+
+        return None
+
+    @staticmethod
+    def _extract_max_tokens(info: Any) -> Optional[int]:
+        """Normalize max token values from LiteLLM metadata responses.
+
+        Args:
+            info (Any): Metadata payload returned by LiteLLM.
+
+        Returns:
+            int | None: Valid max token count when present.
+        """
+
+        if not isinstance(info, dict):
+            return None
+        for key in ("max_output_tokens", "max_tokens", "max_completion_tokens"):
+            value = info.get(key)
+            if isinstance(value, (int, float)) and value > 0:
+                return int(value)
+        return None

@@ -16,4 +16,3 @@ embeddings:
   provider: "azure"
 defaults:
   provider: "azure"
-  max_tokens: 128000
