@@ -102,5 +102,69 @@
     "creator": "Behavioral interviewing practice (various)",
     "category": "Career Coaching",
     "core_principles": "Structured storytelling to evidence capability and outcomes."
+  },
+  {
+    "name": "Decision Matrix",
+    "description": "Score options against weighted criteria.",
+    "origin_year": 1952,
+    "creator": "Stuart Pugh",
+    "category": "Decision",
+    "core_principles": null
+  },
+  {
+    "name": "Design Thinking",
+    "description": "User-centered iterative process involving Empathize, Define, Ideate, Prototype, and Test to foster innovation and practical solutions aligned with user needs.",
+    "origin_year": 1990,
+    "creator": "IDEO, Stanford d.school",
+    "category": "Innovation / Problem Solving",
+    "core_principles": null
+  },
+  {
+    "name": "Agile Retrospectives",
+    "description": "Structured reflection sessions after sprints or iterations with team members to discuss what worked, what didn’t, and actionable improvements.",
+    "origin_year": 2001,
+    "creator": "Agile Software Development community",
+    "category": "Continuous Improvement / Team Collaboration",
+    "core_principles": null
+  },
+  {
+    "name": "Lean Startup Methodology",
+    "description": "Build-Measure-Learn iterative loop for developing products or services with minimal waste, validated learning, and rapid adaptation.",
+    "origin_year": 2008,
+    "creator": "Eric Ries",
+    "category": "Entrepreneurship / Product Development",
+    "core_principles": null
+  },
+  {
+    "name": "OKR (Objectives and Key Results)",
+    "description": "Framework to set ambitious, measurable goals with defined Key Results fostering focus, alignment, and accountability.",
+    "origin_year": 1999,
+    "creator": "Andy Grove",
+    "category": "Goal Setting / Performance Management",
+    "core_principles": null
+  },
+  {
+    "name": "Liberating Structures",
+    "description": "Collection of microstructures to facilitate inclusive participation and unleash creativity in groups, e.g., '1-2-4-All,' 'What, So What, Now What?'.",
+    "origin_year": 2010,
+    "creator": "Henri Lipmanowicz, Keith McCandless",
+    "category": "Group Facilitation / Collaboration",
+    "core_principles": null
+  },
+  {
+    "name": "Cynefin Framework",
+    "description": "Sense-making framework to help leaders decide actions based on categorizing problems into simple, complicated, complex, chaotic, or disorder domains.",
+    "origin_year": 2007,
+    "creator": "Dave Snowden",
+    "category": "Decision-Making / Complexity Management",
+    "core_principles": null
+  },
+  {
+    "name": "Remote and Hybrid Team Strategies",
+    "description": "Frameworks and practices specifically for managing distributed teams, including asynchronous collaboration, virtual whiteboarding, and digital wellbeing methods.",
+    "origin_year": 2020,
+    "creator": "Various contributors",
+    "category": "Team Management / Communication",
+    "core_principles": null
   }
 ]
