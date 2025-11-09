@@ -54,7 +54,6 @@ examples/
 .windsurfrules
 .clinerules
 .roo/
-*.lock
 AGENTS.md
 AGENTS*.md
 ctmblueprint.md
