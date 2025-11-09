@@ -7,7 +7,6 @@ Updates:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List
 
 
 @dataclass
@@ -20,11 +19,15 @@ class FeedbackEntry:
     created_at: str | None = None
 
 
+def _feedback_entry_list() -> list["FeedbackEntry"]:
+    return []
+
+
 @dataclass
 class FeedbackManager:
     """Captures user feedback for iterative improvement."""
 
-    entries: List[FeedbackEntry] = field(default_factory=list)
+    entries: list[FeedbackEntry] = field(default_factory=_feedback_entry_list)
 
     def add(
         self,
@@ -51,7 +54,7 @@ class FeedbackManager:
             )
         )
 
-    def latest(self, limit: int = 5) -> List[FeedbackEntry]:
+    def latest(self, limit: int = 5) -> list[FeedbackEntry]:
         """Return the newest feedback entries in insertion order.
 
         Args:

@@ -53,22 +53,26 @@ class ConfigService:
     @property
     def app_metadata(self) -> dict[str, Any]:
         """Return general application metadata."""
-        return self._settings.get("app", {})
+        app_section = self._settings.get("app", {})
+        return dict(app_section) if isinstance(app_section, dict) else {}
 
     @property
     def logging_config(self) -> dict[str, Any]:
         """Return logging configuration settings."""
-        return self._settings.get("logging", {})
+        logging_section = self._settings.get("logging", {})
+        return dict(logging_section) if isinstance(logging_section, dict) else {}
 
     @property
     def database_config(self) -> dict[str, Any]:
         """Return database configuration values."""
-        return self._database.get("database", {})
+        database_section = self._database.get("database", {})
+        return dict(database_section) if isinstance(database_section, dict) else {}
 
     @property
     def providers(self) -> dict[str, Any]:
         """Return provider configuration registry."""
-        return self._providers.get("providers", {})
+        provider_section = self._providers.get("providers", {})
+        return dict(provider_section) if isinstance(provider_section, dict) else {}
 
     def get_workflow_model_config(self, workflow: str) -> WorkflowModelConfig:
         """Return configuration for the requested workflow.

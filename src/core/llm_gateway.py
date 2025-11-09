@@ -9,7 +9,7 @@ Updates:
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, TYPE_CHECKING, cast
 
 from tenacity import (
     RetryError,
@@ -23,13 +23,29 @@ from ..services.config_service import ConfigService, WorkflowModelConfig
 
 try:
     import litellm
-    from litellm import completion
+    from litellm import completion as _litellm_completion  # pyright: ignore[reportUnknownVariableType]
 except ImportError as exc:  # pragma: no cover - guidance for missing dependency
     raise RuntimeError(
         "litellm is required for LLMGateway. Install via `pip install litellm`."
     ) from exc
 else:
     litellm.drop_params = True
+
+if TYPE_CHECKING:
+    from typing import Protocol
+
+    class CompletionCallable(Protocol):
+        def __call__(
+            self,
+            *,
+            messages: List[Dict[str, str]],
+            **kwargs: Any,
+        ) -> Dict[str, Any]:
+            ...
+else:
+    CompletionCallable = Callable[..., Any]
+
+completion = _litellm_completion
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +116,7 @@ class LLMGateway:
             logger.error(message)
             raise self.LLMInvocationError(message) from exc
 
-        return response["choices"][0]["message"]["content"]
+        return self._extract_text_content(response)
 
     def _execute_with_retry(
         self,
@@ -108,6 +124,7 @@ class LLMGateway:
         messages: List[Dict[str, str]],
         params: Dict[str, Any],
     ) -> Dict[str, Any]:
+        completion_fn = cast(CompletionCallable, completion)
         for attempt in self._retry:
             with attempt:
                 logger.debug(
@@ -116,7 +133,8 @@ class LLMGateway:
                     params.get("model"),
                     attempt.retry_state.attempt_number,
                 )
-                return completion(messages=messages, **params)
+                raw_response = completion_fn(messages=messages, **params)
+                return self._normalise_response(raw_response)
         raise self.LLMInvocationError(
             f"LLM invocation failed for workflow '{workflow}' without response."
         )
@@ -190,6 +208,40 @@ class LLMGateway:
         params.update(overrides)
         return params
 
+    def _extract_text_content(self, response: Mapping[str, Any]) -> str:
+        choices = response.get("choices")
+        if not isinstance(choices, Sequence) or not choices:
+            raise self.LLMInvocationError(
+                "LLM response did not include any choices."
+            )
+        mapping_choices = cast(Sequence[Mapping[str, object]], choices)
+        first_choice = mapping_choices[0]
+        message_value: object | None = first_choice.get("message")
+        if not isinstance(message_value, dict):
+            raise self.LLMInvocationError("LLM response missing message object.")
+        message_mapping = cast(Mapping[str, Any], message_value)
+        content = message_mapping.get("content")
+        if not isinstance(content, str):
+            raise self.LLMInvocationError("LLM response content is not textual.")
+        return content
+
+    def _normalise_response(self, raw_response: Any) -> Dict[str, Any]:
+        if isinstance(raw_response, dict):
+            return cast(Dict[str, Any], raw_response)
+        dict_method = getattr(raw_response, "dict", None)
+        if callable(dict_method):
+            candidate = dict_method()
+            if isinstance(candidate, dict):
+                return cast(Dict[str, Any], candidate)
+        model_dump = getattr(raw_response, "model_dump", None)
+        if callable(model_dump):
+            candidate = model_dump()
+            if isinstance(candidate, dict):
+                return cast(Dict[str, Any], candidate)
+        raise self.LLMInvocationError(
+            f"Unexpected LLM response type: {type(raw_response).__name__}"
+        )
+
     def _resolve_max_tokens(self, config: WorkflowModelConfig) -> Optional[int]:
         """Determine the max_tokens parameter for the configured model.
 
@@ -246,47 +298,60 @@ class LLMGateway:
             getattr(litellm, "get_model_info", None),
             getattr(getattr(litellm, "utils", None), "get_model_info", None),
         ):
-            if callable(accessor):
-                try:
-                    info = accessor(model)  # type: ignore[arg-type]
-                except TypeError:
-                    try:
-                        info = accessor(model=model)
-                    except Exception as exc:  # pragma: no cover - noisy debug path
-                        logger.debug(
-                            "LiteLLM get_model_info(%s) failed: %s", model, exc
-                        )
-                        continue
-                except Exception as exc:  # pragma: no cover - noisy debug path
-                    logger.debug("LiteLLM get_model_info(%s) failed: %s", model, exc)
-                    continue
-                suggestion = self._extract_max_tokens(info)
-                if suggestion is not None:
-                    return suggestion
-
-        registry = getattr(litellm, "model_cost", None)
-        if isinstance(registry, dict):
-            suggestion = self._extract_max_tokens(registry.get(model))
+            if not callable(accessor):
+                continue
+            info = self._safe_model_info(accessor, model)
+            if info is None:
+                continue
+            suggestion = self._extract_max_tokens(info)
             if suggestion is not None:
                 return suggestion
+
+        registry = getattr(litellm, "model_cost", None)
+        if isinstance(registry, Mapping):
+            cost_table = cast(Mapping[str, Mapping[str, Any]], registry)
+            entry = cost_table.get(model)
+            if entry is not None:
+                suggestion = self._extract_max_tokens(entry)
+                if suggestion is not None:
+                    return suggestion
 
         return None
 
     @staticmethod
-    def _extract_max_tokens(info: Any) -> Optional[int]:
-        """Normalize max token values from LiteLLM metadata responses.
-
-        Args:
-            info (Any): Metadata payload returned by LiteLLM.
-
-        Returns:
-            int | None: Valid max token count when present.
-        """
-
-        if not isinstance(info, dict):
-            return None
+    def _extract_max_tokens(info: Mapping[str, Any]) -> Optional[int]:
+        """Normalize max token values from LiteLLM metadata responses."""
         for key in ("max_output_tokens", "max_tokens", "max_completion_tokens"):
             value = info.get(key)
             if isinstance(value, (int, float)) and value > 0:
                 return int(value)
+        return None
+
+    def _safe_model_info(
+        self, accessor: Callable[..., Any], model: str
+    ) -> Mapping[str, Any] | None:
+        try:
+            result = accessor(model)
+        except TypeError:
+            try:
+                result = accessor(model=model)
+            except Exception as exc:  # pragma: no cover - noisy debug path
+                logger.debug("LiteLLM get_model_info(%s) failed: %s", model, exc)
+                return None
+        except Exception as exc:  # pragma: no cover - noisy debug path
+            logger.debug("LiteLLM get_model_info(%s) failed: %s", model, exc)
+            return None
+
+        if isinstance(result, Mapping):
+            return cast(Mapping[str, Any], result)
+        dict_method = getattr(result, "dict", None)
+        if callable(dict_method):
+            candidate = dict_method()
+            if isinstance(candidate, Mapping):
+                return cast(Mapping[str, Any], candidate)
+        model_dump = getattr(result, "model_dump", None)
+        if callable(model_dump):
+            candidate = model_dump()
+            if isinstance(candidate, Mapping):
+                return cast(Mapping[str, Any], candidate)
         return None

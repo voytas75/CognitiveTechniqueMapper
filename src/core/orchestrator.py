@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from time import perf_counter
-from typing import Protocol
+from typing import Any, Dict, Mapping, Protocol
 
 
 class Workflow(Protocol):
@@ -18,7 +18,7 @@ class Workflow(Protocol):
 
     name: str
 
-    def run(self, context: dict) -> dict:
+    def run(self, context: Mapping[str, Any]) -> Dict[str, Any]:
         """Execute the workflow and return a response.
 
         Args:
@@ -33,11 +33,11 @@ class Workflow(Protocol):
 
 @dataclass(slots=True)
 class Orchestrator:
-    workflows: dict[str, Workflow]
+    workflows: Dict[str, Workflow]
 
     _logger = logging.getLogger(__name__)
 
-    def execute(self, workflow_name: str, context: dict) -> dict:
+    def execute(self, workflow_name: str, context: Mapping[str, Any]) -> Dict[str, Any]:
         """Run a registered workflow with the supplied context.
 
         Args:
