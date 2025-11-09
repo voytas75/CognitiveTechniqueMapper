@@ -1,93 +1,93 @@
 {
-  "problem_description": "I\u2019m juggling two conflicting project priorities without clear criteria.",
+  "problem_description": "I can't decide between two subjects to learn.",
   "last_recommendation": {
     "workflow": "detect_technique",
     "recommendation": {
       "suggested_technique": "Decisional Balance",
-      "why_it_fits": "You\u2019re juggling two conflicting project priorities without clear criteria; Decisional Balance helps by laying out pros and cons for each option to clarify preferences and consequences without needing predefined weights. It makes trade-offs explicit so you can surface what matters most, and it aligns with your strong preference for decision-making tools like Decisional Balance.",
+      "why_it_fits": "You\u2019re choosing between two subjects, and Decisional Balance is designed to clarify the pros and cons of options to reveal preferences and consequences. You\u2019ve previously responded positively to this technique and favor decision-making approaches, making it both a good fit and familiar to you.",
       "steps": [
-        "Name the two priorities as Option A and Option B, and note the decision horizon (e.g., this week) plus any hard constraints (deadlines, budget, dependencies).",
-        "For each option, list concrete pros and cons under themes: impact/value, risk, effort/resources, stakeholder expectations, and timing.",
-        "Assign quick scores to each item (+2 strong pro, +1 minor pro, -1 minor con, -2 strong con) and sum to get an initial lean for each option.",
-        "Highlight the top three factors driving each total; treat these as emerging criteria and sanity-check them against org goals and your manager\u2019s priorities.",
-        "Decide based on the higher total or, if the totals are close, identify the biggest uncertainty and get targeted input from key stakeholders to resolve it."
+        "Define your goal and time horizon (e.g., what outcome you want in 6\u201312 months).",
+        "For each subject, list specific pros and cons across key categories: interest/motivation, relevance to goals, career value, difficulty, time/cost, and available resources.",
+        "Rate the strength of each item (+3 strong pro to -3 strong con) and total the scores for each subject.",
+        "Identify top 2 decisive factors and any major cons you can mitigate; note concrete mitigations (e.g., prerequisite course, study plan).",
+        "Choose the subject with the higher aligned net score and set a first step (e.g., enroll, find a syllabus) plus a 4-week review checkpoint."
       ],
-      "raw_response": "{\n  \"suggested_technique\": \"Decisional Balance\",\n  \"why_it_fits\": \"You\u2019re juggling two conflicting project priorities without clear criteria; Decisional Balance helps by laying out pros and cons for each option to clarify preferences and consequences without needing predefined weights. It makes trade-offs explicit so you can surface what matters most, and it aligns with your strong preference for decision-making tools like Decisional Balance.\",\n  \"steps\": [\n    \"Name the two priorities as Option A and Option B, and note the decision horizon (e.g., this week) plus any hard constraints (deadlines, budget, dependencies).\",\n    \"For each option, list concrete pros and cons under themes: impact/value, risk, effort/resources, stakeholder expectations, and timing.\",\n    \"Assign quick scores to each item (+2 strong pro, +1 minor pro, -1 minor con, -2 strong con) and sum to get an initial lean for each option.\",\n    \"Highlight the top three factors driving each total; treat these as emerging criteria and sanity-check them against org goals and your manager\u2019s priorities.\",\n    \"Decide based on the higher total or, if the totals are close, identify the biggest uncertainty and get targeted input from key stakeholders to resolve it.\"\n  ]\n}"
+      "raw_response": "{\n  \"suggested_technique\": \"Decisional Balance\",\n  \"why_it_fits\": \"You\u2019re choosing between two subjects, and Decisional Balance is designed to clarify the pros and cons of options to reveal preferences and consequences. You\u2019ve previously responded positively to this technique and favor decision-making approaches, making it both a good fit and familiar to you.\",\n  \"steps\": [\n    \"Define your goal and time horizon (e.g., what outcome you want in 6\u201312 months).\",\n    \"For each subject, list specific pros and cons across key categories: interest/motivation, relevance to goals, career value, difficulty, time/cost, and available resources.\",\n    \"Rate the strength of each item (+3 strong pro to -3 strong con) and total the scores for each subject.\",\n    \"Identify top 2 decisive factors and any major cons you can mitigate; note concrete mitigations (e.g., prerequisite course, study plan).\",\n    \"Choose the subject with the higher aligned net score and set a first step (e.g., enroll, find a syllabus) plus a 4-week review checkpoint.\"\n  ]\n}"
     },
     "matches": [
       {
         "id": "Decisional Balance",
         "metadata": {
+          "origin_year": "1979",
           "name": "Decisional Balance",
           "creator": "Janet Bavelas",
-          "origin_year": "1979",
           "category": "Decision-Making"
         },
         "document": "Evaluating pros and cons of options to clarify preferences and consequences.",
-        "distance": 1.4484403133392334,
-        "score": 0.6584232703374253,
-        "base_score": 0.4084232703374253,
+        "distance": 1.5808444023132324,
+        "score": 0.6374700850247661,
+        "base_score": 0.38747008502476615,
         "preference_adjustment": 0.25
+      },
+      {
+        "id": "Eisenhower Matrix",
+        "metadata": {
+          "category": "Decision-Making",
+          "name": "Eisenhower Matrix",
+          "creator": "Dwight D. Eisenhower",
+          "origin_year": "1954"
+        },
+        "document": "Prioritization matrix dividing tasks into urgent/important quadrants to focus effort on what matters most.",
+        "distance": 1.6088780164718628,
+        "score": 0.4833065377860626,
+        "base_score": 0.38330653778606255,
+        "preference_adjustment": 0.1
+      },
+      {
+        "id": "Sch\u00f6n Reflective Practice",
+        "metadata": {
+          "origin_year": "1983",
+          "creator": "Donald Sch\u00f6n",
+          "name": "Sch\u00f6n Reflective Practice",
+          "category": "Reflection"
+        },
+        "document": "Dual modes of reflection: Reflection-in-Action during work and Reflection-on-Action after the event.",
+        "distance": 1.669250249862671,
+        "score": 0.37463703526915415,
+        "base_score": 0.37463703526915415,
+        "preference_adjustment": 0.0
+      },
+      {
+        "id": "Cynefin Framework",
+        "metadata": {
+          "name": "Cynefin Framework",
+          "category": "Decision-Making / Complexity Management",
+          "origin_year": "2007",
+          "creator": "Dave Snowden"
+        },
+        "document": "Sense-making framework to help leaders decide actions based on categorizing problems into simple, complicated, complex, chaotic, or disorder domains.",
+        "distance": 1.674609661102295,
+        "score": 0.37388633359974743,
+        "base_score": 0.37388633359974743,
+        "preference_adjustment": 0.0
       },
       {
         "id": "Decision Matrix",
         "metadata": {
           "creator": "Stuart Pugh",
-          "name": "Decision Matrix",
           "category": "Decision",
+          "name": "Decision Matrix",
           "origin_year": "1952"
         },
         "document": "Score options against weighted criteria.",
-        "distance": 1.4907212257385254,
-        "score": 0.40149013453060745,
-        "base_score": 0.40149013453060745,
-        "preference_adjustment": 0.0
-      },
-      {
-        "id": "SMART Goals",
-        "metadata": {
-          "category": "Planning",
-          "name": "SMART Goals",
-          "origin_year": "1981",
-          "creator": "George T. Doran"
-        },
-        "document": "Goal-setting framework ensuring objectives are Specific, Measurable, Achievable, Relevant, and Time-bound.",
-        "distance": 1.5051087141036987,
-        "score": 0.3991842726704934,
-        "base_score": 0.3991842726704934,
-        "preference_adjustment": 0.0
-      },
-      {
-        "id": "Six Thinking Hats",
-        "metadata": {
-          "name": "Six Thinking Hats",
-          "category": "Creativity",
-          "creator": "Edward de Bono",
-          "origin_year": "1985"
-        },
-        "document": "Parallel thinking framework using six perspectives to explore a topic.",
-        "distance": 1.5858018398284912,
-        "score": 0.3867272366340056,
-        "base_score": 0.3867272366340056,
-        "preference_adjustment": 0.0
-      },
-      {
-        "id": "SWOT Analysis",
-        "metadata": {
-          "creator": "Albert Humphrey",
-          "category": "Strategic Planning",
-          "origin_year": "1960",
-          "name": "SWOT Analysis"
-        },
-        "document": "Assessing Strengths, Weaknesses, Opportunities, and Threats for strategic decisions.",
-        "distance": 1.6386654376983643,
-        "score": 0.37897945897691093,
-        "base_score": 0.37897945897691093,
+        "distance": 1.7122888565063477,
+        "score": 0.3686922938171426,
+        "base_score": 0.3686922938171426,
         "preference_adjustment": 0.0
       }
     ],
     "preference_summary": "Positive response to Decisional Balance (avg rating 5.0). Favors Decision-Making category techniques (avg rating 5.0).",
-    "plan": "**Decisional Balance Implementation Plan**\n\n- **Define Options & Context**\n  - Clearly name your two conflicting priorities as Option A and Option B.\n  - Specify the decision horizon (e.g., \u201cby end of this week\u201d).\n  - Note any hard constraints (e.g., deadlines, budget limits, dependencies).\n\n- **List Pros and Cons by Theme**\n  - For each option, create two columns: Pros and Cons.\n  - Under each, list concrete points for these themes:\n    - Impact/Value\n    - Risk\n    - Effort/Resources\n    - Stakeholder Expectations\n    - Timing\n\n- **Score Each Item**\n  - Assign a score to each pro/con:\n    - +2 = strong pro\n    - +1 = minor pro\n    - -1 = minor con\n    - -2 = strong con\n\n- **Calculate Totals**\n  - Sum the scores for each option to get an initial lean.\n\n- **Highlight Key Drivers**\n  - Identify the top three factors (highest absolute scores) influencing each option\u2019s total.\n  - Treat these as your emerging decision criteria.\n\n- **Sanity-Check Against Priorities**\n  - Compare the top factors to organizational goals and your manager\u2019s stated priorities.\n  - Adjust if any key priorities are missing or misaligned.\n\n- **Make Your Decision**\n  - If one option has a clearly higher total, select it.\n  - If scores are close, identify the biggest uncertainty or gap.\n  - Seek targeted input from relevant stakeholders to resolve the uncertainty.\n\n- **Document & Communicate**\n  - Briefly document your process and reasoning.\n  - Share your decision and rationale with your manager or team as appropriate."
+    "plan": "**Decisional Balance Implementation Plan**\n\n- **1. Define your goal and time horizon:**  \n  - Clearly state what you want to achieve (e.g., \u201cChoose the best subject for my next semester\u201d) and specify the timeframe (e.g., \u201c6\u201312 months\u201d).\n\n- **2. List pros and cons for each subject:**  \n  - For each subject, create a table or list with these categories:  \n    - Interest/motivation  \n    - Relevance to goals  \n    - Career value  \n    - Difficulty  \n    - Time/cost  \n    - Available resources  \n  - Under each category, write specific pros and cons.\n\n- **3. Rate each item:**  \n  - Assign a score to each pro/con:  \n    - +3 = strong pro  \n    - +2 = moderate pro  \n    - +1 = slight pro  \n    - -1 = slight con  \n    - -2 = moderate con  \n    - -3 = strong con  \n  - Add up the total for each subject.\n\n- **4. Identify decisive factors and mitigations:**  \n  - Highlight the top 2 factors most important to your decision.  \n  - For any major cons, brainstorm ways to reduce or manage them (e.g., take a prep course, adjust your schedule).\n\n- **5. Make your choice and set next steps:**  \n  - Select the subject with the higher net score and strongest alignment with your goals.  \n  - Decide on a concrete first action (e.g., enroll in the class, download the syllabus).\n\n- **6. Schedule a 4-week review:**  \n  - Mark your calendar to reassess your choice and progress after 4 weeks, making adjustments if needed."
   },
   "last_explanation": {
     "overview": "The recommendation is to use the Decisional Balance technique to systematically compare the pros and cons of each job offer, helping clarify which aligns better with your priorities and long-term goals.",
@@ -991,6 +991,98 @@
       ],
       "preference_summary": "Positive response to Decisional Balance (avg rating 5.0). Favors Decision-Making category techniques (avg rating 5.0).",
       "plan": "**Decisional Balance Implementation Plan**\n\n- **Define Options & Context**\n  - Clearly name your two conflicting priorities as Option A and Option B.\n  - Specify the decision horizon (e.g., \u201cby end of this week\u201d).\n  - Note any hard constraints (e.g., deadlines, budget limits, dependencies).\n\n- **List Pros and Cons by Theme**\n  - For each option, create two columns: Pros and Cons.\n  - Under each, list concrete points for these themes:\n    - Impact/Value\n    - Risk\n    - Effort/Resources\n    - Stakeholder Expectations\n    - Timing\n\n- **Score Each Item**\n  - Assign a score to each pro/con:\n    - +2 = strong pro\n    - +1 = minor pro\n    - -1 = minor con\n    - -2 = strong con\n\n- **Calculate Totals**\n  - Sum the scores for each option to get an initial lean.\n\n- **Highlight Key Drivers**\n  - Identify the top three factors (highest absolute scores) influencing each option\u2019s total.\n  - Treat these as your emerging decision criteria.\n\n- **Sanity-Check Against Priorities**\n  - Compare the top factors to organizational goals and your manager\u2019s stated priorities.\n  - Adjust if any key priorities are missing or misaligned.\n\n- **Make Your Decision**\n  - If one option has a clearly higher total, select it.\n  - If scores are close, identify the biggest uncertainty or gap.\n  - Seek targeted input from relevant stakeholders to resolve the uncertainty.\n\n- **Document & Communicate**\n  - Briefly document your process and reasoning.\n  - Share your decision and rationale with your manager or team as appropriate."
+    },
+    {
+      "problem_description": "I can't decide between two subjects to learn."
+    },
+    {
+      "workflow": "detect_technique",
+      "recommendation": {
+        "suggested_technique": "Decisional Balance",
+        "why_it_fits": "You\u2019re choosing between two subjects, and Decisional Balance is designed to clarify the pros and cons of options to reveal preferences and consequences. You\u2019ve previously responded positively to this technique and favor decision-making approaches, making it both a good fit and familiar to you.",
+        "steps": [
+          "Define your goal and time horizon (e.g., what outcome you want in 6\u201312 months).",
+          "For each subject, list specific pros and cons across key categories: interest/motivation, relevance to goals, career value, difficulty, time/cost, and available resources.",
+          "Rate the strength of each item (+3 strong pro to -3 strong con) and total the scores for each subject.",
+          "Identify top 2 decisive factors and any major cons you can mitigate; note concrete mitigations (e.g., prerequisite course, study plan).",
+          "Choose the subject with the higher aligned net score and set a first step (e.g., enroll, find a syllabus) plus a 4-week review checkpoint."
+        ],
+        "raw_response": "{\n  \"suggested_technique\": \"Decisional Balance\",\n  \"why_it_fits\": \"You\u2019re choosing between two subjects, and Decisional Balance is designed to clarify the pros and cons of options to reveal preferences and consequences. You\u2019ve previously responded positively to this technique and favor decision-making approaches, making it both a good fit and familiar to you.\",\n  \"steps\": [\n    \"Define your goal and time horizon (e.g., what outcome you want in 6\u201312 months).\",\n    \"For each subject, list specific pros and cons across key categories: interest/motivation, relevance to goals, career value, difficulty, time/cost, and available resources.\",\n    \"Rate the strength of each item (+3 strong pro to -3 strong con) and total the scores for each subject.\",\n    \"Identify top 2 decisive factors and any major cons you can mitigate; note concrete mitigations (e.g., prerequisite course, study plan).\",\n    \"Choose the subject with the higher aligned net score and set a first step (e.g., enroll, find a syllabus) plus a 4-week review checkpoint.\"\n  ]\n}"
+      },
+      "matches": [
+        {
+          "id": "Decisional Balance",
+          "metadata": {
+            "origin_year": "1979",
+            "name": "Decisional Balance",
+            "creator": "Janet Bavelas",
+            "category": "Decision-Making"
+          },
+          "document": "Evaluating pros and cons of options to clarify preferences and consequences.",
+          "distance": 1.5808444023132324,
+          "score": 0.6374700850247661,
+          "base_score": 0.38747008502476615,
+          "preference_adjustment": 0.25
+        },
+        {
+          "id": "Eisenhower Matrix",
+          "metadata": {
+            "category": "Decision-Making",
+            "name": "Eisenhower Matrix",
+            "creator": "Dwight D. Eisenhower",
+            "origin_year": "1954"
+          },
+          "document": "Prioritization matrix dividing tasks into urgent/important quadrants to focus effort on what matters most.",
+          "distance": 1.6088780164718628,
+          "score": 0.4833065377860626,
+          "base_score": 0.38330653778606255,
+          "preference_adjustment": 0.1
+        },
+        {
+          "id": "Sch\u00f6n Reflective Practice",
+          "metadata": {
+            "origin_year": "1983",
+            "creator": "Donald Sch\u00f6n",
+            "name": "Sch\u00f6n Reflective Practice",
+            "category": "Reflection"
+          },
+          "document": "Dual modes of reflection: Reflection-in-Action during work and Reflection-on-Action after the event.",
+          "distance": 1.669250249862671,
+          "score": 0.37463703526915415,
+          "base_score": 0.37463703526915415,
+          "preference_adjustment": 0.0
+        },
+        {
+          "id": "Cynefin Framework",
+          "metadata": {
+            "name": "Cynefin Framework",
+            "category": "Decision-Making / Complexity Management",
+            "origin_year": "2007",
+            "creator": "Dave Snowden"
+          },
+          "document": "Sense-making framework to help leaders decide actions based on categorizing problems into simple, complicated, complex, chaotic, or disorder domains.",
+          "distance": 1.674609661102295,
+          "score": 0.37388633359974743,
+          "base_score": 0.37388633359974743,
+          "preference_adjustment": 0.0
+        },
+        {
+          "id": "Decision Matrix",
+          "metadata": {
+            "creator": "Stuart Pugh",
+            "category": "Decision",
+            "name": "Decision Matrix",
+            "origin_year": "1952"
+          },
+          "document": "Score options against weighted criteria.",
+          "distance": 1.7122888565063477,
+          "score": 0.3686922938171426,
+          "base_score": 0.3686922938171426,
+          "preference_adjustment": 0.0
+        }
+      ],
+      "preference_summary": "Positive response to Decisional Balance (avg rating 5.0). Favors Decision-Making category techniques (avg rating 5.0).",
+      "plan": "**Decisional Balance Implementation Plan**\n\n- **1. Define your goal and time horizon:**  \n  - Clearly state what you want to achieve (e.g., \u201cChoose the best subject for my next semester\u201d) and specify the timeframe (e.g., \u201c6\u201312 months\u201d).\n\n- **2. List pros and cons for each subject:**  \n  - For each subject, create a table or list with these categories:  \n    - Interest/motivation  \n    - Relevance to goals  \n    - Career value  \n    - Difficulty  \n    - Time/cost  \n    - Available resources  \n  - Under each category, write specific pros and cons.\n\n- **3. Rate each item:**  \n  - Assign a score to each pro/con:  \n    - +3 = strong pro  \n    - +2 = moderate pro  \n    - +1 = slight pro  \n    - -1 = slight con  \n    - -2 = moderate con  \n    - -3 = strong con  \n  - Add up the total for each subject.\n\n- **4. Identify decisive factors and mitigations:**  \n  - Highlight the top 2 factors most important to your decision.  \n  - For any major cons, brainstorm ways to reduce or manage them (e.g., take a prep course, adjust your schedule).\n\n- **5. Make your choice and set next steps:**  \n  - Select the subject with the higher net score and strongest alignment with your goals.  \n  - Decide on a concrete first action (e.g., enroll in the class, download the syllabus).\n\n- **6. Schedule a 4-week review:**  \n  - Mark your calendar to reassess your choice and progress after 4 weeks, making adjustments if needed."
     }
   ]
 }
