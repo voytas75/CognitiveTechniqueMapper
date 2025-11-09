@@ -20,7 +20,6 @@ index_metadata*
 article chat.*
 .cache
 */coding
-*.lock
 */XPOSTS.*
 RAPORT*
 tmp/
