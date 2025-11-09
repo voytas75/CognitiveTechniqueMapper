@@ -1,93 +1,93 @@
 {
-  "problem_description": "Help my 12-year-old daughter grasp fractions and decimal conversions\u2014she understands the steps individually but freezes on real-world word problems like dividing a pizza or converting oney amounts.",
+  "problem_description": "Design a weekly study routine for my 12-year-old that balances homework, piano practice, and downtime\u2014she tends to procrastinate after school, so we need clear structure with built-in breaks to keep her motivated without burning out.",
   "last_recommendation": {
     "workflow": "detect_technique",
     "recommendation": {
-      "suggested_technique": "Six Thinking Hats",
-      "why_it_fits": "This parallel thinking framework guides a learner to look at a problem through clear lenses\u2014facts, feelings, plan, creativity, benefits, and risks\u2014reducing freeze-ups on word problems. For your daughter, it separates the math facts (White Hat) from emotions (Red Hat) and adds a simple plan (Blue Hat) and concrete modeling (Green Hat), which helps transfer her step-by-step skills to real-world contexts like pizza slices and money.",
+      "suggested_technique": "Toyota Kata",
+      "why_it_fits": "Toyota Kata is built around routine-based practice and habit formation, which fits your need for a clear weekly after\u2011school structure with built\u2011in breaks. Its Improvement Kata supports small, time\u2011boxed experiments to counter procrastination, while the Coaching Kata adds brief daily check\u2011ins that keep motivation up and prevent burnout.",
       "steps": [
-        "Create a simple Hats cheat-sheet/bookmark: White=facts/units/numbers; Blue=plan steps; Green=draw/model (paper pizza slices, coins/bills); Yellow=does the answer make sense?; Black=common traps; Red=quick 1\u201310 worry rating.",
-        "Run the routine on each problem in order: White list given numbers/units, Blue write a 1\u20132 step plan, Green model (cut a paper circle into fractions or lay out coins), compute, then Yellow/Black do a fast estimate and pitfall check, Red rate feelings before/after.",
-        "Practice in 10\u2011minute sessions with 3 problems (pizza sharing, recipe scaling, money conversions); speak each hat aloud to build a steady, low\u2011pressure script.",
-        "Fade scaffolds over 3\u20134 weeks: start with all hats and physical props, then drop to quick Red at the end, combine Yellow/Black into a 5\u2011second sense check, and aim to do White+Blue mentally before solving.",
-        "Track transfer: after each session, note one new real\u2011life situation where she can use the same hat routine (cafeteria slices, splitting a bill), building a visible list to reinforce confidence."
+        "Co-create a simple visual weekly schedule: 15-min snack/unwind \u2192 two 25-min homework blocks with 5-min breaks \u2192 20-min piano \u2192 30\u201360 min downtime; adjust for lesson days.",
+        "Set an if\u2011then cue to start: \u201cIf it\u2019s 4:30 pm, then start Homework Block 1 with a timer; phone goes in another room until downtime.\u201d",
+        "Run a daily Improvement loop: after dinner, ask 3 questions\u2014What was the plan? What happened? What will we try tomorrow?\u2014then tweak one thing (start time, block length, reward).",
+        "Do a 5\u2011min parent Coaching check\u2011in: praise effort, confirm tomorrow\u2019s start time, and set one small experiment (e.g., move piano before homework on low\u2011energy days).",
+        "Hold a quick Sunday review: adjust the week\u2019s schedule for activities, set one measurable target (e.g., start within 10 minutes of arriving), and choose a simple reward after two completed blocks."
       ],
-      "raw_response": "{\n  \"suggested_technique\": \"Six Thinking Hats\",\n  \"why_it_fits\": \"This parallel thinking framework guides a learner to look at a problem through clear lenses\u2014facts, feelings, plan, creativity, benefits, and risks\u2014reducing freeze-ups on word problems. For your daughter, it separates the math facts (White Hat) from emotions (Red Hat) and adds a simple plan (Blue Hat) and concrete modeling (Green Hat), which helps transfer her step-by-step skills to real-world contexts like pizza slices and money.\",\n  \"steps\": [\n    \"Create a simple Hats cheat-sheet/bookmark: White=facts/units/numbers; Blue=plan steps; Green=draw/model (paper pizza slices, coins/bills); Yellow=does the answer make sense?; Black=common traps; Red=quick 1\u201310 worry rating.\",\n    \"Run the routine on each problem in order: White list given numbers/units, Blue write a 1\u20132 step plan, Green model (cut a paper circle into fractions or lay out coins), compute, then Yellow/Black do a fast estimate and pitfall check, Red rate feelings before/after.\",\n    \"Practice in 10\u2011minute sessions with 3 problems (pizza sharing, recipe scaling, money conversions); speak each hat aloud to build a steady, low\u2011pressure script.\",\n    \"Fade scaffolds over 3\u20134 weeks: start with all hats and physical props, then drop to quick Red at the end, combine Yellow/Black into a 5\u2011second sense check, and aim to do White+Blue mentally before solving.\",\n    \"Track transfer: after each session, note one new real\u2011life situation where she can use the same hat routine (cafeteria slices, splitting a bill), building a visible list to reinforce confidence.\"\n  ]\n}"
+      "raw_response": "{\n  \"suggested_technique\": \"Toyota Kata\",\n  \"why_it_fits\": \"Toyota Kata is built around routine-based practice and habit formation, which fits your need for a clear weekly after\u2011school structure with built\u2011in breaks. Its Improvement Kata supports small, time\u2011boxed experiments to counter procrastination, while the Coaching Kata adds brief daily check\u2011ins that keep motivation up and prevent burnout.\",\n  \"steps\": [\n    \"Co-create a simple visual weekly schedule: 15-min snack/unwind \u2192 two 25-min homework blocks with 5-min breaks \u2192 20-min piano \u2192 30\u201360 min downtime; adjust for lesson days.\",\n    \"Set an if\u2011then cue to start: \u201cIf it\u2019s 4:30 pm, then start Homework Block 1 with a timer; phone goes in another room until downtime.\u201d\",\n    \"Run a daily Improvement loop: after dinner, ask 3 questions\u2014What was the plan? What happened? What will we try tomorrow?\u2014then tweak one thing (start time, block length, reward).\",\n    \"Do a 5\u2011min parent Coaching check\u2011in: praise effort, confirm tomorrow\u2019s start time, and set one small experiment (e.g., move piano before homework on low\u2011energy days).\",\n    \"Hold a quick Sunday review: adjust the week\u2019s schedule for activities, set one measurable target (e.g., start within 10 minutes of arriving), and choose a simple reward after two completed blocks.\"\n  ]\n}"
     },
     "matches": [
+      {
+        "id": "Decisional Balance",
+        "metadata": {
+          "category": "Decision-Making",
+          "origin_year": "1979",
+          "creator": "Janet Bavelas",
+          "name": "Decisional Balance"
+        },
+        "document": "Evaluating pros and cons of options to clarify preferences and consequences.",
+        "distance": 1.5636839866638184,
+        "score": 0.6400636760232384,
+        "base_score": 0.39006367602323844,
+        "preference_adjustment": 0.25
+      },
       {
         "id": "Eisenhower Matrix",
         "metadata": {
           "origin_year": "1954",
-          "category": "Decision-Making",
           "creator": "Dwight D. Eisenhower",
+          "category": "Decision-Making",
           "name": "Eisenhower Matrix"
         },
         "document": "Prioritization matrix dividing tasks into urgent/important quadrants to focus effort on what matters most.",
-        "distance": 1.6973097324371338,
-        "score": 0.4707397737732024,
-        "base_score": 0.3707397737732024,
+        "distance": 1.487689733505249,
+        "score": 0.5019793893633843,
+        "base_score": 0.40197938936338423,
         "preference_adjustment": 0.1
       },
       {
-        "id": "5 Whys",
+        "id": "Toyota Kata",
         "metadata": {
-          "category": "Problem-Solving",
-          "creator": "Taiichi Ohno",
-          "origin_year": "1939",
-          "name": "5 Whys"
+          "category": "Continuous Improvement",
+          "creator": "Mike Rother",
+          "name": "Toyota Kata",
+          "origin_year": "2009"
         },
-        "document": "Iterative questioning technique asking 'Why?' five times to uncover root causes of a problem.",
-        "distance": 1.6409199237823486,
-        "score": 0.3786559338640572,
-        "base_score": 0.3786559338640572,
+        "document": "Routine-based practice for improvement: Improvement Kata (scientific experimentation) and Coaching Kata to build habits.",
+        "distance": 1.4395959377288818,
+        "score": 0.4099039453766841,
+        "base_score": 0.4099039453766841,
         "preference_adjustment": 0.0
       },
       {
-        "id": "Root Cause Analysis",
+        "id": "SMART Goals",
         "metadata": {
-          "name": "Root Cause Analysis",
-          "origin_year": "1950",
-          "creator": "Sakichi Toyoda",
-          "category": "Problem-Solving"
+          "origin_year": "1981",
+          "category": "Planning",
+          "name": "SMART Goals",
+          "creator": "George T. Doran"
         },
-        "document": "Technique focused on identifying the underlying cause of a problem.",
-        "distance": 1.665719985961914,
-        "score": 0.37513317425166626,
-        "base_score": 0.37513317425166626,
+        "document": "Goal-setting framework ensuring objectives are Specific, Measurable, Achievable, Relevant, and Time-bound.",
+        "distance": 1.5319023132324219,
+        "score": 0.3949599456399733,
+        "base_score": 0.3949599456399733,
         "preference_adjustment": 0.0
       },
       {
-        "id": "Cynefin Framework",
+        "id": "Remote and Hybrid Team Strategies",
         "metadata": {
-          "name": "Cynefin Framework",
-          "origin_year": "2007",
-          "category": "Decision-Making / Complexity Management",
-          "creator": "Dave Snowden"
+          "category": "Team Management / Communication",
+          "creator": "Various contributors",
+          "name": "Remote and Hybrid Team Strategies",
+          "origin_year": "2020"
         },
-        "document": "Sense-making framework to help leaders decide actions based on categorizing problems into simple, complicated, complex, chaotic, or disorder domains.",
-        "distance": 1.7112696170806885,
-        "score": 0.3688308952013162,
-        "base_score": 0.3688308952013162,
-        "preference_adjustment": 0.0
-      },
-      {
-        "id": "Six Thinking Hats",
-        "metadata": {
-          "name": "Six Thinking Hats",
-          "origin_year": "1985",
-          "category": "Creativity",
-          "creator": "Edward de Bono"
-        },
-        "document": "Parallel thinking framework using six perspectives to explore a topic.",
-        "distance": 1.7232861518859863,
-        "score": 0.367203424182016,
-        "base_score": 0.367203424182016,
+        "document": "Frameworks and practices specifically for managing distributed teams, including asynchronous collaboration, virtual whiteboarding, and digital wellbeing methods.",
+        "distance": 1.5613515377044678,
+        "score": 0.39041888053219714,
+        "base_score": 0.39041888053219714,
         "preference_adjustment": 0.0
       }
     ],
     "preference_summary": "Positive response to Decisional Balance (avg rating 5.0). Favors Decision-Making category techniques (avg rating 5.0).",
-    "plan": "**Six Thinking Hats Implementation Plan for Math Word Problems**\n\n- **Prepare Materials**\n  - Create a simple Hats cheat-sheet/bookmark with color codes and prompts for each hat.\n  - Gather physical props: paper circles (for pizza), coins/bills, markers.\n\n- **Introduce the Routine**\n  - Explain each hat\u2019s role with examples:\n    - White: List facts, numbers, units.\n    - Blue: Write a 1\u20132 step plan.\n    - Green: Draw/model (use props).\n    - Yellow: Check if the answer makes sense.\n    - Black: Watch for common mistakes.\n    - Red: Rate feelings (1\u201310) before/after.\n\n- **Practice the Routine**\n  - For each problem (3 per 10-minute session):\n    - **White:** List all given numbers/units.\n    - **Blue:** Write a short plan (what to do first, next).\n    - **Green:** Model the problem (draw, use props).\n    - Compute the answer.\n    - **Yellow:** Estimate and check if the answer is reasonable.\n    - **Black:** Identify any common traps or mistakes.\n    - **Red:** Rate worry/confidence before and after solving.\n    - Speak each hat step aloud.\n\n- **Session Structure**\n  - Use real-life themed problems (pizza sharing, recipe scaling, money conversions).\n  - Keep sessions short (10 minutes), low-pressure, and positive.\n\n- **Fade Scaffolds Over 3\u20134 Weeks**\n  - Week 1: Use all hats and props for every problem.\n  - Week 2: Drop physical props for simple drawing/modeling.\n  - Week 3: Combine Yellow/Black into a quick 5-second sense check; only use Red at the end.\n  - Week 4: Do White+Blue mentally before solving; use hats as needed.\n\n- **Track Real-Life Transfer**\n  - After each session, ask her to name one new real-life situation where she could use the hat routine (e.g., splitting a bill, sharing snacks).\n  - Add each example to a visible list to build confidence and reinforce transfer.\n\n- **Monitor Progress**\n  - Note improvements in confidence, problem-solving speed, and independence.\n  - Adjust support as needed based on her comfort with each hat."
+    "plan": "**Toyota Kata Implementation Plan for After-School Structure**\n\n- **Co-create a Visual Schedule**\n  - Make a simple weekly chart together (paper or app).\n  - Schedule: 15-min snack/unwind \u2192 two 25-min homework blocks (with 5-min breaks) \u2192 20-min piano \u2192 30\u201360 min downtime.\n  - Adjust for days with lessons or activities.\n\n- **Set an If-Then Cue**\n  - Decide: \u201cIf it\u2019s 4:30 pm, then start Homework Block 1.\u201d\n  - Use a timer for homework; put phone in another room until downtime.\n\n- **Daily Improvement Loop (after dinner)**\n  - Ask together:\n    - What was the plan?\n    - What happened?\n    - What will we try tomorrow?\n  - Tweak one thing for the next day (e.g., start time, block length, reward).\n\n- **5-Minute Parent Coaching Check-In**\n  - Praise effort and progress.\n  - Confirm tomorrow\u2019s start time.\n  - Set one small experiment (e.g., try piano before homework on tired days).\n\n- **Weekly Sunday Review**\n  - Adjust the schedule for upcoming week\u2019s activities.\n  - Set one measurable target (e.g., start homework within 10 minutes of arriving).\n  - Choose a simple reward for completing two homework blocks.\n\n- **Repeat and Refine**\n  - Stick to the routine, making small adjustments each week based on what works best."
   },
   "last_explanation": {
     "overview": "The recommendation is to use the Decisional Balance technique to systematically compare the pros and cons of each job offer, helping clarify which aligns better with your priorities and long-term goals.",
@@ -1359,6 +1359,98 @@
       ],
       "preference_summary": "Positive response to Decisional Balance (avg rating 5.0). Favors Decision-Making category techniques (avg rating 5.0).",
       "plan": "**Six Thinking Hats Implementation Plan for Math Word Problems**\n\n- **Prepare Materials**\n  - Create a simple Hats cheat-sheet/bookmark with color codes and prompts for each hat.\n  - Gather physical props: paper circles (for pizza), coins/bills, markers.\n\n- **Introduce the Routine**\n  - Explain each hat\u2019s role with examples:\n    - White: List facts, numbers, units.\n    - Blue: Write a 1\u20132 step plan.\n    - Green: Draw/model (use props).\n    - Yellow: Check if the answer makes sense.\n    - Black: Watch for common mistakes.\n    - Red: Rate feelings (1\u201310) before/after.\n\n- **Practice the Routine**\n  - For each problem (3 per 10-minute session):\n    - **White:** List all given numbers/units.\n    - **Blue:** Write a short plan (what to do first, next).\n    - **Green:** Model the problem (draw, use props).\n    - Compute the answer.\n    - **Yellow:** Estimate and check if the answer is reasonable.\n    - **Black:** Identify any common traps or mistakes.\n    - **Red:** Rate worry/confidence before and after solving.\n    - Speak each hat step aloud.\n\n- **Session Structure**\n  - Use real-life themed problems (pizza sharing, recipe scaling, money conversions).\n  - Keep sessions short (10 minutes), low-pressure, and positive.\n\n- **Fade Scaffolds Over 3\u20134 Weeks**\n  - Week 1: Use all hats and props for every problem.\n  - Week 2: Drop physical props for simple drawing/modeling.\n  - Week 3: Combine Yellow/Black into a quick 5-second sense check; only use Red at the end.\n  - Week 4: Do White+Blue mentally before solving; use hats as needed.\n\n- **Track Real-Life Transfer**\n  - After each session, ask her to name one new real-life situation where she could use the hat routine (e.g., splitting a bill, sharing snacks).\n  - Add each example to a visible list to build confidence and reinforce transfer.\n\n- **Monitor Progress**\n  - Note improvements in confidence, problem-solving speed, and independence.\n  - Adjust support as needed based on her comfort with each hat."
+    },
+    {
+      "problem_description": "Design a weekly study routine for my 12-year-old that balances homework, piano practice, and downtime\u2014she tends to procrastinate after school, so we need clear structure with built-in breaks to keep her motivated without burning out."
+    },
+    {
+      "workflow": "detect_technique",
+      "recommendation": {
+        "suggested_technique": "Toyota Kata",
+        "why_it_fits": "Toyota Kata is built around routine-based practice and habit formation, which fits your need for a clear weekly after\u2011school structure with built\u2011in breaks. Its Improvement Kata supports small, time\u2011boxed experiments to counter procrastination, while the Coaching Kata adds brief daily check\u2011ins that keep motivation up and prevent burnout.",
+        "steps": [
+          "Co-create a simple visual weekly schedule: 15-min snack/unwind \u2192 two 25-min homework blocks with 5-min breaks \u2192 20-min piano \u2192 30\u201360 min downtime; adjust for lesson days.",
+          "Set an if\u2011then cue to start: \u201cIf it\u2019s 4:30 pm, then start Homework Block 1 with a timer; phone goes in another room until downtime.\u201d",
+          "Run a daily Improvement loop: after dinner, ask 3 questions\u2014What was the plan? What happened? What will we try tomorrow?\u2014then tweak one thing (start time, block length, reward).",
+          "Do a 5\u2011min parent Coaching check\u2011in: praise effort, confirm tomorrow\u2019s start time, and set one small experiment (e.g., move piano before homework on low\u2011energy days).",
+          "Hold a quick Sunday review: adjust the week\u2019s schedule for activities, set one measurable target (e.g., start within 10 minutes of arriving), and choose a simple reward after two completed blocks."
+        ],
+        "raw_response": "{\n  \"suggested_technique\": \"Toyota Kata\",\n  \"why_it_fits\": \"Toyota Kata is built around routine-based practice and habit formation, which fits your need for a clear weekly after\u2011school structure with built\u2011in breaks. Its Improvement Kata supports small, time\u2011boxed experiments to counter procrastination, while the Coaching Kata adds brief daily check\u2011ins that keep motivation up and prevent burnout.\",\n  \"steps\": [\n    \"Co-create a simple visual weekly schedule: 15-min snack/unwind \u2192 two 25-min homework blocks with 5-min breaks \u2192 20-min piano \u2192 30\u201360 min downtime; adjust for lesson days.\",\n    \"Set an if\u2011then cue to start: \u201cIf it\u2019s 4:30 pm, then start Homework Block 1 with a timer; phone goes in another room until downtime.\u201d\",\n    \"Run a daily Improvement loop: after dinner, ask 3 questions\u2014What was the plan? What happened? What will we try tomorrow?\u2014then tweak one thing (start time, block length, reward).\",\n    \"Do a 5\u2011min parent Coaching check\u2011in: praise effort, confirm tomorrow\u2019s start time, and set one small experiment (e.g., move piano before homework on low\u2011energy days).\",\n    \"Hold a quick Sunday review: adjust the week\u2019s schedule for activities, set one measurable target (e.g., start within 10 minutes of arriving), and choose a simple reward after two completed blocks.\"\n  ]\n}"
+      },
+      "matches": [
+        {
+          "id": "Decisional Balance",
+          "metadata": {
+            "category": "Decision-Making",
+            "origin_year": "1979",
+            "creator": "Janet Bavelas",
+            "name": "Decisional Balance"
+          },
+          "document": "Evaluating pros and cons of options to clarify preferences and consequences.",
+          "distance": 1.5636839866638184,
+          "score": 0.6400636760232384,
+          "base_score": 0.39006367602323844,
+          "preference_adjustment": 0.25
+        },
+        {
+          "id": "Eisenhower Matrix",
+          "metadata": {
+            "origin_year": "1954",
+            "creator": "Dwight D. Eisenhower",
+            "category": "Decision-Making",
+            "name": "Eisenhower Matrix"
+          },
+          "document": "Prioritization matrix dividing tasks into urgent/important quadrants to focus effort on what matters most.",
+          "distance": 1.487689733505249,
+          "score": 0.5019793893633843,
+          "base_score": 0.40197938936338423,
+          "preference_adjustment": 0.1
+        },
+        {
+          "id": "Toyota Kata",
+          "metadata": {
+            "category": "Continuous Improvement",
+            "creator": "Mike Rother",
+            "name": "Toyota Kata",
+            "origin_year": "2009"
+          },
+          "document": "Routine-based practice for improvement: Improvement Kata (scientific experimentation) and Coaching Kata to build habits.",
+          "distance": 1.4395959377288818,
+          "score": 0.4099039453766841,
+          "base_score": 0.4099039453766841,
+          "preference_adjustment": 0.0
+        },
+        {
+          "id": "SMART Goals",
+          "metadata": {
+            "origin_year": "1981",
+            "category": "Planning",
+            "name": "SMART Goals",
+            "creator": "George T. Doran"
+          },
+          "document": "Goal-setting framework ensuring objectives are Specific, Measurable, Achievable, Relevant, and Time-bound.",
+          "distance": 1.5319023132324219,
+          "score": 0.3949599456399733,
+          "base_score": 0.3949599456399733,
+          "preference_adjustment": 0.0
+        },
+        {
+          "id": "Remote and Hybrid Team Strategies",
+          "metadata": {
+            "category": "Team Management / Communication",
+            "creator": "Various contributors",
+            "name": "Remote and Hybrid Team Strategies",
+            "origin_year": "2020"
+          },
+          "document": "Frameworks and practices specifically for managing distributed teams, including asynchronous collaboration, virtual whiteboarding, and digital wellbeing methods.",
+          "distance": 1.5613515377044678,
+          "score": 0.39041888053219714,
+          "base_score": 0.39041888053219714,
+          "preference_adjustment": 0.0
+        }
+      ],
+      "preference_summary": "Positive response to Decisional Balance (avg rating 5.0). Favors Decision-Making category techniques (avg rating 5.0).",
+      "plan": "**Toyota Kata Implementation Plan for After-School Structure**\n\n- **Co-create a Visual Schedule**\n  - Make a simple weekly chart together (paper or app).\n  - Schedule: 15-min snack/unwind \u2192 two 25-min homework blocks (with 5-min breaks) \u2192 20-min piano \u2192 30\u201360 min downtime.\n  - Adjust for days with lessons or activities.\n\n- **Set an If-Then Cue**\n  - Decide: \u201cIf it\u2019s 4:30 pm, then start Homework Block 1.\u201d\n  - Use a timer for homework; put phone in another room until downtime.\n\n- **Daily Improvement Loop (after dinner)**\n  - Ask together:\n    - What was the plan?\n    - What happened?\n    - What will we try tomorrow?\n  - Tweak one thing for the next day (e.g., start time, block length, reward).\n\n- **5-Minute Parent Coaching Check-In**\n  - Praise effort and progress.\n  - Confirm tomorrow\u2019s start time.\n  - Set one small experiment (e.g., try piano before homework on tired days).\n\n- **Weekly Sunday Review**\n  - Adjust the schedule for upcoming week\u2019s activities.\n  - Set one measurable target (e.g., start homework within 10 minutes of arriving).\n  - Choose a simple reward for completing two homework blocks.\n\n- **Repeat and Refine**\n  - Stick to the routine, making small adjustments each week based on what works best."
     }
   ]
 }
