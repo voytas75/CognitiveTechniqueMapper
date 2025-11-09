@@ -13,6 +13,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Structured `explain_logic` prompt with JSON parsing plus CLI rendering of key factors, risks, and next steps.
 - SQLite-backed feedback persistence with preloaded history and summaries.
 - `analyze --show-candidates` flag to display similarity-ranked technique matches.
+- `simulate` workflow and CLI command for scenario walkthroughs with cautions and follow-up actions.
+- `compare` workflow to contrast candidate techniques and surface the best alternative.
+- Preference service that converts feedback into personalization signals for recommendations and prompts.
 
 ### Changed
 - Align `max_tokens` handling with LiteLLM per-model limits to avoid provider rejections.

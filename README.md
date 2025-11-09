@@ -10,6 +10,9 @@ Cognitive Technique Mapper (CTM) is a modular CLI application that pairs problem
 - **Workflow-Oriented Reasoning:** `litellm` gateway routes requests to different models per workflow (detection, explanation, summarization, feedback).
 - **Structured Recommendations:** `analyze` now parses LLM replies into technique, rationale, and concrete steps, and automatically generates an implementation plan.
 - **Structured Explanations:** `explain` renders JSON-backed insights covering key factors, risks, and suggested follow-ups.
+- **Scenario Simulation:** `simulate` explores how the recommended technique performs under different what-if paths and highlights cautions.
+- **Candidate Comparison:** `compare` contrasts the shortlist, surfaces the strongest alternative, and offers decision guidance.
+- **Preference-Aware Personalization:** Feedback ratings train a lightweight preference model that influences recommendations and prompts.
 - **CLI Experience:** `describe`, `analyze`, `explain`, `settings`, `refresh`, and `feedback` commands guide users from problem input to actionable recommendations.
 - **Config-Driven:** YAML files under `config/` define app metadata, database paths, model mappings, and providers.
 - **Bootstrap & Persistence:** `TechniqueDataInitializer` seeds the database (and Chroma) from `data/techniques.json`, while CLI state persistence (`data/state.json`) allows multi-command sessions.
@@ -80,11 +83,13 @@ All files are loaded through `ConfigService` and cached for reuse.
 python -m src.cli describe "I can't decide between two great job offers."
 python -m src.cli analyze
 python -m src.cli explain
+python -m src.cli simulate --scenario "Negotiating counter-offers"
+python -m src.cli compare --limit 3
 python -m src.cli settings show
 python -m src.cli settings update-workflow detect_technique --model openai/gpt-4.1 --temperature 0.4
 python -m src.cli refresh --skip-embeddings
 python -m src.cli analyze --show-candidates
-python -m src.cli feedback "Loved the recommendation" --rating 5
+python -m src.cli feedback "Loved the recommendation" --rating 5 --technique "Decisional Balance"
 python -m src.cli analyze --log-level DEBUG  # temporary verbose logging
 ```
 
@@ -94,6 +99,8 @@ Notes:
 - `explain` requests the `explain_logic` workflow to justify the recommendation.
 - `settings show` prints a JSON snapshot of the current config values. Use `update-workflow` and `update-provider` to make inline edits (supports `--interactive`).
 - `feedback` stores feedback and summarizes recent entries via LLM.
+- `simulate` replays the current recommendation with scenario variations and safeguards.
+- `compare` analyzes the candidate shortlist, highlighting trade-offs and flow-on guidance.
 - `refresh` reloads `data/techniques.json`, replaces existing rows, and optionally rebuilds embeddings.
 - `analyze --show-candidates` prints the shortlist with similarity scores for transparency.
 

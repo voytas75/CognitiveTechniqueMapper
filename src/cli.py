@@ -34,6 +34,7 @@ from .core.llm_gateway import LLMGateway
 from .core.orchestrator import Orchestrator
 from .core.logging_setup import configure_logging, set_runtime_level
 from .db.feedback_repository import FeedbackRepository
+from .db.preference_repository import PreferenceRepository
 from .db.sqlite_client import SQLiteClient
 from .services.config_editor import ConfigEditor
 from .services.config_service import ConfigService
@@ -42,12 +43,17 @@ from .services.embedding_gateway import EmbeddingGateway
 from .services.explanation_service import ExplanationResult, ExplanationService
 from .services.feedback_service import FeedbackService
 from .services.plan_generator import PlanGenerator
+from .services.preference_service import PreferenceService
 from .services.prompt_service import PromptService
+from .services.simulation_service import SimulationService
+from .services.comparison_service import ComparisonService
 from .services.technique_selector import TechniqueSelector
 from .workflows.config_update import ConfigUpdateWorkflow
 from .workflows.detect_technique import DetectTechniqueWorkflow
 from .workflows.feedback_loop import FeedbackWorkflow
 from .workflows.generate_plan import GeneratePlanWorkflow
+from .workflows.simulate_technique import SimulateTechniqueWorkflow
+from .workflows.compare_candidates import CompareCandidatesWorkflow
 
 try:
     from .db.chroma_client import ChromaClient
@@ -69,9 +75,14 @@ class AppState:
     problem_description: Optional[str] = None
     last_recommendation: Optional[dict] = None
     last_explanation: Optional[dict] = None
+    last_simulation: Optional[dict] = None
+    last_comparison: Optional[dict] = None
     context_history: list[dict] = field(default_factory=list)
     llm_gateway: Optional[LLMGateway] = field(default=None, repr=False, compare=False)
     explanation_service: Optional[ExplanationService] = field(
+        default=None, repr=False, compare=False
+    )
+    preference_service: Optional[PreferenceService] = field(
         default=None, repr=False, compare=False
     )
 
@@ -97,6 +108,8 @@ class AppState:
             problem_description=data.get("problem_description"),
             last_recommendation=data.get("last_recommendation"),
             last_explanation=data.get("last_explanation"),
+            last_simulation=data.get("last_simulation"),
+            last_comparison=data.get("last_comparison"),
             context_history=data.get("context_history", []),
         )
 
@@ -111,6 +124,8 @@ class AppState:
             "problem_description": self.problem_description,
             "last_recommendation": self.last_recommendation,
             "last_explanation": self.last_explanation,
+            "last_simulation": self.last_simulation,
+            "last_comparison": self.last_comparison,
             "context_history": self.context_history,
         }
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -188,6 +203,8 @@ def initialize_runtime() -> tuple[Orchestrator, AppState]:
     logger.debug("Initialization completed (Chroma enabled=%s).", bool(chroma_client))
 
     prompt_service = PromptService()
+    preference_repository = PreferenceRepository(sqlite_client=sqlite_client)
+    preference_service = PreferenceService(repository=preference_repository)
 
     selector = TechniqueSelector(
         sqlite_client=sqlite_client,
@@ -196,6 +213,7 @@ def initialize_runtime() -> tuple[Orchestrator, AppState]:
         preprocessor=None,
         embedder=embedding_gateway,
         chroma_client=chroma_client,
+        preference_service=preference_service,
     )
     plan_generator = PlanGenerator(llm_gateway=llm_gateway)
     feedback_manager = FeedbackManager()
@@ -204,8 +222,15 @@ def initialize_runtime() -> tuple[Orchestrator, AppState]:
         feedback_manager=feedback_manager,
         llm_gateway=llm_gateway,
         repository=feedback_repository,
+        preference_service=preference_service,
     )
     explanation_service = ExplanationService(
+        llm_gateway=llm_gateway, prompt_service=prompt_service
+    )
+    simulation_service = SimulationService(
+        llm_gateway=llm_gateway, prompt_service=prompt_service
+    )
+    comparison_service = ComparisonService(
         llm_gateway=llm_gateway, prompt_service=prompt_service
     )
 
@@ -215,12 +240,19 @@ def initialize_runtime() -> tuple[Orchestrator, AppState]:
             "summarize_result": GeneratePlanWorkflow(plan_generator=plan_generator),
             "feedback_loop": FeedbackWorkflow(feedback_service=feedback_service),
             "config_update": ConfigUpdateWorkflow(),
+            "simulate_technique": SimulateTechniqueWorkflow(
+                simulation_service=simulation_service
+            ),
+            "compare_candidates": CompareCandidatesWorkflow(
+                comparison_service=comparison_service
+            ),
         }
     )
 
     state = AppState.load()
     state.llm_gateway = llm_gateway
     state.explanation_service = explanation_service
+    state.preference_service = preference_service
     return orchestrator, state
 
 
@@ -312,12 +344,17 @@ def analyze(
     _render_analysis_output(
         recommendation,
         result.get("plan"),
+        preference_summary=result.get("preference_summary"),
         matches=result.get("matches") if show_candidates else None,
     )
 
 
 def _render_analysis_output(
-    recommendation: dict[str, Any], plan: Any, *, matches: Any = None
+    recommendation: dict[str, Any],
+    plan: Any,
+    *,
+    preference_summary: str | None = None,
+    matches: Any = None,
 ) -> None:
     """Display structured recommendation and optional plan to the console."""
 
@@ -333,6 +370,9 @@ def _render_analysis_output(
         f"[bold]Suggested:[/]\n{technique}",
         f"[bold]Why it fits:[/]\n{why_it_fits}",
     ]
+
+    if preference_summary:
+        lines.append(f"[bold]Preference context:[/]\n{preference_summary}")
 
     if steps:
         lines.append("[bold]How to apply:[/]")
@@ -398,6 +438,107 @@ def _render_explanation_output(result: ExplanationResult) -> None:
     console.print(Panel(content, title="Explain Logic"))
 
 
+def _render_simulation_output(simulation: dict[str, Any]) -> None:
+    if not simulation:
+        console.print(Panel("No simulation details available.", title="Simulation"))
+        return
+
+    lines: list[str] = []
+    overview = simulation.get("simulation_overview")
+    if overview:
+        lines.append(f"[bold]Simulation overview:[/]\n{overview}")
+
+    variations = simulation.get("scenario_variations") or []
+    if variations:
+        lines.append("\n[bold]Scenario variations:[/]")
+        for entry in variations:
+            name = entry.get("name") or "Scenario"
+            outcome = entry.get("outcome") or ""
+            guidance = entry.get("guidance") or ""
+            lines.append(f"- {name}: {outcome}")
+            if guidance:
+                lines.append(f"  Guidance: {guidance}")
+
+    cautions = simulation.get("cautions") or []
+    if cautions:
+        lines.append("\n[bold]Cautions:[/]")
+        for idx, caution in enumerate(cautions, start=1):
+            lines.append(f"{idx}. {caution}")
+
+    follow_up = simulation.get("recommended_follow_up") or []
+    if follow_up:
+        lines.append("\n[bold]Recommended follow-up:[/]")
+        for idx, action in enumerate(follow_up, start=1):
+            lines.append(f"{idx}. {action}")
+
+    console.print(Panel("\n".join(lines), title="Simulation"))
+
+
+def _render_comparison_output(comparison: dict[str, Any]) -> None:
+    if not comparison:
+        console.print(Panel("No comparison available.", title="Comparison"))
+        return
+
+    lines: list[str] = []
+    current = comparison.get("current_recommendation") or "Unknown"
+    lines.append(f"[bold]Current recommendation:[/]\n{current}")
+
+    alternative = comparison.get("best_alternative")
+    if alternative:
+        lines.append(f"\n[bold]Top alternative:[/]\n{alternative}")
+
+    points = comparison.get("comparison_points") or []
+    if points:
+        lines.append("\n[bold]Comparison points:[/]")
+        for point in points:
+            technique = point.get("technique") or "Candidate"
+            strengths = point.get("strengths") or ""
+            risks = point.get("risks") or ""
+            best_for = point.get("best_for") or ""
+            lines.append(f"- {technique}")
+            if strengths:
+                lines.append(f"  Strengths: {strengths}")
+            if risks:
+                lines.append(f"  Risks: {risks}")
+            if best_for:
+                lines.append(f"  Best for: {best_for}")
+
+    guidance = comparison.get("decision_guidance") or []
+    if guidance:
+        lines.append("\n[bold]Decision guidance:[/]")
+        for idx, tip in enumerate(guidance, start=1):
+            lines.append(f"{idx}. {tip}")
+
+    confidence = comparison.get("confidence_notes")
+    if confidence:
+        lines.append(f"\n[bold]Confidence notes:[/]\n{confidence}")
+
+    console.print(Panel("\n".join(lines), title="Comparison"))
+
+
+def _active_preference_summary() -> Optional[str]:
+    if not state.preference_service:
+        return None
+    summary = state.preference_service.preference_summary()
+    return summary or None
+
+
+def _infer_category_from_matches(matches: Any, technique: Optional[str]) -> Optional[str]:
+    if not technique or not isinstance(matches, list):
+        return None
+    target = technique.lower()
+    for match in matches:
+        if not isinstance(match, dict):
+            continue
+        metadata = match.get("metadata") or {}
+        name = metadata.get("name") or match.get("id")
+        if isinstance(name, str) and name.lower() == target:
+            category = metadata.get("category") or match.get("category")
+            if isinstance(category, str) and category.strip():
+                return category
+    return None
+
+
 @app.command()
 def explain(
     log_level: str = typer.Option(
@@ -438,6 +579,108 @@ def explain(
     state.context_history.append({"explanation": state.last_explanation})
     state.save()
     _render_explanation_output(explanation)
+
+
+@app.command()
+def simulate(
+    scenario: Optional[str] = typer.Option(
+        None,
+        "--scenario",
+        "-s",
+        help="Optional scenario focus or constraint to explore during simulation.",
+    ),
+    log_level: str = typer.Option(
+        None,
+        "--log-level",
+        "-l",
+        help="Override logging level for this invocation.",
+    ),
+) -> None:
+    """Simulate applying the recommended technique across scenario variations."""
+
+    if not state.last_recommendation:
+        raise typer.BadParameter("No recommendation available. Run `analyze` first.")
+
+    recommendation = state.last_recommendation.get("recommendation") or {}
+    if not recommendation:
+        raise typer.BadParameter("Current recommendation payload is empty.")
+
+    _apply_log_override(log_level)
+    preference_summary = _active_preference_summary()
+    context = {
+        "recommendation": recommendation,
+        "problem_description": state.problem_description,
+        "scenario": scenario or state.problem_description,
+        "preference_summary": preference_summary,
+    }
+    try:
+        result = orchestrator.execute("simulate_technique", context)
+    except RuntimeError as exc:
+        console.print(f"[red]Simulation failed: {exc}[/]")
+        raise typer.Exit(code=1) from exc
+
+    simulation = result.get("simulation") or {}
+    state.last_simulation = simulation
+    state.context_history.append({"simulation": simulation})
+    state.save()
+    logger.info("Simulation workflow executed.")
+    _render_simulation_output(simulation)
+
+
+@app.command()
+def compare(
+    focus: Optional[str] = typer.Option(
+        None,
+        "--focus",
+        "-f",
+        help="Optional technique name to prioritise in the comparison.",
+    ),
+    limit: int = typer.Option(
+        5,
+        "--limit",
+        "-n",
+        help="Maximum number of candidates to include from the shortlist (0 = all).",
+    ),
+    log_level: str = typer.Option(
+        None,
+        "--log-level",
+        "-l",
+        help="Override logging level for this invocation.",
+    ),
+) -> None:
+    """Compare shortlisted techniques and highlight trade-offs."""
+
+    if not state.last_recommendation:
+        raise typer.BadParameter("No recommendation available. Run `analyze` first.")
+
+    recommendation = state.last_recommendation.get("recommendation") or {}
+    matches = state.last_recommendation.get("matches") or []
+    if not recommendation or not matches:
+        raise typer.BadParameter(
+            "Candidate shortlist unavailable. Re-run `analyze` to regenerate matches."
+        )
+
+    _apply_log_override(log_level)
+    shortlist = matches if limit <= 0 else matches[:limit]
+    preference_summary = _active_preference_summary()
+    context = {
+        "recommendation": recommendation,
+        "matches": shortlist,
+        "focus": focus,
+        "preference_summary": preference_summary,
+    }
+    try:
+        result = orchestrator.execute("compare_candidates", context)
+    except RuntimeError as exc:
+        console.print(f"[red]Comparison failed: {exc}[/]")
+        raise typer.Exit(code=1) from exc
+
+    comparison = result.get("comparison") or {}
+    state.last_comparison = comparison
+    state.context_history.append({"comparison": comparison})
+    state.save()
+    logger.info("Comparison workflow executed.")
+    _render_comparison_output(comparison)
 
 
 @settings_app.callback(invoke_without_command=True)
@@ -631,6 +874,18 @@ def refresh(
 def feedback(
     message: str = typer.Argument(..., help="Feedback message."),
     rating: Optional[int] = typer.Option(None, help="Optional rating 1-5."),
+    technique: Optional[str] = typer.Option(
+        None,
+        "--technique",
+        "-t",
+        help="Technique the feedback refers to (defaults to last recommendation).",
+    ),
+    category: Optional[str] = typer.Option(
+        None,
+        "--category",
+        "-c",
+        help="Technique category the feedback refers to.",
+    ),
     log_level: str = typer.Option(
         None,
         "--log-level",
@@ -649,11 +904,30 @@ def feedback(
         typer.Exit: When feedback operations fail.
     """
     _apply_log_override(log_level)
+    if rating is not None and (rating < 1 or rating > 5):
+        raise typer.BadParameter("Rating must be between 1 and 5.")
+
+    if technique is None and state.last_recommendation:
+        technique = (
+            (state.last_recommendation.get("recommendation") or {}).get(
+                "suggested_technique"
+            )
+        )
+    if category is None and technique:
+        category = _infer_category_from_matches(
+            state.last_recommendation.get("matches")
+            if state.last_recommendation
+            else [],
+            technique,
+        )
+
     context = {
         "action": "record",
         "message": message,
         "rating": rating,
         "workflow": "detect_technique",
+        "technique": technique,
+        "category": category,
     }
     try:
         orchestrator.execute("feedback_loop", context)
@@ -678,6 +952,9 @@ def _refresh_runtime() -> None:
     orchestrator, refreshed_state = initialize_runtime()
     refreshed_state.problem_description = state.problem_description
     refreshed_state.last_recommendation = state.last_recommendation
+    refreshed_state.last_explanation = state.last_explanation
+    refreshed_state.last_simulation = state.last_simulation
+    refreshed_state.last_comparison = state.last_comparison
     refreshed_state.context_history = state.context_history
     state = refreshed_state
 

@@ -33,6 +33,18 @@ CREATE TABLE IF NOT EXISTS feedback (
 );
 """
 
+PREFERENCES_TABLE_SCHEMA = """
+CREATE TABLE IF NOT EXISTS preferences (
+    id INTEGER PRIMARY KEY,
+    technique TEXT,
+    category TEXT,
+    rating INTEGER,
+    sentiment TEXT,
+    notes TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+"""
+
 
 class SQLiteClient:
     """Lightweight wrapper around sqlite3 for the techniques knowledge base."""
@@ -61,6 +73,7 @@ class SQLiteClient:
         with self.connection as conn:
             conn.execute(TECHNIQUES_TABLE_SCHEMA)
             conn.execute(FEEDBACK_TABLE_SCHEMA)
+            conn.execute(PREFERENCES_TABLE_SCHEMA)
 
     def insert_technique(
         self,

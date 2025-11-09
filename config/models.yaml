@@ -11,6 +11,12 @@ workflows:
   feedback_loop:
     model: "azure/gpt-4.1"
     temperature: 0.5
+  simulate_technique:
+    model: "azure/gpt-4.1"
+    temperature: 0.4
+  compare_candidates:
+    model: "azure/gpt-4.1"
+    temperature: 0.5
 embeddings:
   model: "UDTEMBED3L"
   provider: "azure"

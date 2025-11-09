@@ -32,6 +32,8 @@ class FeedbackWorkflow:
                 workflow=context.get("workflow", "detect_technique"),
                 message=context["message"],
                 rating=context.get("rating"),
+                technique=context.get("technique"),
+                category=context.get("category"),
             )
             return {"status": "ok"}
         return self.feedback_service.summarize_feedback()

@@ -13,6 +13,7 @@ from typing import Dict, List
 from ..core.feedback_manager import FeedbackManager
 from ..core.llm_gateway import LLMGateway
 from ..db.feedback_repository import FeedbackRepository
+from .preference_service import PreferenceService
 
 
 class FeedbackService:
@@ -25,6 +26,7 @@ class FeedbackService:
         repository: FeedbackRepository,
         *,
         history_limit: int = 25,
+        preference_service: PreferenceService | None = None,
     ) -> None:
         """Initialize dependencies for feedback processing.
 
@@ -33,16 +35,24 @@ class FeedbackService:
             llm_gateway (LLMGateway): Gateway for summarization of feedback.
             repository (FeedbackRepository): Persistent storage for feedback records.
             history_limit (int): Number of recent entries to cache in memory.
+            preference_service (PreferenceService | None): Optional preference sink.
         """
 
         self._feedback_manager = feedback_manager
         self._llm = llm_gateway
         self._repository = repository
         self._history_limit = history_limit
+        self._preferences = preference_service
         self._bootstrap_manager()
 
     def record_feedback(
-        self, workflow: str, message: str, rating: int | None = None
+        self,
+        workflow: str,
+        message: str,
+        rating: int | None = None,
+        *,
+        technique: str | None = None,
+        category: str | None = None,
     ) -> None:
         """Record a feedback entry.
 
@@ -50,6 +60,8 @@ class FeedbackService:
             workflow (str): Workflow identifier associated with the feedback.
             message (str): Free-form feedback message.
             rating (int | None): Optional rating in the range 1-5.
+            technique (str | None): Technique referenced by the feedback.
+            category (str | None): Technique category context.
         """
 
         timestamp = (
@@ -70,6 +82,13 @@ class FeedbackService:
             rating=rating,
             created_at=timestamp,
         )
+        if self._preferences:
+            self._preferences.record_preference(
+                technique=technique,
+                category=category,
+                rating=rating,
+                notes=message,
+            )
 
     def summarize_feedback(self) -> Dict[str, str]:
         """Summarize recent feedback entries with the LLM.

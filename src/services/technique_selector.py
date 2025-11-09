@@ -15,6 +15,7 @@ from ..core.preprocessor import ProblemPreprocessor
 from ..core.llm_gateway import LLMGateway
 from ..db.sqlite_client import SQLiteClient
 from .embedding_gateway import EmbeddingGateway
+from .preference_service import PreferenceService
 from .technique_utils import compose_embedding_text
 from .prompt_service import PromptService
 
@@ -55,6 +56,7 @@ class TechniqueSelector:
         preprocessor: ProblemPreprocessor | None = None,
         embedder: EmbeddingGateway | None = None,
         chroma_client: ChromaClient | None = None,
+        preference_service: PreferenceService | None = None,
     ) -> None:
         """Initialize dependencies for technique recommendation.
 
@@ -73,6 +75,7 @@ class TechniqueSelector:
         self._prompts = prompt_service
         self._preprocessor = preprocessor or ProblemPreprocessor()
         self._embedder = embedder
+        self._preferences = preference_service
 
     def recommend(self, problem_description: str) -> Dict[str, Any]:
         """Recommend a technique for a problem description.
@@ -87,7 +90,15 @@ class TechniqueSelector:
         cleaned_description = self._preprocessor.normalize(problem_description)
         embedding_vector = self._generate_query_embedding(cleaned_description)
         candidate_matches = self._vector_search(cleaned_description, embedding_vector)
-        return self._llm_reason_about_candidates(cleaned_description, candidate_matches)
+        preference_summary = (
+            self._preferences.preference_summary() if self._preferences else ""
+        )
+        adjusted_matches = self._apply_preference_adjustments(candidate_matches)
+        return self._llm_reason_about_candidates(
+            cleaned_description,
+            adjusted_matches,
+            preference_summary=preference_summary or None,
+        )
 
     def _generate_query_embedding(self, normalized_text: str) -> List[float] | None:
         """Generate an embedding for the normalized text if an embedder is available.
@@ -191,7 +202,11 @@ class TechniqueSelector:
         return dot / (norm_a * norm_b)
 
     def _llm_reason_about_candidates(
-        self, normalized_text: str, candidates: List[Dict[str, Any]]
+        self,
+        normalized_text: str,
+        candidates: List[Dict[str, Any]],
+        *,
+        preference_summary: str | None = None,
     ) -> Dict[str, Any]:
         """Prompt the LLM to select the best candidate from the shortlist.
 
@@ -214,19 +229,27 @@ class TechniqueSelector:
                 "workflow": "detect_technique",
                 "recommendation": empty.as_dict(),
                 "matches": [],
+                "preference_summary": preference_summary,
             }
 
-        prompt = self._build_prompt(normalized_text, candidates)
+        prompt = self._build_prompt(
+            normalized_text, candidates, preference_summary=preference_summary
+        )
         response = self._invoke_llm(prompt)
         recommendation = self._parse_recommendation(response)
         return {
             "workflow": "detect_technique",
             "recommendation": recommendation.as_dict() if recommendation else None,
             "matches": candidates,
+            "preference_summary": preference_summary,
         }
 
     def _build_prompt(
-        self, normalized_text: str, candidates: List[Dict[str, Any]]
+        self,
+        normalized_text: str,
+        candidates: List[Dict[str, Any]],
+        *,
+        preference_summary: str | None = None,
     ) -> str:
         """Construct the prompt sent to the detect_technique workflow.
 
@@ -268,7 +291,44 @@ class TechniqueSelector:
         buffer.append(
             "Ensure 'steps' includes concrete, user-facing actions and limit to 5 entries."
         )
+        if preference_summary:
+            buffer.extend(
+                [
+                    "",
+                    "User preference insights:",
+                    preference_summary,
+                ]
+            )
         return "\n".join(buffer)
+
+    def _apply_preference_adjustments(
+        self, candidates: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """Incorporate preference-based score adjustments."""
+
+        if not self._preferences or not candidates:
+            return candidates
+
+        adjusted: List[Dict[str, Any]] = []
+        for entry in candidates:
+            candidate = dict(entry)
+            metadata = candidate.get("metadata") or {}
+            adjustment = self._preferences.score_adjustment(metadata)
+            base_score = self._coerce_float(candidate.get("score"))
+            if base_score is not None:
+                candidate["base_score"] = base_score
+                candidate["score"] = base_score + adjustment
+            else:
+                candidate["base_score"] = None
+                candidate["score"] = adjustment
+            candidate["preference_adjustment"] = adjustment
+            adjusted.append(candidate)
+
+        adjusted.sort(
+            key=lambda item: self._coerce_float(item.get("score")) or 0.0,
+            reverse=True,
+        )
+        return adjusted
 
     def _invoke_llm(self, prompt: str) -> str:
         """Invoke the LLM with JSON response enforcement and fallback."""
@@ -336,3 +396,12 @@ class TechniqueSelector:
             segments = [segment.strip() for segment in value.split("\n") if segment]
             return segments
         return []
+
+    @staticmethod
+    def _coerce_float(value: Any) -> float | None:
+        if isinstance(value, (int, float)):
+            return float(value)
+        try:
+            return float(str(value))
+        except (TypeError, ValueError):
+            return None
