@@ -356,9 +356,7 @@ def explain(
         console.print(f"[red]Explain failed: {exc}[/]")
         raise typer.Exit(code=1) from exc
     logger.info("Explain workflow executed.")
-
-
-console.print(Panel(llm_output, title="Explain Logic"))
+    console.print(Panel(llm_output, title="Explain Logic"))
 
 
 @settings_app.callback(invoke_without_command=True)
@@ -378,7 +376,7 @@ def settings_show() -> None:
 
 @settings_app.command("update-workflow")
 def settings_update_workflow(
-    workflow: str = typer.Argument(..., help="Workflow name to modify."),
+    workflow: str | None = typer.Argument(None, help="Workflow name to modify."),
     model: str | None = typer.Option(None, help="Updated model identifier."),
     temperature: float | None = typer.Option(
         None, help="Temperature parameter between 0.0 and 2.0."
@@ -402,8 +400,21 @@ def settings_update_workflow(
     """Update workflow configuration in models.yaml and refresh runtime services."""
 
     config_service = ConfigService()
+    workflow_configs = config_service.iter_workflow_configs()
+
+    if workflow is None:
+        if not interactive:
+            available = ", ".join(sorted(workflow_configs)) or "(none configured)"
+            raise typer.BadParameter(
+                f"Workflow argument required. Available workflows: {available}."
+            )
+        default_workflow = next(iter(workflow_configs.keys()), "")
+        workflow = _prompt_value("Workflow", default_workflow)
+        if not workflow:
+            raise typer.BadParameter("Workflow selection is required.")
+
     try:
-        current = config_service.get_workflow_model_config(workflow)
+        current = workflow_configs[workflow]
     except KeyError as exc:
         raise typer.BadParameter(str(exc)) from exc
 
@@ -437,7 +448,7 @@ def settings_update_workflow(
 
 @settings_app.command("update-provider")
 def settings_update_provider(
-    provider: str = typer.Argument(..., help="Provider name to update."),
+    provider: str | None = typer.Argument(None, help="Provider name to update."),
     api_base: str | None = typer.Option(None, help="HTTP base URL for the provider."),
     api_version: str | None = typer.Option(None, help="Optional API version."),
     api_key_env: str | None = typer.Option(
@@ -457,6 +468,18 @@ def settings_update_provider(
 
     config_service = ConfigService()
     providers = config_service.providers
+
+    if provider is None:
+        if not interactive:
+            available = ", ".join(sorted(providers)) or "(none configured)"
+            raise typer.BadParameter(
+                f"Provider argument required. Available providers: {available}."
+            )
+        default_provider = next(iter(providers.keys()), "")
+        provider = _prompt_value("Provider", default_provider)
+        if not provider:
+            raise typer.BadParameter("Provider selection is required.")
+
     current = providers.get(provider, {})
 
     if interactive:
