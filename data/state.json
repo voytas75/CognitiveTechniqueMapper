@@ -1,60 +1,74 @@
 {
-  "problem_description": "I can't decide between two subjects to learn.",
+  "problem_description": "I can't decide between two programms to write in python.",
   "last_recommendation": {
     "workflow": "detect_technique",
     "recommendation": {
       "suggested_technique": "Decisional Balance",
-      "why_it_fits": "You\u2019re choosing between two subjects, and Decisional Balance is designed to clarify the pros and cons of options to reveal preferences and consequences. You\u2019ve previously responded positively to this technique and favor decision-making approaches, making it both a good fit and familiar to you.",
+      "why_it_fits": "You\u2019re choosing between two Python projects; Decisional Balance is designed to compare options via pros and cons to clarify preferences and consequences. It aligns with your decision-making preferences and is faster to apply than a full Decision Matrix while highlighting what matters most (learning value, effort, and impact).",
       "steps": [
-        "Define your goal and time horizon (e.g., what outcome you want in 6\u201312 months).",
-        "For each subject, list specific pros and cons across key categories: interest/motivation, relevance to goals, career value, difficulty, time/cost, and available resources.",
-        "Rate the strength of each item (+3 strong pro to -3 strong con) and total the scores for each subject.",
-        "Identify top 2 decisive factors and any major cons you can mitigate; note concrete mitigations (e.g., prerequisite course, study plan).",
-        "Choose the subject with the higher aligned net score and set a first step (e.g., enroll, find a syllabus) plus a 4-week review checkpoint."
+        "Define your primary goal for this project (e.g., learn a specific library, build a portfolio piece, solve a personal need).",
+        "For each program, list 5\u20137 pros and 5\u20137 cons across learning value, feasibility, time to complete, enjoyment, and real-world usefulness.",
+        "Mark each item as High/Medium/Low importance relative to your goal, then tally High pros minus High cons for each program.",
+        "For the leading option, identify the biggest High con and write a mitigation (e.g., scope to an MVP, find a tutorial, schedule help).",
+        "Choose the program with the stronger High-rated net, write a one-sentence rationale, and schedule your first focused 2-hour build session."
       ],
-      "raw_response": "{\n  \"suggested_technique\": \"Decisional Balance\",\n  \"why_it_fits\": \"You\u2019re choosing between two subjects, and Decisional Balance is designed to clarify the pros and cons of options to reveal preferences and consequences. You\u2019ve previously responded positively to this technique and favor decision-making approaches, making it both a good fit and familiar to you.\",\n  \"steps\": [\n    \"Define your goal and time horizon (e.g., what outcome you want in 6\u201312 months).\",\n    \"For each subject, list specific pros and cons across key categories: interest/motivation, relevance to goals, career value, difficulty, time/cost, and available resources.\",\n    \"Rate the strength of each item (+3 strong pro to -3 strong con) and total the scores for each subject.\",\n    \"Identify top 2 decisive factors and any major cons you can mitigate; note concrete mitigations (e.g., prerequisite course, study plan).\",\n    \"Choose the subject with the higher aligned net score and set a first step (e.g., enroll, find a syllabus) plus a 4-week review checkpoint.\"\n  ]\n}"
+      "raw_response": "{\n  \"suggested_technique\": \"Decisional Balance\",\n  \"why_it_fits\": \"You\u2019re choosing between two Python projects; Decisional Balance is designed to compare options via pros and cons to clarify preferences and consequences. It aligns with your decision-making preferences and is faster to apply than a full Decision Matrix while highlighting what matters most (learning value, effort, and impact).\",\n  \"steps\": [\n    \"Define your primary goal for this project (e.g., learn a specific library, build a portfolio piece, solve a personal need).\",\n    \"For each program, list 5\u20137 pros and 5\u20137 cons across learning value, feasibility, time to complete, enjoyment, and real-world usefulness.\",\n    \"Mark each item as High/Medium/Low importance relative to your goal, then tally High pros minus High cons for each program.\",\n    \"For the leading option, identify the biggest High con and write a mitigation (e.g., scope to an MVP, find a tutorial, schedule help).\",\n    \"Choose the program with the stronger High-rated net, write a one-sentence rationale, and schedule your first focused 2-hour build session.\"\n  ]\n}"
     },
     "matches": [
       {
         "id": "Decisional Balance",
         "metadata": {
-          "origin_year": "1979",
-          "name": "Decisional Balance",
           "creator": "Janet Bavelas",
-          "category": "Decision-Making"
+          "category": "Decision-Making",
+          "origin_year": "1979",
+          "name": "Decisional Balance"
         },
         "document": "Evaluating pros and cons of options to clarify preferences and consequences.",
-        "distance": 1.5808444023132324,
-        "score": 0.6374700850247661,
-        "base_score": 0.38747008502476615,
+        "distance": 1.595644235610962,
+        "score": 0.6352608097367474,
+        "base_score": 0.3852608097367474,
         "preference_adjustment": 0.25
       },
       {
         "id": "Eisenhower Matrix",
         "metadata": {
-          "category": "Decision-Making",
+          "origin_year": "1954",
           "name": "Eisenhower Matrix",
-          "creator": "Dwight D. Eisenhower",
-          "origin_year": "1954"
+          "category": "Decision-Making",
+          "creator": "Dwight D. Eisenhower"
         },
         "document": "Prioritization matrix dividing tasks into urgent/important quadrants to focus effort on what matters most.",
-        "distance": 1.6088780164718628,
-        "score": 0.4833065377860626,
-        "base_score": 0.38330653778606255,
+        "distance": 1.646793246269226,
+        "score": 0.4778156837182296,
+        "base_score": 0.37781568371822954,
         "preference_adjustment": 0.1
       },
       {
-        "id": "Sch\u00f6n Reflective Practice",
+        "id": "Decision Matrix",
         "metadata": {
-          "origin_year": "1983",
-          "creator": "Donald Sch\u00f6n",
-          "name": "Sch\u00f6n Reflective Practice",
-          "category": "Reflection"
+          "origin_year": "1952",
+          "name": "Decision Matrix",
+          "category": "Decision",
+          "creator": "Stuart Pugh"
         },
-        "document": "Dual modes of reflection: Reflection-in-Action during work and Reflection-on-Action after the event.",
-        "distance": 1.669250249862671,
-        "score": 0.37463703526915415,
-        "base_score": 0.37463703526915415,
+        "document": "Score options against weighted criteria.",
+        "distance": 1.5449705123901367,
+        "score": 0.3929318611479074,
+        "base_score": 0.3929318611479074,
+        "preference_adjustment": 0.0
+      },
+      {
+        "id": "MoSCoW Method",
+        "metadata": {
+          "name": "MoSCoW Method",
+          "origin_year": "1994",
+          "creator": "Dai Clegg",
+          "category": "Planning"
+        },
+        "document": "Prioritization technique categorizing requirements as Must, Should, Could, Won't to manage scope.",
+        "distance": 1.7895641326904297,
+        "score": 0.3584789423842848,
+        "base_score": 0.3584789423842848,
         "preference_adjustment": 0.0
       },
       {
@@ -62,32 +76,18 @@
         "metadata": {
           "name": "Cynefin Framework",
           "category": "Decision-Making / Complexity Management",
-          "origin_year": "2007",
-          "creator": "Dave Snowden"
+          "creator": "Dave Snowden",
+          "origin_year": "2007"
         },
         "document": "Sense-making framework to help leaders decide actions based on categorizing problems into simple, complicated, complex, chaotic, or disorder domains.",
-        "distance": 1.674609661102295,
-        "score": 0.37388633359974743,
-        "base_score": 0.37388633359974743,
-        "preference_adjustment": 0.0
-      },
-      {
-        "id": "Decision Matrix",
-        "metadata": {
-          "creator": "Stuart Pugh",
-          "category": "Decision",
-          "name": "Decision Matrix",
-          "origin_year": "1952"
-        },
-        "document": "Score options against weighted criteria.",
-        "distance": 1.7122888565063477,
-        "score": 0.3686922938171426,
-        "base_score": 0.3686922938171426,
+        "distance": 1.7911498546600342,
+        "score": 0.3582752815404823,
+        "base_score": 0.3582752815404823,
         "preference_adjustment": 0.0
       }
     ],
     "preference_summary": "Positive response to Decisional Balance (avg rating 5.0). Favors Decision-Making category techniques (avg rating 5.0).",
-    "plan": "**Decisional Balance Implementation Plan**\n\n- **1. Define your goal and time horizon:**  \n  - Clearly state what you want to achieve (e.g., \u201cChoose the best subject for my next semester\u201d) and specify the timeframe (e.g., \u201c6\u201312 months\u201d).\n\n- **2. List pros and cons for each subject:**  \n  - For each subject, create a table or list with these categories:  \n    - Interest/motivation  \n    - Relevance to goals  \n    - Career value  \n    - Difficulty  \n    - Time/cost  \n    - Available resources  \n  - Under each category, write specific pros and cons.\n\n- **3. Rate each item:**  \n  - Assign a score to each pro/con:  \n    - +3 = strong pro  \n    - +2 = moderate pro  \n    - +1 = slight pro  \n    - -1 = slight con  \n    - -2 = moderate con  \n    - -3 = strong con  \n  - Add up the total for each subject.\n\n- **4. Identify decisive factors and mitigations:**  \n  - Highlight the top 2 factors most important to your decision.  \n  - For any major cons, brainstorm ways to reduce or manage them (e.g., take a prep course, adjust your schedule).\n\n- **5. Make your choice and set next steps:**  \n  - Select the subject with the higher net score and strongest alignment with your goals.  \n  - Decide on a concrete first action (e.g., enroll in the class, download the syllabus).\n\n- **6. Schedule a 4-week review:**  \n  - Mark your calendar to reassess your choice and progress after 4 weeks, making adjustments if needed."
+    "plan": "**Decisional Balance Implementation Plan for Choosing Between Two Python Projects**\n\n- **Clarify Your Goal:**  \n  Define your main objective for this project (e.g., learn a new library, build a portfolio piece, solve a personal problem).\n\n- **List Pros and Cons:**  \n  For each project, list 5\u20137 pros and 5\u20137 cons, considering:  \n  - Learning value  \n  - Feasibility  \n  - Time to complete  \n  - Enjoyment  \n  - Real-world usefulness\n\n- **Rate Importance:**  \n  Mark each pro and con as High, Medium, or Low importance relative to your goal.\n\n- **Score Highs:**  \n  For each project, count the number of High-importance pros and subtract the number of High-importance cons.\n\n- **Mitigate Top Con:**  \n  For the project with the higher net High score, identify its biggest High-importance con and write a mitigation strategy (e.g., reduce scope, find a tutorial, ask for help).\n\n- **Decide and Justify:**  \n  Choose the project with the stronger High-rated net. Write a one-sentence rationale for your choice.\n\n- **Schedule Action:**  \n  Block out your first focused 2-hour build session on your calendar to start the chosen project."
   },
   "last_explanation": {
     "overview": "The recommendation is to use the Decisional Balance technique to systematically compare the pros and cons of each job offer, helping clarify which aligns better with your priorities and long-term goals.",
@@ -1083,6 +1083,98 @@
       ],
       "preference_summary": "Positive response to Decisional Balance (avg rating 5.0). Favors Decision-Making category techniques (avg rating 5.0).",
       "plan": "**Decisional Balance Implementation Plan**\n\n- **1. Define your goal and time horizon:**  \n  - Clearly state what you want to achieve (e.g., \u201cChoose the best subject for my next semester\u201d) and specify the timeframe (e.g., \u201c6\u201312 months\u201d).\n\n- **2. List pros and cons for each subject:**  \n  - For each subject, create a table or list with these categories:  \n    - Interest/motivation  \n    - Relevance to goals  \n    - Career value  \n    - Difficulty  \n    - Time/cost  \n    - Available resources  \n  - Under each category, write specific pros and cons.\n\n- **3. Rate each item:**  \n  - Assign a score to each pro/con:  \n    - +3 = strong pro  \n    - +2 = moderate pro  \n    - +1 = slight pro  \n    - -1 = slight con  \n    - -2 = moderate con  \n    - -3 = strong con  \n  - Add up the total for each subject.\n\n- **4. Identify decisive factors and mitigations:**  \n  - Highlight the top 2 factors most important to your decision.  \n  - For any major cons, brainstorm ways to reduce or manage them (e.g., take a prep course, adjust your schedule).\n\n- **5. Make your choice and set next steps:**  \n  - Select the subject with the higher net score and strongest alignment with your goals.  \n  - Decide on a concrete first action (e.g., enroll in the class, download the syllabus).\n\n- **6. Schedule a 4-week review:**  \n  - Mark your calendar to reassess your choice and progress after 4 weeks, making adjustments if needed."
+    },
+    {
+      "problem_description": "I can't decide between two programms to write in python."
+    },
+    {
+      "workflow": "detect_technique",
+      "recommendation": {
+        "suggested_technique": "Decisional Balance",
+        "why_it_fits": "You\u2019re choosing between two Python projects; Decisional Balance is designed to compare options via pros and cons to clarify preferences and consequences. It aligns with your decision-making preferences and is faster to apply than a full Decision Matrix while highlighting what matters most (learning value, effort, and impact).",
+        "steps": [
+          "Define your primary goal for this project (e.g., learn a specific library, build a portfolio piece, solve a personal need).",
+          "For each program, list 5\u20137 pros and 5\u20137 cons across learning value, feasibility, time to complete, enjoyment, and real-world usefulness.",
+          "Mark each item as High/Medium/Low importance relative to your goal, then tally High pros minus High cons for each program.",
+          "For the leading option, identify the biggest High con and write a mitigation (e.g., scope to an MVP, find a tutorial, schedule help).",
+          "Choose the program with the stronger High-rated net, write a one-sentence rationale, and schedule your first focused 2-hour build session."
+        ],
+        "raw_response": "{\n  \"suggested_technique\": \"Decisional Balance\",\n  \"why_it_fits\": \"You\u2019re choosing between two Python projects; Decisional Balance is designed to compare options via pros and cons to clarify preferences and consequences. It aligns with your decision-making preferences and is faster to apply than a full Decision Matrix while highlighting what matters most (learning value, effort, and impact).\",\n  \"steps\": [\n    \"Define your primary goal for this project (e.g., learn a specific library, build a portfolio piece, solve a personal need).\",\n    \"For each program, list 5\u20137 pros and 5\u20137 cons across learning value, feasibility, time to complete, enjoyment, and real-world usefulness.\",\n    \"Mark each item as High/Medium/Low importance relative to your goal, then tally High pros minus High cons for each program.\",\n    \"For the leading option, identify the biggest High con and write a mitigation (e.g., scope to an MVP, find a tutorial, schedule help).\",\n    \"Choose the program with the stronger High-rated net, write a one-sentence rationale, and schedule your first focused 2-hour build session.\"\n  ]\n}"
+      },
+      "matches": [
+        {
+          "id": "Decisional Balance",
+          "metadata": {
+            "creator": "Janet Bavelas",
+            "category": "Decision-Making",
+            "origin_year": "1979",
+            "name": "Decisional Balance"
+          },
+          "document": "Evaluating pros and cons of options to clarify preferences and consequences.",
+          "distance": 1.595644235610962,
+          "score": 0.6352608097367474,
+          "base_score": 0.3852608097367474,
+          "preference_adjustment": 0.25
+        },
+        {
+          "id": "Eisenhower Matrix",
+          "metadata": {
+            "origin_year": "1954",
+            "name": "Eisenhower Matrix",
+            "category": "Decision-Making",
+            "creator": "Dwight D. Eisenhower"
+          },
+          "document": "Prioritization matrix dividing tasks into urgent/important quadrants to focus effort on what matters most.",
+          "distance": 1.646793246269226,
+          "score": 0.4778156837182296,
+          "base_score": 0.37781568371822954,
+          "preference_adjustment": 0.1
+        },
+        {
+          "id": "Decision Matrix",
+          "metadata": {
+            "origin_year": "1952",
+            "name": "Decision Matrix",
+            "category": "Decision",
+            "creator": "Stuart Pugh"
+          },
+          "document": "Score options against weighted criteria.",
+          "distance": 1.5449705123901367,
+          "score": 0.3929318611479074,
+          "base_score": 0.3929318611479074,
+          "preference_adjustment": 0.0
+        },
+        {
+          "id": "MoSCoW Method",
+          "metadata": {
+            "name": "MoSCoW Method",
+            "origin_year": "1994",
+            "creator": "Dai Clegg",
+            "category": "Planning"
+          },
+          "document": "Prioritization technique categorizing requirements as Must, Should, Could, Won't to manage scope.",
+          "distance": 1.7895641326904297,
+          "score": 0.3584789423842848,
+          "base_score": 0.3584789423842848,
+          "preference_adjustment": 0.0
+        },
+        {
+          "id": "Cynefin Framework",
+          "metadata": {
+            "name": "Cynefin Framework",
+            "category": "Decision-Making / Complexity Management",
+            "creator": "Dave Snowden",
+            "origin_year": "2007"
+          },
+          "document": "Sense-making framework to help leaders decide actions based on categorizing problems into simple, complicated, complex, chaotic, or disorder domains.",
+          "distance": 1.7911498546600342,
+          "score": 0.3582752815404823,
+          "base_score": 0.3582752815404823,
+          "preference_adjustment": 0.0
+        }
+      ],
+      "preference_summary": "Positive response to Decisional Balance (avg rating 5.0). Favors Decision-Making category techniques (avg rating 5.0).",
+      "plan": "**Decisional Balance Implementation Plan for Choosing Between Two Python Projects**\n\n- **Clarify Your Goal:**  \n  Define your main objective for this project (e.g., learn a new library, build a portfolio piece, solve a personal problem).\n\n- **List Pros and Cons:**  \n  For each project, list 5\u20137 pros and 5\u20137 cons, considering:  \n  - Learning value  \n  - Feasibility  \n  - Time to complete  \n  - Enjoyment  \n  - Real-world usefulness\n\n- **Rate Importance:**  \n  Mark each pro and con as High, Medium, or Low importance relative to your goal.\n\n- **Score Highs:**  \n  For each project, count the number of High-importance pros and subtract the number of High-importance cons.\n\n- **Mitigate Top Con:**  \n  For the project with the higher net High score, identify its biggest High-importance con and write a mitigation strategy (e.g., reduce scope, find a tutorial, ask for help).\n\n- **Decide and Justify:**  \n  Choose the project with the stronger High-rated net. Write a one-sentence rationale for your choice.\n\n- **Schedule Action:**  \n  Block out your first focused 2-hour build session on your calendar to start the chosen project."
     }
   ]
 }
