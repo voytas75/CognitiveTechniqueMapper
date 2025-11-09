@@ -17,6 +17,9 @@ class StubEmbedder:
         self.calls.append(text)
         return [0.1, 0.2, 0.3]
 
+    def embed_batch(self, texts):
+        return [[0.1, 0.2, 0.3] for _ in texts]
+
 
 @pytest.fixture()
 def catalog(tmp_path: Path) -> TechniqueCatalogService:
@@ -87,3 +90,69 @@ def test_remove_deletes_from_all_sources(catalog: TechniqueCatalogService) -> No
 
     assert catalog.sqlite_client.fetch_all() == []
     assert _read_dataset(catalog.dataset_path) == []
+
+
+def test_export_writes_dataset(catalog: TechniqueCatalogService, tmp_path: Path) -> None:
+    catalog.add({"name": "Exported", "description": "Catalog entry"})
+    output_path = tmp_path / "out.json"
+
+    path, count = catalog.export_to_file(output_path)
+
+    assert path == output_path
+    exported = json.loads(output_path.read_text(encoding="utf-8"))
+    assert count == 1
+    assert exported[0]["name"] == "Exported"
+
+
+def test_import_replace_overwrites_catalog(catalog: TechniqueCatalogService, tmp_path: Path) -> None:
+    catalog.add({"name": "Old", "description": "To replace"})
+    import_file = tmp_path / "replace.json"
+    import_file.write_text(
+        json.dumps(
+            [
+                {
+                    "name": "New Technique",
+                    "description": "Imported description",
+                    "category": "Strategy",
+                }
+            ],
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    summary = catalog.import_from_file(import_file, mode="replace", rebuild_embeddings=False)
+
+    assert summary["total"] == 1
+    names = [item["name"] for item in catalog.list()]
+    assert names == ["New Technique"]
+
+
+def test_import_append_merges_catalog(catalog: TechniqueCatalogService, tmp_path: Path) -> None:
+    catalog.add({"name": "Existing", "description": "Original"})
+    import_file = tmp_path / "append.json"
+    import_file.write_text(
+        json.dumps(
+            [
+                {
+                    "name": "Existing",
+                    "description": "Updated",
+                    "category": "Updated Category",
+                },
+                {
+                    "name": "Additional",
+                    "description": "Another entry",
+                },
+            ],
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    summary = catalog.import_from_file(import_file, mode="append", rebuild_embeddings=False)
+
+    assert summary["total"] == 2
+    records = {item["name"]: item for item in catalog.list()}
+    assert records["Existing"]["description"] == "Updated"
+    assert records["Existing"]["category"] == "Updated Category"
+    assert records["Additional"]["description"] == "Another entry"

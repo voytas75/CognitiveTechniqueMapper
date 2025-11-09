@@ -110,6 +110,12 @@ class PreferenceService:
 
         return self._ensure_profile()
 
+    def clear(self) -> None:
+        """Remove all stored preferences and reset cached aggregates."""
+
+        self._repository.delete_all()
+        self._profile = None
+
     def _ensure_profile(self) -> PreferenceProfile:
         if self._profile is None:
             self._profile = self._compute_profile()

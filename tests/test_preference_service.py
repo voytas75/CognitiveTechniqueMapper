@@ -41,3 +41,7 @@ def test_preference_service_records_and_scores(tmp_path: Path) -> None:
     assert negative_adjustment < 0
     summary = service.preference_summary()
     assert "Decisional Balance" in summary
+
+    service.clear()
+    cleared_profile = service.export_profile()
+    assert cleared_profile.totals["count"] == 0

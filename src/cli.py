@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import Any, Optional
 import json as _json
@@ -71,6 +71,8 @@ settings_app = typer.Typer(
 techniques_app = typer.Typer(
     add_completion=False, help="Manage techniques in the catalog."
 )
+history_app = typer.Typer(add_completion=False, help="Inspect or clear session history.")
+preferences_app = typer.Typer(add_completion=False, help="Inspect personalization preferences.")
 logger = logging.getLogger(__name__)
 
 
@@ -840,6 +842,8 @@ def settings_update_provider(
     console.print_json(data={"provider": provider, "config": refreshed})
 
 
+app.add_typer(history_app, name="history")
+app.add_typer(preferences_app, name="preferences")
 app.add_typer(techniques_app, name="techniques")
 app.add_typer(settings_app, name="settings")
 
@@ -946,6 +950,120 @@ def feedback(
     console.print(
         Panel(summary.get("summary", "No summary available."), title="Feedback Summary")
     )
+
+
+@history_app.command("show")
+def history_show(
+    limit: int = typer.Option(
+        10,
+        "--limit",
+        "-n",
+        min=0,
+        help="Number of most recent history entries to display (0 = all).",
+    ),
+    raw: bool = typer.Option(
+        False,
+        "--raw",
+        help="Emit raw JSON instead of rendered panels.",
+    ),
+) -> None:
+    """Display recent session history captured by the CLI."""
+
+    entries = state.context_history
+    if not entries:
+        console.print(Panel("History is empty.", title="History"))
+        return
+
+    subset = entries if limit == 0 else entries[-limit:]
+    start_index = len(entries) - len(subset)
+
+    if raw:
+        console.print_json(data=subset)
+        return
+
+    for offset, entry in enumerate(subset, start=1):
+        event_number = start_index + offset
+        console.print(
+            Panel(
+                json.dumps(entry, ensure_ascii=False, indent=2),
+                title=f"Event {event_number}",
+            )
+        )
+
+
+@history_app.command("clear")
+def history_clear(
+    force: bool = typer.Option(
+        False,
+        "--force",
+        "-f",
+        help="Clear without confirmation prompt.",
+    )
+) -> None:
+    """Erase the stored session history."""
+
+    if not state.context_history:
+        console.print("[yellow]History is already empty.[/]")
+        return
+
+    if not force and not typer.confirm("Clear all history entries?"):
+        console.print("[yellow]History unchanged.[/]")
+        return
+
+    state.context_history.clear()
+    state.save()
+    console.print("[green]History cleared.[/]")
+
+
+@preferences_app.command("summary")
+def preferences_summary() -> None:
+    """Show a human-readable summary of recorded preferences."""
+
+    if not state.preference_service:
+        console.print("[yellow]Preference service unavailable.[/]")
+        return
+
+    summary = state.preference_service.preference_summary()
+    if not summary:
+        console.print(Panel("No preference signals recorded yet.", title="Preferences"))
+        return
+
+    console.print(Panel(summary, title="Preference Summary"))
+
+
+@preferences_app.command("export")
+def preferences_export() -> None:
+    """Export the full preference profile as JSON."""
+
+    if not state.preference_service:
+        console.print("[yellow]Preference service unavailable.[/]")
+        return
+
+    profile = state.preference_service.export_profile()
+    console.print_json(data=asdict(profile))
+
+
+@preferences_app.command("reset")
+def preferences_reset(
+    force: bool = typer.Option(
+        False,
+        "--force",
+        "-f",
+        help="Reset preferences without a confirmation prompt.",
+    )
+) -> None:
+    """Remove all stored feedback-based preferences."""
+
+    if not state.preference_service:
+        console.print("[yellow]Preference service unavailable.[/]")
+        return
+
+    if not force and not typer.confirm("Clear all stored preferences?"):
+        console.print("[yellow]Preferences unchanged.[/]")
+        return
+
+    state.preference_service.clear()
+    console.print("[green]Preferences cleared.[/]")
 
 
 @techniques_app.command("list")
@@ -1115,6 +1233,77 @@ def techniques_remove(
     if success:
         _refresh_runtime()
         console.print(f"[green]Removed technique '{name}'.[/]")
+
+
+@techniques_app.command("export")
+def techniques_export(
+    file: Path = typer.Option(
+        ...,
+        "--file",
+        "-f",
+        help="Destination path for exported techniques (JSON).",
+        file_okay=True,
+        dir_okay=False,
+        writable=True,
+        resolve_path=True,
+    )
+) -> None:
+    """Export the current technique catalog to a JSON file."""
+
+    catalog, sqlite_client = _create_catalog_service()
+    try:
+        path, count = catalog.export_to_file(file)
+    except Exception as exc:
+        console.print(f"[red]Export failed: {exc}[/]")
+        raise typer.Exit(code=1) from exc
+    finally:
+        sqlite_client.close()
+
+    console.print_json(data={"file": str(path), "count": count})
+
+
+@techniques_app.command("import")
+def techniques_import(
+    file: Path = typer.Option(
+        ...,
+        "--file",
+        "-f",
+        help="JSON file containing techniques to import.",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+    ),
+    mode: str = typer.Option(
+        "replace",
+        "--mode",
+        "-m",
+        help="Import mode: replace existing data or append to it.",
+    ),
+    rebuild_embeddings: bool = typer.Option(
+        True,
+        "--rebuild-embeddings/--skip-embeddings",
+        help="Recompute embeddings after import when a vector store is configured.",
+    ),
+) -> None:
+    """Import techniques from a JSON file using append or replace semantics."""
+
+    catalog, sqlite_client = _create_catalog_service()
+    try:
+        summary = catalog.import_from_file(
+            file,
+            mode=mode.lower(),
+            rebuild_embeddings=rebuild_embeddings,
+        )
+    except Exception as exc:
+        console.print(f"[red]Import failed: {exc}[/]")
+        raise typer.Exit(code=1) from exc
+    finally:
+        sqlite_client.close()
+
+    _refresh_runtime()
+    console.print_json(data={"mode": mode.lower(), **summary})
 
 
 def _show_settings() -> None:

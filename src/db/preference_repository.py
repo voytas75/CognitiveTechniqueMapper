@@ -62,3 +62,9 @@ class PreferenceRepository:
                 """
             )
             return [dict(row) for row in cursor.fetchall()]
+
+    def delete_all(self) -> None:
+        """Remove all stored preference records."""
+
+        with self._sqlite.connection as conn:
+            conn.execute("DELETE FROM preferences")

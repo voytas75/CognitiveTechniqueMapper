@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Iterable, Optional
 
 from ..db.sqlite_client import SQLiteClient
-from .data_initializer import DEFAULT_DATASET_PATH
+from .data_initializer import DEFAULT_DATASET_PATH, TechniqueDataInitializer
 from .embedding_gateway import EmbeddingGateway
 from .technique_utils import compose_embedding_text
 
@@ -141,6 +141,86 @@ class TechniqueCatalogService:
             extra={"tool": "technique_catalog", "technique": name},
         )
 
+    def export_to_file(self, destination: Path | str) -> tuple[Path, int]:
+        """Write the current dataset to disk and return the export metadata."""
+
+        dest_path = Path(destination)
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
+        records = self._load_dataset()
+        dest_path.write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8")
+        logger.info(
+            "technique_export_completed",
+            extra={"tool": "technique_catalog", "technique_count": len(records)},
+        )
+        return dest_path, len(records)
+
+    def import_from_file(
+        self,
+        source: Path | str,
+        *,
+        mode: str = "replace",
+        rebuild_embeddings: bool = True,
+    ) -> dict[str, int]:
+        """Import techniques from a file, optionally appending to the catalog."""
+
+        valid_modes = {"replace", "append"}
+        if mode not in valid_modes:
+            raise ValueError(f"Unsupported import mode '{mode}'. Choose from {sorted(valid_modes)}.")
+
+        path = Path(source)
+        if not path.exists():
+            raise FileNotFoundError(f"Import file not found: {path}")
+
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(payload, list):
+            raise ValueError("Import file must contain a JSON list of technique objects.")
+
+        normalized_records = [self._normalize_record(item) for item in payload]
+
+        existing_dataset = self._load_dataset()
+        stats = {"added": 0, "updated": 0}
+
+        if mode == "replace":
+            combined_dataset = normalized_records
+            stats["added"] = len(normalized_records)
+            stats["updated"] = 0
+        else:
+            lookup = {entry.get("name", "").lower(): dict(entry) for entry in existing_dataset}
+            order: list[str] = [entry.get("name", "").lower() for entry in existing_dataset]
+            for record in normalized_records:
+                key = record["name"].lower()
+                if key in lookup:
+                    lookup[key] = record
+                    stats["updated"] += 1
+                else:
+                    lookup[key] = record
+                    order.append(key)
+                    stats["added"] += 1
+            combined_dataset = [lookup[key] for key in order]
+
+        self._write_dataset(combined_dataset)
+
+        initializer = TechniqueDataInitializer(
+            sqlite_client=self.sqlite_client,
+            embedder=self.embedder,
+            chroma_client=self.chroma_client,
+            dataset_path=self.dataset_path,
+        )
+        initializer.refresh(rebuild_embeddings=rebuild_embeddings)
+
+        logger.info(
+            "technique_import_completed",
+            extra={
+                "tool": "technique_catalog",
+                "import_mode": mode,
+                "added": stats["added"],
+                "updated": stats["updated"],
+                "total": len(combined_dataset),
+            },
+        )
+
+        return {"added": stats["added"], "updated": stats["updated"], "total": len(combined_dataset)}
+
     def _prepare_update_payload(self, updates: dict[str, Any]) -> dict[str, Any]:
         prepared: dict[str, Any] = {}
 
@@ -214,6 +294,27 @@ class TechniqueCatalogService:
         self.dataset_path.parent.mkdir(parents=True, exist_ok=True)
         with self.dataset_path.open("w", encoding="utf-8") as handle:
             json.dump(list(entries), handle, ensure_ascii=False, indent=2)
+
+    def _normalize_record(self, entry: dict[str, Any]) -> dict[str, Any]:
+        if not isinstance(entry, dict):
+            raise ValueError("Each technique entry must be a JSON object.")
+
+        name = entry.get("name")
+        description = entry.get("description")
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError("Technique entries require a non-empty 'name'.")
+        if not isinstance(description, str) or not description.strip():
+            raise ValueError("Technique entries require a non-empty 'description'.")
+
+        normalized = {
+            "name": name.strip(),
+            "description": description.strip(),
+            "origin_year": self._coerce_int(entry.get("origin_year")),
+            "creator": self._normalize_optional(entry.get("creator")),
+            "category": self._normalize_optional(entry.get("category")),
+            "core_principles": self._normalize_optional(entry.get("core_principles")),
+        }
+        return normalized
 
     @staticmethod
     def _coerce_int(value: Any) -> Optional[int]:

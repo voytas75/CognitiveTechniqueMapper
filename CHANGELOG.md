@@ -19,6 +19,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Structured JSON logging with workflow duration metrics.
 - Tenacity-powered retries and timeouts for LLM and embedding gateways.
 - `techniques` CLI group for listing, adding, updating, and removing catalog entries.
+- `history` CLI group to inspect or clear session records.
+- `preferences` CLI group to review/export/reset personalization signals.
+- `techniques import`/`techniques export` commands for bulk catalog management.
 
 ### Changed
 - Align `max_tokens` handling with LiteLLM per-model limits to avoid provider rejections.
