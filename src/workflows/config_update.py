@@ -1,12 +1,13 @@
 """Config update workflow definitions.
 
 Updates:
+    v0.1.1 - 2025-11-09 - Use dataclass conversion helper for workflow configs.
     v0.1.0 - 2025-11-09 - Added module and method docstrings.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from ..services.config_service import ConfigService
@@ -32,7 +33,7 @@ class ConfigUpdateWorkflow:
             "app": service.app_metadata,
             "database": service.database_config,
             "workflows": {
-                workflow: config.__dict__
+                workflow: asdict(config)
                 for workflow, config in service.iter_workflow_configs().items()
             },
         }

@@ -8,3 +8,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 - Align `max_tokens` handling with LiteLLM per-model limits to avoid provider rejections.
+- Fix `settings` CLI command by serializing workflow configs via dataclass helpers.
