@@ -59,7 +59,7 @@ uv pip sync requirements.lock
 - Set provider credentials (example `.env` entry):
 
 ```
-AZURE_OPENAI_ENDPOINT="https://<your-endpoint>.openai.azure.com/"
+AZURE_API_BASE="https://<your-endpoint>.openai.azure.com/"
 AZURE_OPENAI_KEY="..."
 OPENAI_API_KEY="..."
 ANTHROPIC_API_KEY="..."
