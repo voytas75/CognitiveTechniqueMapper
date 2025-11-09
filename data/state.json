@@ -1,20 +1,48 @@
 {
-  "problem_description": "Help my 12\u2011year\u2011old daughter build confidence with pre\u2011algebra word problems; she gets overwhelmed by multi\u2011step questions and shuts down before trying.",
+  "problem_description": "Help my 12-year-old daughter grasp fractions and decimal conversions\u2014she understands the steps individually but freezes on real-world word problems like dividing a pizza or converting oney amounts.",
   "last_recommendation": {
     "workflow": "detect_technique",
     "recommendation": {
-      "suggested_technique": "OSKAR Model",
-      "why_it_fits": "OSKAR is a solution-focused coaching framework that builds confidence through small, measurable wins\u2014ideal for a 12-year-old who feels overwhelmed by multi-step word problems. Its Scaling step turns \u201cshutting down\u201d into a number you can nudge upward, while Affirm and Action emphasize strengths and simple routines to reduce anxiety and make multi-step tasks feel doable.",
+      "suggested_technique": "Six Thinking Hats",
+      "why_it_fits": "This parallel thinking framework guides a learner to look at a problem through clear lenses\u2014facts, feelings, plan, creativity, benefits, and risks\u2014reducing freeze-ups on word problems. For your daughter, it separates the math facts (White Hat) from emotions (Red Hat) and adds a simple plan (Blue Hat) and concrete modeling (Green Hat), which helps transfer her step-by-step skills to real-world contexts like pizza slices and money.",
       "steps": [
-        "Outcome: Agree on a kid-friendly goal (e.g., \u201cfeel calm and capable solving 3-step word problems\u201d).",
-        "Scaling: Before and after each problem, ask her to rate confidence 1\u201310; choose problems and supports aimed at raising the score by 1 point.",
-        "Know-how: List tactics that have helped (read the question twice, circle key info, draw a quick sketch, write steps 1\u20132\u20133) and pick two to use every time.",
-        "Affirm and Action: Start with a strengths statement (\u201cYou\u2019re great at spotting patterns\u201d) and use a 2-minute start rule plus a fixed routine: underline the question, list knowns, plan steps, then compute.",
-        "Review: Once a week, briefly track scores and what worked, celebrate small wins, and set the next tiny goal (e.g., \u201ctwo word problems using the same routine\u201d)."
+        "Create a simple Hats cheat-sheet/bookmark: White=facts/units/numbers; Blue=plan steps; Green=draw/model (paper pizza slices, coins/bills); Yellow=does the answer make sense?; Black=common traps; Red=quick 1\u201310 worry rating.",
+        "Run the routine on each problem in order: White list given numbers/units, Blue write a 1\u20132 step plan, Green model (cut a paper circle into fractions or lay out coins), compute, then Yellow/Black do a fast estimate and pitfall check, Red rate feelings before/after.",
+        "Practice in 10\u2011minute sessions with 3 problems (pizza sharing, recipe scaling, money conversions); speak each hat aloud to build a steady, low\u2011pressure script.",
+        "Fade scaffolds over 3\u20134 weeks: start with all hats and physical props, then drop to quick Red at the end, combine Yellow/Black into a 5\u2011second sense check, and aim to do White+Blue mentally before solving.",
+        "Track transfer: after each session, note one new real\u2011life situation where she can use the same hat routine (cafeteria slices, splitting a bill), building a visible list to reinforce confidence."
       ],
-      "raw_response": "{\n  \"suggested_technique\": \"OSKAR Model\",\n  \"why_it_fits\": \"OSKAR is a solution-focused coaching framework that builds confidence through small, measurable wins\u2014ideal for a 12-year-old who feels overwhelmed by multi-step word problems. Its Scaling step turns \u201cshutting down\u201d into a number you can nudge upward, while Affirm and Action emphasize strengths and simple routines to reduce anxiety and make multi-step tasks feel doable.\",\n  \"steps\": [\n    \"Outcome: Agree on a kid-friendly goal (e.g., \u201cfeel calm and capable solving 3-step word problems\u201d).\",\n    \"Scaling: Before and after each problem, ask her to rate confidence 1\u201310; choose problems and supports aimed at raising the score by 1 point.\",\n    \"Know-how: List tactics that have helped (read the question twice, circle key info, draw a quick sketch, write steps 1\u20132\u20133) and pick two to use every time.\",\n    \"Affirm and Action: Start with a strengths statement (\u201cYou\u2019re great at spotting patterns\u201d) and use a 2-minute start rule plus a fixed routine: underline the question, list knowns, plan steps, then compute.\",\n    \"Review: Once a week, briefly track scores and what worked, celebrate small wins, and set the next tiny goal (e.g., \u201ctwo word problems using the same routine\u201d).\"\n  ]\n}"
+      "raw_response": "{\n  \"suggested_technique\": \"Six Thinking Hats\",\n  \"why_it_fits\": \"This parallel thinking framework guides a learner to look at a problem through clear lenses\u2014facts, feelings, plan, creativity, benefits, and risks\u2014reducing freeze-ups on word problems. For your daughter, it separates the math facts (White Hat) from emotions (Red Hat) and adds a simple plan (Blue Hat) and concrete modeling (Green Hat), which helps transfer her step-by-step skills to real-world contexts like pizza slices and money.\",\n  \"steps\": [\n    \"Create a simple Hats cheat-sheet/bookmark: White=facts/units/numbers; Blue=plan steps; Green=draw/model (paper pizza slices, coins/bills); Yellow=does the answer make sense?; Black=common traps; Red=quick 1\u201310 worry rating.\",\n    \"Run the routine on each problem in order: White list given numbers/units, Blue write a 1\u20132 step plan, Green model (cut a paper circle into fractions or lay out coins), compute, then Yellow/Black do a fast estimate and pitfall check, Red rate feelings before/after.\",\n    \"Practice in 10\u2011minute sessions with 3 problems (pizza sharing, recipe scaling, money conversions); speak each hat aloud to build a steady, low\u2011pressure script.\",\n    \"Fade scaffolds over 3\u20134 weeks: start with all hats and physical props, then drop to quick Red at the end, combine Yellow/Black into a 5\u2011second sense check, and aim to do White+Blue mentally before solving.\",\n    \"Track transfer: after each session, note one new real\u2011life situation where she can use the same hat routine (cafeteria slices, splitting a bill), building a visible list to reinforce confidence.\"\n  ]\n}"
     },
     "matches": [
+      {
+        "id": "Eisenhower Matrix",
+        "metadata": {
+          "origin_year": "1954",
+          "category": "Decision-Making",
+          "creator": "Dwight D. Eisenhower",
+          "name": "Eisenhower Matrix"
+        },
+        "document": "Prioritization matrix dividing tasks into urgent/important quadrants to focus effort on what matters most.",
+        "distance": 1.6973097324371338,
+        "score": 0.4707397737732024,
+        "base_score": 0.3707397737732024,
+        "preference_adjustment": 0.1
+      },
+      {
+        "id": "5 Whys",
+        "metadata": {
+          "category": "Problem-Solving",
+          "creator": "Taiichi Ohno",
+          "origin_year": "1939",
+          "name": "5 Whys"
+        },
+        "document": "Iterative questioning technique asking 'Why?' five times to uncover root causes of a problem.",
+        "distance": 1.6409199237823486,
+        "score": 0.3786559338640572,
+        "base_score": 0.3786559338640572,
+        "preference_adjustment": 0.0
+      },
       {
         "id": "Root Cause Analysis",
         "metadata": {
@@ -24,70 +52,42 @@
           "category": "Problem-Solving"
         },
         "document": "Technique focused on identifying the underlying cause of a problem.",
-        "distance": 1.5940680503845215,
-        "score": 0.38549489858285285,
-        "base_score": 0.38549489858285285,
+        "distance": 1.665719985961914,
+        "score": 0.37513317425166626,
+        "base_score": 0.37513317425166626,
         "preference_adjustment": 0.0
       },
       {
-        "id": "5 Whys",
+        "id": "Cynefin Framework",
         "metadata": {
-          "category": "Problem-Solving",
-          "name": "5 Whys",
-          "creator": "Taiichi Ohno",
-          "origin_year": "1939"
+          "name": "Cynefin Framework",
+          "origin_year": "2007",
+          "category": "Decision-Making / Complexity Management",
+          "creator": "Dave Snowden"
         },
-        "document": "Iterative questioning technique asking 'Why?' five times to uncover root causes of a problem.",
-        "distance": 1.59653902053833,
-        "score": 0.385128046253152,
-        "base_score": 0.385128046253152,
-        "preference_adjustment": 0.0
-      },
-      {
-        "id": "OSKAR Model",
-        "metadata": {
-          "name": "OSKAR Model",
-          "category": "Coaching",
-          "creator": "Paul Z. Jackson and Mark McKergow",
-          "origin_year": "1990"
-        },
-        "document": "Solution-focused coaching model: Outcome, Scaling, Know-how, Affirm and Action, Review.",
-        "distance": 1.6113686561584473,
-        "score": 0.3829409523016516,
-        "base_score": 0.3829409523016516,
+        "document": "Sense-making framework to help leaders decide actions based on categorizing problems into simple, complicated, complex, chaotic, or disorder domains.",
+        "distance": 1.7112696170806885,
+        "score": 0.3688308952013162,
+        "base_score": 0.3688308952013162,
         "preference_adjustment": 0.0
       },
       {
         "id": "Six Thinking Hats",
         "metadata": {
-          "creator": "Edward de Bono",
           "name": "Six Thinking Hats",
           "origin_year": "1985",
-          "category": "Creativity"
+          "category": "Creativity",
+          "creator": "Edward de Bono"
         },
         "document": "Parallel thinking framework using six perspectives to explore a topic.",
-        "distance": 1.641761064529419,
-        "score": 0.3785353692379184,
-        "base_score": 0.3785353692379184,
-        "preference_adjustment": 0.0
-      },
-      {
-        "id": "GROW Model",
-        "metadata": {
-          "category": "Coaching",
-          "origin_year": "1988",
-          "creator": "John Whitmore",
-          "name": "GROW Model"
-        },
-        "document": "Coaching framework: Goal, Reality, Options, Way Forward to structure progress-oriented conversations.",
-        "distance": 1.6523042917251587,
-        "score": 0.37703064581234846,
-        "base_score": 0.37703064581234846,
+        "distance": 1.7232861518859863,
+        "score": 0.367203424182016,
+        "base_score": 0.367203424182016,
         "preference_adjustment": 0.0
       }
     ],
     "preference_summary": "Positive response to Decisional Balance (avg rating 5.0). Favors Decision-Making category techniques (avg rating 5.0).",
-    "plan": "**OSKAR Model Implementation Plan for Multi-Step Word Problems (Age 12)**\n\n- **Outcome:**  \n  - Together, set a clear, kid-friendly goal (e.g., \u201cFeel calm and capable solving 3-step word problems\u201d).\n\n- **Scaling:**  \n  - Before and after each problem, ask her to rate her confidence on a scale of 1\u201310.  \n  - Choose problems and supports aimed at nudging the score up by 1 point.\n\n- **Know-how:**  \n  - Brainstorm and list strategies that have helped before (e.g., rereading the question, circling key info, drawing a sketch, writing out steps).  \n  - Pick two strategies to use every time and make them part of her routine.\n\n- **Affirm and Action:**  \n  - Start each session with a strengths-based affirmation (e.g., \u201cYou\u2019re great at spotting patterns!\u201d).  \n  - Use a 2-minute start rule: begin working for just 2 minutes to reduce overwhelm.  \n  - Follow a fixed routine: underline the question, list knowns, plan steps, then compute.\n\n- **Review:**  \n  - Once a week, review confidence scores and discuss what worked.  \n  - Celebrate small wins and progress.  \n  - Set a new, small goal for the next week (e.g., \u201cSolve two word problems using the same routine\u201d)."
+    "plan": "**Six Thinking Hats Implementation Plan for Math Word Problems**\n\n- **Prepare Materials**\n  - Create a simple Hats cheat-sheet/bookmark with color codes and prompts for each hat.\n  - Gather physical props: paper circles (for pizza), coins/bills, markers.\n\n- **Introduce the Routine**\n  - Explain each hat\u2019s role with examples:\n    - White: List facts, numbers, units.\n    - Blue: Write a 1\u20132 step plan.\n    - Green: Draw/model (use props).\n    - Yellow: Check if the answer makes sense.\n    - Black: Watch for common mistakes.\n    - Red: Rate feelings (1\u201310) before/after.\n\n- **Practice the Routine**\n  - For each problem (3 per 10-minute session):\n    - **White:** List all given numbers/units.\n    - **Blue:** Write a short plan (what to do first, next).\n    - **Green:** Model the problem (draw, use props).\n    - Compute the answer.\n    - **Yellow:** Estimate and check if the answer is reasonable.\n    - **Black:** Identify any common traps or mistakes.\n    - **Red:** Rate worry/confidence before and after solving.\n    - Speak each hat step aloud.\n\n- **Session Structure**\n  - Use real-life themed problems (pizza sharing, recipe scaling, money conversions).\n  - Keep sessions short (10 minutes), low-pressure, and positive.\n\n- **Fade Scaffolds Over 3\u20134 Weeks**\n  - Week 1: Use all hats and props for every problem.\n  - Week 2: Drop physical props for simple drawing/modeling.\n  - Week 3: Combine Yellow/Black into a quick 5-second sense check; only use Red at the end.\n  - Week 4: Do White+Blue mentally before solving; use hats as needed.\n\n- **Track Real-Life Transfer**\n  - After each session, ask her to name one new real-life situation where she could use the hat routine (e.g., splitting a bill, sharing snacks).\n  - Add each example to a visible list to build confidence and reinforce transfer.\n\n- **Monitor Progress**\n  - Note improvements in confidence, problem-solving speed, and independence.\n  - Adjust support as needed based on her comfort with each hat."
   },
   "last_explanation": {
     "overview": "The recommendation is to use the Decisional Balance technique to systematically compare the pros and cons of each job offer, helping clarify which aligns better with your priorities and long-term goals.",
@@ -1267,6 +1267,98 @@
       ],
       "preference_summary": "Positive response to Decisional Balance (avg rating 5.0). Favors Decision-Making category techniques (avg rating 5.0).",
       "plan": "**OSKAR Model Implementation Plan for Multi-Step Word Problems (Age 12)**\n\n- **Outcome:**  \n  - Together, set a clear, kid-friendly goal (e.g., \u201cFeel calm and capable solving 3-step word problems\u201d).\n\n- **Scaling:**  \n  - Before and after each problem, ask her to rate her confidence on a scale of 1\u201310.  \n  - Choose problems and supports aimed at nudging the score up by 1 point.\n\n- **Know-how:**  \n  - Brainstorm and list strategies that have helped before (e.g., rereading the question, circling key info, drawing a sketch, writing out steps).  \n  - Pick two strategies to use every time and make them part of her routine.\n\n- **Affirm and Action:**  \n  - Start each session with a strengths-based affirmation (e.g., \u201cYou\u2019re great at spotting patterns!\u201d).  \n  - Use a 2-minute start rule: begin working for just 2 minutes to reduce overwhelm.  \n  - Follow a fixed routine: underline the question, list knowns, plan steps, then compute.\n\n- **Review:**  \n  - Once a week, review confidence scores and discuss what worked.  \n  - Celebrate small wins and progress.  \n  - Set a new, small goal for the next week (e.g., \u201cSolve two word problems using the same routine\u201d)."
+    },
+    {
+      "problem_description": "Help my 12-year-old daughter grasp fractions and decimal conversions\u2014she understands the steps individually but freezes on real-world word problems like dividing a pizza or converting oney amounts."
+    },
+    {
+      "workflow": "detect_technique",
+      "recommendation": {
+        "suggested_technique": "Six Thinking Hats",
+        "why_it_fits": "This parallel thinking framework guides a learner to look at a problem through clear lenses\u2014facts, feelings, plan, creativity, benefits, and risks\u2014reducing freeze-ups on word problems. For your daughter, it separates the math facts (White Hat) from emotions (Red Hat) and adds a simple plan (Blue Hat) and concrete modeling (Green Hat), which helps transfer her step-by-step skills to real-world contexts like pizza slices and money.",
+        "steps": [
+          "Create a simple Hats cheat-sheet/bookmark: White=facts/units/numbers; Blue=plan steps; Green=draw/model (paper pizza slices, coins/bills); Yellow=does the answer make sense?; Black=common traps; Red=quick 1\u201310 worry rating.",
+          "Run the routine on each problem in order: White list given numbers/units, Blue write a 1\u20132 step plan, Green model (cut a paper circle into fractions or lay out coins), compute, then Yellow/Black do a fast estimate and pitfall check, Red rate feelings before/after.",
+          "Practice in 10\u2011minute sessions with 3 problems (pizza sharing, recipe scaling, money conversions); speak each hat aloud to build a steady, low\u2011pressure script.",
+          "Fade scaffolds over 3\u20134 weeks: start with all hats and physical props, then drop to quick Red at the end, combine Yellow/Black into a 5\u2011second sense check, and aim to do White+Blue mentally before solving.",
+          "Track transfer: after each session, note one new real\u2011life situation where she can use the same hat routine (cafeteria slices, splitting a bill), building a visible list to reinforce confidence."
+        ],
+        "raw_response": "{\n  \"suggested_technique\": \"Six Thinking Hats\",\n  \"why_it_fits\": \"This parallel thinking framework guides a learner to look at a problem through clear lenses\u2014facts, feelings, plan, creativity, benefits, and risks\u2014reducing freeze-ups on word problems. For your daughter, it separates the math facts (White Hat) from emotions (Red Hat) and adds a simple plan (Blue Hat) and concrete modeling (Green Hat), which helps transfer her step-by-step skills to real-world contexts like pizza slices and money.\",\n  \"steps\": [\n    \"Create a simple Hats cheat-sheet/bookmark: White=facts/units/numbers; Blue=plan steps; Green=draw/model (paper pizza slices, coins/bills); Yellow=does the answer make sense?; Black=common traps; Red=quick 1\u201310 worry rating.\",\n    \"Run the routine on each problem in order: White list given numbers/units, Blue write a 1\u20132 step plan, Green model (cut a paper circle into fractions or lay out coins), compute, then Yellow/Black do a fast estimate and pitfall check, Red rate feelings before/after.\",\n    \"Practice in 10\u2011minute sessions with 3 problems (pizza sharing, recipe scaling, money conversions); speak each hat aloud to build a steady, low\u2011pressure script.\",\n    \"Fade scaffolds over 3\u20134 weeks: start with all hats and physical props, then drop to quick Red at the end, combine Yellow/Black into a 5\u2011second sense check, and aim to do White+Blue mentally before solving.\",\n    \"Track transfer: after each session, note one new real\u2011life situation where she can use the same hat routine (cafeteria slices, splitting a bill), building a visible list to reinforce confidence.\"\n  ]\n}"
+      },
+      "matches": [
+        {
+          "id": "Eisenhower Matrix",
+          "metadata": {
+            "origin_year": "1954",
+            "category": "Decision-Making",
+            "creator": "Dwight D. Eisenhower",
+            "name": "Eisenhower Matrix"
+          },
+          "document": "Prioritization matrix dividing tasks into urgent/important quadrants to focus effort on what matters most.",
+          "distance": 1.6973097324371338,
+          "score": 0.4707397737732024,
+          "base_score": 0.3707397737732024,
+          "preference_adjustment": 0.1
+        },
+        {
+          "id": "5 Whys",
+          "metadata": {
+            "category": "Problem-Solving",
+            "creator": "Taiichi Ohno",
+            "origin_year": "1939",
+            "name": "5 Whys"
+          },
+          "document": "Iterative questioning technique asking 'Why?' five times to uncover root causes of a problem.",
+          "distance": 1.6409199237823486,
+          "score": 0.3786559338640572,
+          "base_score": 0.3786559338640572,
+          "preference_adjustment": 0.0
+        },
+        {
+          "id": "Root Cause Analysis",
+          "metadata": {
+            "name": "Root Cause Analysis",
+            "origin_year": "1950",
+            "creator": "Sakichi Toyoda",
+            "category": "Problem-Solving"
+          },
+          "document": "Technique focused on identifying the underlying cause of a problem.",
+          "distance": 1.665719985961914,
+          "score": 0.37513317425166626,
+          "base_score": 0.37513317425166626,
+          "preference_adjustment": 0.0
+        },
+        {
+          "id": "Cynefin Framework",
+          "metadata": {
+            "name": "Cynefin Framework",
+            "origin_year": "2007",
+            "category": "Decision-Making / Complexity Management",
+            "creator": "Dave Snowden"
+          },
+          "document": "Sense-making framework to help leaders decide actions based on categorizing problems into simple, complicated, complex, chaotic, or disorder domains.",
+          "distance": 1.7112696170806885,
+          "score": 0.3688308952013162,
+          "base_score": 0.3688308952013162,
+          "preference_adjustment": 0.0
+        },
+        {
+          "id": "Six Thinking Hats",
+          "metadata": {
+            "name": "Six Thinking Hats",
+            "origin_year": "1985",
+            "category": "Creativity",
+            "creator": "Edward de Bono"
+          },
+          "document": "Parallel thinking framework using six perspectives to explore a topic.",
+          "distance": 1.7232861518859863,
+          "score": 0.367203424182016,
+          "base_score": 0.367203424182016,
+          "preference_adjustment": 0.0
+        }
+      ],
+      "preference_summary": "Positive response to Decisional Balance (avg rating 5.0). Favors Decision-Making category techniques (avg rating 5.0).",
+      "plan": "**Six Thinking Hats Implementation Plan for Math Word Problems**\n\n- **Prepare Materials**\n  - Create a simple Hats cheat-sheet/bookmark with color codes and prompts for each hat.\n  - Gather physical props: paper circles (for pizza), coins/bills, markers.\n\n- **Introduce the Routine**\n  - Explain each hat\u2019s role with examples:\n    - White: List facts, numbers, units.\n    - Blue: Write a 1\u20132 step plan.\n    - Green: Draw/model (use props).\n    - Yellow: Check if the answer makes sense.\n    - Black: Watch for common mistakes.\n    - Red: Rate feelings (1\u201310) before/after.\n\n- **Practice the Routine**\n  - For each problem (3 per 10-minute session):\n    - **White:** List all given numbers/units.\n    - **Blue:** Write a short plan (what to do first, next).\n    - **Green:** Model the problem (draw, use props).\n    - Compute the answer.\n    - **Yellow:** Estimate and check if the answer is reasonable.\n    - **Black:** Identify any common traps or mistakes.\n    - **Red:** Rate worry/confidence before and after solving.\n    - Speak each hat step aloud.\n\n- **Session Structure**\n  - Use real-life themed problems (pizza sharing, recipe scaling, money conversions).\n  - Keep sessions short (10 minutes), low-pressure, and positive.\n\n- **Fade Scaffolds Over 3\u20134 Weeks**\n  - Week 1: Use all hats and props for every problem.\n  - Week 2: Drop physical props for simple drawing/modeling.\n  - Week 3: Combine Yellow/Black into a quick 5-second sense check; only use Red at the end.\n  - Week 4: Do White+Blue mentally before solving; use hats as needed.\n\n- **Track Real-Life Transfer**\n  - After each session, ask her to name one new real-life situation where she could use the hat routine (e.g., splitting a bill, sharing snacks).\n  - Add each example to a visible list to build confidence and reinforce transfer.\n\n- **Monitor Progress**\n  - Note improvements in confidence, problem-solving speed, and independence.\n  - Adjust support as needed based on her comfort with each hat."
     }
   ]
 }
