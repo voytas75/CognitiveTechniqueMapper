@@ -1,6 +1,6 @@
-detect_technique: prompts/detect_technique.txt
-generate_plan: prompts/generate_plan.txt
-feedback: prompts/feedback.txt
-explain_logic: prompts/explain_logic.txt
-simulate_technique: prompts/simulate_technique.txt
-compare_candidates: prompts/compare_candidates.txt
+detect_technique: detect_technique.txt
+generate_plan: generate_plan.txt
+feedback: feedback.txt
+explain_logic: explain_logic.txt
+simulate_technique: simulate_technique.txt
+compare_candidates: compare_candidates.txt
