@@ -2,6 +2,7 @@
 
 Updates:
     v0.1.0 - 2025-11-09 - Added module docstring and expanded method documentation.
+    v0.1.1 - 2025-11-09 - Ensure provider metadata is forwarded to litellm.
 """
 
 from __future__ import annotations
@@ -114,6 +115,7 @@ class EmbeddingGateway:
             for key, value in provider_config.items():
                 if key not in {"api_key_env"}:
                     params.setdefault(key, value)
+            params.setdefault("custom_llm_provider", self._config.provider)
 
         response = litellm_embedding(**params)
         data = response.get("data")
