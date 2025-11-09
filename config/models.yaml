@@ -6,10 +6,10 @@ workflows:
     model: "azure/gpt-4.1"
     temperature: 0.3
   explain_logic:
-    model: "azure/gpt-4o"
+    model: "azure/gpt-4.1"
     temperature: 0.4
   feedback_loop:
-    model: "azure/gpt-4o-mini"
+    model: "azure/gpt-4.1"
     temperature: 0.5
 embeddings:
   model: "UDTEMBED3L"
