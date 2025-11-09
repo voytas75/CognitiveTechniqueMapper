@@ -1,6 +1,7 @@
 """Config update workflow definitions.
 
 Updates:
+    v0.1.2 - 2025-11-09 - Include embedding configuration in CLI summary.
     v0.1.1 - 2025-11-09 - Use dataclass conversion helper for workflow configs.
     v0.1.0 - 2025-11-09 - Added module and method docstrings.
 """
@@ -32,6 +33,7 @@ class ConfigUpdateWorkflow:
         return {
             "app": service.app_metadata,
             "database": service.database_config,
+            "embeddings": asdict(service.get_embedding_config()),
             "workflows": {
                 workflow: asdict(config)
                 for workflow, config in service.iter_workflow_configs().items()
