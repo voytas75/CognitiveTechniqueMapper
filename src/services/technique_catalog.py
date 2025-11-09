@@ -83,7 +83,7 @@ class TechniqueCatalogService:
         self._sync_embedding(entry)
         logger.info(
             "technique_added",
-            extra={"tool": "technique_catalog", "name": name},
+            extra={"tool": "technique_catalog", "technique": name},
         )
         return entry
 
@@ -120,8 +120,8 @@ class TechniqueCatalogService:
             "technique_updated",
             extra={
                 "tool": "technique_catalog",
-                "name": name,
-                "updated_name": new_name,
+                "technique": name,
+                "updated_technique": new_name,
             },
         )
         return updated_entry
@@ -138,7 +138,7 @@ class TechniqueCatalogService:
         self._delete_embedding(name)
         logger.info(
             "technique_removed",
-            extra={"tool": "technique_catalog", "name": name},
+            extra={"tool": "technique_catalog", "technique": name},
         )
 
     def _prepare_update_payload(self, updates: dict[str, Any]) -> dict[str, Any]:
@@ -179,7 +179,7 @@ class TechniqueCatalogService:
                     "embedding_delete_failed",
                     extra={
                         "tool": "technique_catalog",
-                        "name": previous_name,
+                        "technique": previous_name,
                         "error": str(exc),
                     },
                 )
@@ -196,7 +196,7 @@ class TechniqueCatalogService:
                 "embedding_delete_failed",
                 extra={
                     "tool": "technique_catalog",
-                    "name": name,
+                    "technique": name,
                     "error": str(exc),
                 },
             )
