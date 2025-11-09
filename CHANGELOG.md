@@ -16,6 +16,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `simulate` workflow and CLI command for scenario walkthroughs with cautions and follow-up actions.
 - `compare` workflow to contrast candidate techniques and surface the best alternative.
 - Preference service that converts feedback into personalization signals for recommendations and prompts.
+- Structured JSON logging with workflow duration metrics.
+- Tenacity-powered retries and timeouts for LLM and embedding gateways.
+- `techniques` CLI group for listing, adding, updating, and removing catalog entries.
 
 ### Changed
 - Align `max_tokens` handling with LiteLLM per-model limits to avoid provider rejections.

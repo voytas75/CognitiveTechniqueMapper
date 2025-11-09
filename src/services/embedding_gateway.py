@@ -3,6 +3,7 @@
 Updates:
     v0.1.0 - 2025-11-09 - Added module docstring and expanded method documentation.
     v0.1.1 - 2025-11-09 - Ensure provider metadata is forwarded to litellm.
+    v0.3.0 - 2025-05-09 - Added retry logic, timeouts, and structured errors.
 """
 
 from __future__ import annotations
@@ -10,7 +11,7 @@ from __future__ import annotations
 import hashlib
 import math
 import logging
-from typing import Iterable, List, Sequence
+from typing import Any, Iterable, List, Sequence
 
 try:
     import litellm
@@ -23,6 +24,14 @@ else:  # pragma: no cover - attribute may not exist on older versions
     except AttributeError:
         pass
 
+from tenacity import (
+    RetryError,
+    Retrying,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
+
 from .config_service import ConfigService
 
 logger = logging.getLogger(__name__)
@@ -30,6 +39,11 @@ logger = logging.getLogger(__name__)
 
 class EmbeddingGateway:
     """Generates embeddings with litellm and falls back to deterministic hashes if unavailable."""
+
+    DEFAULT_TIMEOUT_SECONDS = 30
+
+    class EmbeddingGenerationError(RuntimeError):
+        """Raised when embedding generation fails after retries."""
 
     def __init__(
         self, config_service: ConfigService, *, use_fallback: bool = True
@@ -45,6 +59,12 @@ class EmbeddingGateway:
         self._config = config_service.get_embedding_config()
         self._providers = config_service.providers
         self._use_fallback = use_fallback
+        self._retry = Retrying(
+            stop=stop_after_attempt(5),
+            wait=wait_exponential(multiplier=1, min=4, max=10),
+            retry=retry_if_exception_type(Exception),
+            reraise=True,
+        )
 
     def embed(self, text: str) -> List[float]:
         """Generate an embedding vector for a single text block.
@@ -80,7 +100,9 @@ class EmbeddingGateway:
         except Exception as exc:
             logger.warning("Embedding generation failed (%s); using fallback.", exc)
             if not self._use_fallback:
-                raise RuntimeError(f"Embedding generation failed: {exc}") from exc
+                raise self.EmbeddingGenerationError(
+                    f"Embedding generation failed: {exc}"
+                ) from exc
             return [self._fallback_embedding(text) for text in texts_list]
 
     def _invoke_litellm(self, texts: Sequence[str]) -> List[List[float]]:
@@ -117,16 +139,40 @@ class EmbeddingGateway:
                     params.setdefault(key, value)
             params.setdefault("custom_llm_provider", self._config.provider)
 
-        response = litellm_embedding(**params)
+        params.setdefault("timeout", self.DEFAULT_TIMEOUT_SECONDS)
+
+        try:
+            response = self._execute_with_retry(params)
+        except RetryError as retry_error:
+            last_exc = retry_error.last_attempt.exception()
+            message = f"Embedding generation failed after retries: {last_exc}"
+            logger.error(message)
+            raise self.EmbeddingGenerationError(message) from last_exc
+        except Exception as exc:
+            message = f"Embedding generation failed: {exc}"
+            logger.error(message)
+            raise self.EmbeddingGenerationError(message) from exc
+
         data = response.get("data")
         if not data:
-            raise RuntimeError("Embedding API returned no data")
+            raise self.EmbeddingGenerationError("Embedding API returned no data")
         logger.debug(
             "Received %s embedding vectors from %s",
             len(data),
             self._config.model,
         )
         return [item.get("embedding", []) for item in data]
+
+    def _execute_with_retry(self, params: dict[str, object]) -> dict[str, Any]:
+        for attempt in self._retry:
+            with attempt:
+                logger.debug(
+                    "Requesting embeddings model=%s attempt=%s",
+                    params.get("model"),
+                    attempt.retry_state.attempt_number,
+                )
+                return litellm_embedding(**params)
+        raise self.EmbeddingGenerationError("Embedding invocation failed without response.")
 
     def _fallback_embedding(self, text: str, dimensions: int = 12) -> List[float]:
         """Generate a deterministic fallback embedding vector.

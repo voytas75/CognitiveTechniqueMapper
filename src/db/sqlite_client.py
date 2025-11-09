@@ -3,13 +3,14 @@
 Updates:
     v0.1.0 - 2025-11-09 - Added module and method docstrings.
     v0.2.0 - 2025-11-09 - Added replace_all helper for dataset refresh workflows.
+    v0.3.0 - 2025-05-09 - Added CRUD helpers for interactive technique management.
 """
 
 from __future__ import annotations
 
 import sqlite3
 from pathlib import Path
-from typing import Iterable, Optional
+from typing import Any, Iterable, Optional
 
 TECHNIQUES_TABLE_SCHEMA = """
 CREATE TABLE IF NOT EXISTS techniques (
@@ -172,6 +173,81 @@ class SQLiteClient:
         with self.connection as conn:
             cursor = conn.execute("SELECT * FROM techniques")
             return cursor.fetchall()
+
+    def fetch_by_name(self, name: str) -> sqlite3.Row | None:
+        """Fetch a single technique row by its name.
+
+        Args:
+            name (str): Technique name to locate.
+
+        Returns:
+            sqlite3.Row | None: Matching row or ``None`` when absent.
+        """
+
+        with self.connection as conn:
+            cursor = conn.execute(
+                "SELECT * FROM techniques WHERE lower(name) = lower(?) LIMIT 1",
+                (name,),
+            )
+            return cursor.fetchone()
+
+    def update_technique(self, name: str, updates: dict[str, Any]) -> int:
+        """Update an existing technique with the supplied fields.
+
+        Args:
+            name (str): Existing technique name to update.
+            updates (dict[str, Any]): Column/value pairs to persist.
+
+        Returns:
+            int: Number of rows affected by the update.
+        """
+
+        if not updates:
+            return 0
+
+        allowed = {
+            "name",
+            "description",
+            "origin_year",
+            "creator",
+            "category",
+            "core_principles",
+        }
+        assignments: list[str] = []
+        values: list[Any] = []
+        for column, value in updates.items():
+            if column not in allowed:
+                continue
+            assignments.append(f"{column} = ?")
+            values.append(value)
+
+        if not assignments:
+            return 0
+
+        values.append(name)
+        with self.connection as conn:
+            cursor = conn.execute(
+                f"UPDATE techniques SET {', '.join(assignments)} WHERE lower(name) = lower(?)",
+                values,
+            )
+            return cursor.rowcount
+
+    def delete_technique(self, name: str) -> int:
+        """Delete a technique by name.
+
+        Args:
+            name (str): Technique name to remove.
+
+        Returns:
+            int: Number of deleted rows.
+        """
+
+        with self.connection as conn:
+            cursor = conn.execute(
+                "DELETE FROM techniques WHERE lower(name) = lower(?)",
+                (name,),
+            )
+            return cursor.rowcount
 
     def close(self) -> None:
         """Close and discard the active SQLite connection."""

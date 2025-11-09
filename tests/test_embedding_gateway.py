@@ -5,6 +5,8 @@ from typing import Any, Dict
 
 import pytest
 
+from tenacity import Retrying, retry_if_exception_type, stop_after_attempt, wait_exponential
+
 from src.services.config_service import ConfigService
 from src.services.embedding_gateway import EmbeddingGateway
 
@@ -67,3 +69,57 @@ def test_embedding_gateway_uses_provider_metadata(
     assert captured["api_key"] == "secret"
     assert captured["api_base"] == "https://azure.example.com"
     assert captured["api_version"] == "2024-05-01-preview"
+    assert (
+        captured["timeout"]
+        == EmbeddingGateway.DEFAULT_TIMEOUT_SECONDS
+    )
+
+
+def test_embedding_gateway_falls_back_after_retries(
+    embedding_config: ConfigService, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    attempts = {"count": 0}
+
+    def failing_embedding(**kwargs: Any) -> Dict[str, Any]:
+        attempts["count"] += 1
+        raise RuntimeError("transient")
+
+    monkeypatch.setattr(
+        "src.services.embedding_gateway.litellm_embedding", failing_embedding
+    )
+
+    gateway = EmbeddingGateway(config_service=embedding_config, use_fallback=True)
+    gateway._retry = Retrying(
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=0, min=0, max=0),
+        retry=retry_if_exception_type(Exception),
+        reraise=True,
+    )
+
+    vector = gateway.embed("example")
+
+    assert attempts["count"] == 5
+    assert len(vector) == 12
+    assert sum(component**2 for component in vector) == pytest.approx(1.0, rel=1e-2)
+
+
+def test_embedding_gateway_raises_when_no_fallback(
+    embedding_config: ConfigService, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def failing_embedding(**kwargs: Any) -> Dict[str, Any]:
+        raise RuntimeError("persistent failure")
+
+    monkeypatch.setattr(
+        "src.services.embedding_gateway.litellm_embedding", failing_embedding
+    )
+
+    gateway = EmbeddingGateway(config_service=embedding_config, use_fallback=False)
+    gateway._retry = Retrying(
+        stop=stop_after_attempt(2),
+        wait=wait_exponential(multiplier=0, min=0, max=0),
+        retry=retry_if_exception_type(Exception),
+        reraise=True,
+    )
+
+    with pytest.raises(EmbeddingGateway.EmbeddingGenerationError):
+        gateway.embed("example")

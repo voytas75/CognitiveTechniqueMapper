@@ -3,12 +3,21 @@
 Updates:
     v0.1.1 - 2025-11-09 - Resolve max_tokens from LiteLLM metadata when available.
     v0.1.0 - 2025-11-09 - Added Google-style docstrings and update metadata.
+    v0.3.0 - 2025-05-09 - Added tenacity retries, timeouts, and structured errors.
 """
 
 from __future__ import annotations
 
 import logging
 from typing import Any, Dict, List, Optional
+
+from tenacity import (
+    RetryError,
+    Retrying,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 try:
     import litellm
@@ -28,6 +37,11 @@ logger = logging.getLogger(__name__)
 class LLMGateway:
     """Central point for orchestrating LLM calls."""
 
+    DEFAULT_TIMEOUT_SECONDS = 30
+
+    class LLMInvocationError(RuntimeError):
+        """Raised when an LLM invocation fails after retries."""
+
     def __init__(self, config_service: ConfigService) -> None:
         """Store configuration dependencies for LLM dispatch.
 
@@ -36,6 +50,12 @@ class LLMGateway:
         """
 
         self._config_service = config_service
+        self._retry = Retrying(
+            stop=stop_after_attempt(5),
+            wait=wait_exponential(multiplier=1, min=4, max=10),
+            retry=retry_if_exception_type(Exception),
+            reraise=True,
+        )
 
     def invoke(
         self,
@@ -64,15 +84,42 @@ class LLMGateway:
         messages = self._build_messages(prompt, system_prompt)
         params = self._build_params(config, kwargs)
 
+        params.setdefault("timeout", self.DEFAULT_TIMEOUT_SECONDS)
+
         try:
-            logger.debug("Invoking workflow=%s model=%s", workflow, params.get("model"))
-            response = completion(messages=messages, **params)
+            response = self._execute_with_retry(workflow, messages, params)
+        except RetryError as retry_error:  # pragma: no cover - relied on tests
+            last_exc = retry_error.last_attempt.exception()
+            message = (
+                f"LLM invocation failed for workflow '{workflow}' after retries: {last_exc}"
+            )
+            logger.error(message)
+            raise self.LLMInvocationError(message) from last_exc
         except Exception as exc:  # pragma: no cover - network/credential issues
-            logger.error("LLM invocation failed for %s: %s", workflow, exc)
-            raise RuntimeError(
-                f"LLM invocation failed for workflow '{workflow}': {exc}"
-            ) from exc
+            message = f"LLM invocation failed for workflow '{workflow}': {exc}"
+            logger.error(message)
+            raise self.LLMInvocationError(message) from exc
+
         return response["choices"][0]["message"]["content"]
+
+    def _execute_with_retry(
+        self,
+        workflow: str,
+        messages: List[Dict[str, str]],
+        params: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        for attempt in self._retry:
+            with attempt:
+                logger.debug(
+                    "Invoking workflow=%s model=%s attempt=%s",
+                    workflow,
+                    params.get("model"),
+                    attempt.retry_state.attempt_number,
+                )
+                return completion(messages=messages, **params)
+        raise self.LLMInvocationError(
+            f"LLM invocation failed for workflow '{workflow}' without response."
+        )
 
     def _build_messages(
         self, prompt: str, system_prompt: str | None

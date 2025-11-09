@@ -3,6 +3,7 @@
 Updates:
     v0.1.0 - 2025-11-09 - Added module metadata and Google-style docstrings.
     v0.2.0 - 2025-11-09 - Added settings editor, refresh command, and structured outputs.
+    v0.3.0 - 2025-05-09 - Added technique catalog CLI and structured telemetry logging.
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ import os
 import typer
 from rich.console import Console
 from rich.panel import Panel
+from rich.table import Table
 
 import sys
 
@@ -47,6 +49,7 @@ from .services.preference_service import PreferenceService
 from .services.prompt_service import PromptService
 from .services.simulation_service import SimulationService
 from .services.comparison_service import ComparisonService
+from .services.technique_catalog import TechniqueCatalogService
 from .services.technique_selector import TechniqueSelector
 from .workflows.config_update import ConfigUpdateWorkflow
 from .workflows.detect_technique import DetectTechniqueWorkflow
@@ -64,6 +67,9 @@ console = Console()
 app = typer.Typer(add_completion=False, help="Cognitive Technique Mapper CLI")
 settings_app = typer.Typer(
     add_completion=False, help="Inspect and edit application configuration."
+)
+techniques_app = typer.Typer(
+    add_completion=False, help="Manage techniques in the catalog."
 )
 logger = logging.getLogger(__name__)
 
@@ -834,6 +840,7 @@ def settings_update_provider(
     console.print_json(data={"provider": provider, "config": refreshed})
 
 
+app.add_typer(techniques_app, name="techniques")
 app.add_typer(settings_app, name="settings")
 
 
@@ -941,6 +948,175 @@ def feedback(
     )
 
 
+@techniques_app.command("list")
+def techniques_list() -> None:
+    """Display techniques stored in the knowledge base."""
+
+    catalog, sqlite_client = _create_catalog_service()
+    try:
+        entries = catalog.list()
+    finally:
+        sqlite_client.close()
+
+    if not entries:
+        console.print(Panel("No techniques available.", title="Techniques"))
+        return
+
+    table = Table(title="Techniques", show_lines=False)
+    table.add_column("Name", style="bold")
+    table.add_column("Category")
+    table.add_column("Origin Year")
+    table.add_column("Creator")
+    table.add_column("Description", overflow="fold")
+
+    for entry in entries:
+        description = entry.get("description") or ""
+        truncated = description if len(description) <= 120 else description[:117] + "..."
+        table.add_row(
+            entry.get("name") or "",
+            entry.get("category") or "-",
+            str(entry.get("origin_year") or "-"),
+            entry.get("creator") or "-",
+            truncated,
+        )
+
+    console.print(table)
+
+
+@techniques_app.command("add")
+def techniques_add(
+    name: str = typer.Option(..., "--name", "-n", help="Technique name."),
+    description: str = typer.Option(
+        ..., "--description", "-d", help="Technique description."
+    ),
+    origin_year: Optional[int] = typer.Option(
+        None, "--origin-year", help="Origin year of the technique."
+    ),
+    creator: Optional[str] = typer.Option(
+        None, "--creator", help="Creator attribution for the technique."
+    ),
+    category: Optional[str] = typer.Option(
+        None, "--category", help="Technique category or theme."
+    ),
+    core_principles: Optional[str] = typer.Option(
+        None, "--core-principles", help="Key principles for the technique."
+    ),
+) -> None:
+    """Add a new technique and refresh runtime services."""
+
+    catalog, sqlite_client = _create_catalog_service()
+    success = False
+    try:
+        entry = catalog.add(
+            {
+                "name": name,
+                "description": description,
+                "origin_year": origin_year,
+                "creator": creator,
+                "category": category,
+                "core_principles": core_principles,
+            }
+        )
+        success = True
+    except ValueError as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=1) from exc
+    except Exception as exc:  # pragma: no cover - defensive path
+        console.print(f"[red]Failed to add technique: {exc}[/]")
+        raise typer.Exit(code=1) from exc
+    finally:
+        sqlite_client.close()
+
+    if success:
+        _refresh_runtime()
+        console.print_json(data={"technique": entry})
+
+
+@techniques_app.command("update")
+def techniques_update(
+    name: str = typer.Argument(..., help="Existing technique name."),
+    new_name: Optional[str] = typer.Option(
+        None, "--new-name", help="Rename the technique to this value."
+    ),
+    description: Optional[str] = typer.Option(
+        None, "--description", help="Updated description."
+    ),
+    origin_year: Optional[int] = typer.Option(
+        None, "--origin-year", help="Updated origin year."
+    ),
+    creator: Optional[str] = typer.Option(
+        None, "--creator", help="Updated creator attribution."
+    ),
+    category: Optional[str] = typer.Option(
+        None, "--category", help="Updated category."
+    ),
+    core_principles: Optional[str] = typer.Option(
+        None, "--core-principles", help="Updated core principles."
+    ),
+) -> None:
+    """Update an existing technique and refresh runtime services."""
+
+    updates: dict[str, Any] = {}
+    if new_name:
+        updates["name"] = new_name
+    if description is not None:
+        updates["description"] = description
+    if origin_year is not None:
+        updates["origin_year"] = origin_year
+    if creator is not None:
+        updates["creator"] = creator
+    if category is not None:
+        updates["category"] = category
+    if core_principles is not None:
+        updates["core_principles"] = core_principles
+
+    if not updates:
+        raise typer.BadParameter("Provide at least one field to update.")
+
+    catalog, sqlite_client = _create_catalog_service()
+    success = False
+    try:
+        entry = catalog.update(name, updates)
+        success = True
+    except ValueError as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=1) from exc
+    except Exception as exc:  # pragma: no cover - defensive path
+        console.print(f"[red]Failed to update technique: {exc}[/]")
+        raise typer.Exit(code=1) from exc
+    finally:
+        sqlite_client.close()
+
+    if success:
+        _refresh_runtime()
+        console.print_json(data={"technique": entry})
+
+
+@techniques_app.command("remove")
+def techniques_remove(
+    name: str = typer.Argument(..., help="Technique name to remove."),
+) -> None:
+    """Remove a technique from the catalog and refresh runtime services."""
+
+    catalog, sqlite_client = _create_catalog_service()
+    success = False
+    try:
+        catalog.remove(name)
+        success = True
+    except ValueError as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=1) from exc
+    except Exception as exc:  # pragma: no cover - defensive path
+        console.print(f"[red]Failed to remove technique: {exc}[/]")
+        raise typer.Exit(code=1) from exc
+    finally:
+        sqlite_client.close()
+
+    if success:
+        _refresh_runtime()
+        console.print(f"[green]Removed technique '{name}'.[/]")
+
+
 def _show_settings() -> None:
     config_summary = orchestrator.execute("config_update", {})
     console.print_json(data=config_summary)
@@ -985,6 +1161,35 @@ def _prompt_int(label: str, current: int | None) -> int | None:
         return int(response)
     except ValueError as exc:  # pragma: no cover - input validation
         raise typer.BadParameter(f"Invalid integer for {label}: {response}") from exc
+
+
+def _create_catalog_service() -> tuple[TechniqueCatalogService, SQLiteClient]:
+    config_service = ConfigService()
+    db_config = config_service.database_config
+
+    sqlite_client = SQLiteClient(db_config.get("sqlite_path", "./data/techniques.db"))
+    sqlite_client.initialize_schema()
+
+    chroma_client = None
+    if ChromaClient:
+        try:
+            chroma_client = ChromaClient(
+                persist_directory=db_config.get("chromadb_path", "./embeddings"),
+                collection_name=db_config.get("chromadb_collection", "techniques"),
+            )
+        except Exception as exc:  # pragma: no cover - optional dependency
+            console.print(f"[yellow]ChromaDB disabled: {exc}[/]")
+            chroma_client = None
+
+    embedder = EmbeddingGateway(config_service=config_service)
+    dataset_path = PROJECT_ROOT / "data" / "techniques.json"
+    catalog = TechniqueCatalogService(
+        sqlite_client=sqlite_client,
+        embedder=embedder,
+        dataset_path=dataset_path,
+        chroma_client=chroma_client,
+    )
+    return catalog, sqlite_client
 
 
 def _create_initializer() -> tuple[TechniqueDataInitializer, SQLiteClient]:

@@ -2,22 +2,43 @@
 
 Updates:
     v0.1.0 - 2025-11-09 - Added module docstrings and Google-style documentation.
+    v0.3.0 - 2025-05-09 - Switched to custom structured JSON logging.
 """
 
 from __future__ import annotations
 
+import json
 import logging
+from datetime import datetime, timezone
 from typing import Any
 
-from rich.console import Console
-from rich.logging import RichHandler
-
 _configured = False
-_handler: RichHandler | None = None
+_handler: logging.Handler | None = None
+
+
+class JsonFormatter(logging.Formatter):
+    """Custom formatter that emits structured JSON log records."""
+
+    def format(self, record: logging.LogRecord) -> str:  # noqa: D401
+        payload: dict[str, Any] = {
+            "timestamp": datetime.fromtimestamp(record.created, timezone.utc)
+            .isoformat()
+            .replace("+00:00", "Z"),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+        }
+
+        payload.update(_extract_extra_fields(record))
+
+        if record.exc_info:
+            payload["exc_info"] = self.formatException(record.exc_info)
+
+        return json.dumps(payload, ensure_ascii=False)
 
 
 def configure_logging(config: dict[str, Any] | None = None) -> None:
-    """Configure application-wide logging with a Rich handler.
+    """Configure application-wide logging with structured JSON output.
 
     Args:
         config (dict[str, Any] | None): Optional logging configuration dictionary.
@@ -32,14 +53,8 @@ def configure_logging(config: dict[str, Any] | None = None) -> None:
     level_name = str(config.get("level", "INFO")).upper()
     level = getattr(logging, level_name, logging.INFO)
 
-    console = Console()
-    handler = RichHandler(
-        rich_tracebacks=True,
-        console=console,
-        markup=True,
-        show_time=False,
-    )
-    handler.setFormatter(logging.Formatter("%(name)s • %(levelname)s • %(message)s"))
+    handler = logging.StreamHandler()
+    handler.setFormatter(JsonFormatter())
 
     root_logger = logging.getLogger()
     root_logger.setLevel(level)
@@ -48,6 +63,39 @@ def configure_logging(config: dict[str, Any] | None = None) -> None:
 
     _handler = handler
     _configured = True
+
+
+def _extract_extra_fields(record: logging.LogRecord) -> dict[str, Any]:
+    extras: dict[str, Any] = {}
+    for key, value in record.__dict__.items():
+        if key.startswith("_"):
+            continue
+        if key in {
+            "name",
+            "msg",
+            "args",
+            "levelname",
+            "levelno",
+            "pathname",
+            "filename",
+            "module",
+            "exc_info",
+            "exc_text",
+            "stack_info",
+            "lineno",
+            "funcName",
+            "created",
+            "msecs",
+            "relativeCreated",
+            "thread",
+            "threadName",
+            "processName",
+            "process",
+            "message",
+        }:
+            continue
+        extras[key] = value
+    return extras
 
 
 def set_runtime_level(level_name: str) -> None:

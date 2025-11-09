@@ -72,6 +72,9 @@ class PromptService:
         for name, relative in mapping.items():
             prompt_path = Path(relative)
             if not prompt_path.is_absolute():
-                prompt_path = (self._base_path / prompt_path).resolve()
+                if prompt_path.parts and prompt_path.parts[0] == self._base_path.name:
+                    prompt_path = (Path.cwd() / prompt_path).resolve()
+                else:
+                    prompt_path = (self._base_path / prompt_path).resolve()
             normalized[name] = prompt_path
         return normalized
