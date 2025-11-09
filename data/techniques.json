@@ -166,5 +166,53 @@
     "creator": "Various contributors",
     "category": "Team Management / Communication",
     "core_principles": null
+  },
+  {
+    "name": "5 Whys",
+    "description": "Iterative questioning technique asking 'Why?' five times to uncover root causes of a problem.",
+    "origin_year": 1939,
+    "creator": "Taiichi Ohno",
+    "category": "Problem-Solving",
+    "core_principles": null
+  },
+  {
+    "name": "Eisenhower Matrix",
+    "description": "Prioritization matrix dividing tasks into urgent/important quadrants to focus effort on what matters most.",
+    "origin_year": 1954,
+    "creator": "Dwight D. Eisenhower",
+    "category": "Decision-Making",
+    "core_principles": null
+  },
+  {
+    "name": "Jobs to be Done",
+    "description": "Framework focusing on customer 'jobs' (tasks they hire products to do) to drive innovation.",
+    "origin_year": 2005,
+    "creator": "Clayton Christensen",
+    "category": "Innovation / Problem Solving",
+    "core_principles": null
+  },
+  {
+    "name": "MoSCoW Method",
+    "description": "Prioritization technique categorizing requirements as Must, Should, Could, Won't to manage scope.",
+    "origin_year": 1994,
+    "creator": "Dai Clegg",
+    "category": "Planning",
+    "core_principles": null
+  },
+  {
+    "name": "SCAMPER",
+    "description": "Brainstorming checklist: Substitute, Combine, Adapt, Modify, Put to another use, Eliminate, Reverse to generate ideas.",
+    "origin_year": 1971,
+    "creator": "Bob Eberle",
+    "category": "Creativity",
+    "core_principles": null
+  },
+  {
+    "name": "Toyota Kata",
+    "description": "Routine-based practice for improvement: Improvement Kata (scientific experimentation) and Coaching Kata to build habits.",
+    "origin_year": 2009,
+    "creator": "Mike Rother",
+    "category": "Continuous Improvement",
+    "core_principles": null
   }
 ]
