@@ -6,7 +6,7 @@ Updates:
 
 from __future__ import annotations
 
-from typing import Iterable, List, Optional
+from typing import Any, Optional
 
 from .sqlite_client import SQLiteClient
 
@@ -30,7 +30,7 @@ class FeedbackRepository:
             )
             return cursor.lastrowid
 
-    def fetch_recent(self, limit: int = 5) -> List[dict]:
+    def fetch_recent(self, limit: int = 5) -> list[dict[str, Any]]:
         with self._sqlite.connection as conn:
             cursor = conn.execute(
                 """

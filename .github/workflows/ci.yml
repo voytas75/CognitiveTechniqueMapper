@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install project dependencies
+        run: |
+          pip install -e .[dev]
+
+      - name: Ruff lint
+        run: ruff check
+
+      - name: Run mypy (core modules)
+        run: mypy src/core
+
+      - name: Run pyright (core modules)
+        run: pyright
+
+      - name: Run tests with coverage
+        run: pytest --cov=src --cov-report=term

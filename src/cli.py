@@ -4,64 +4,62 @@ Updates:
     v0.1.0 - 2025-11-09 - Added module metadata and Google-style docstrings.
     v0.2.0 - 2025-11-09 - Added settings editor, refresh command, and structured outputs.
     v0.3.0 - 2025-05-09 - Added technique catalog CLI and structured telemetry logging.
+    v0.3.1 - 2025-11-09 - Adopted lazy runtime initialization and absolute package imports.
 """
 
 from __future__ import annotations
 
 import json
 import logging
-from dataclasses import dataclass, field, asdict
+import os
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Optional
-import json as _json
 
-import os
 import typer
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-import sys
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-STATE_PATH = Path(
-    os.environ.get("CTM_STATE_PATH", PROJECT_ROOT / "data" / "state.json")
+from src.core.feedback_manager import FeedbackManager
+from src.core.llm_gateway import LLMGateway
+from src.core.logging_setup import configure_logging, set_runtime_level
+from src.core.orchestrator import Orchestrator
+from src.db.feedback_repository import FeedbackRepository
+from src.db.preference_repository import PreferenceRepository
+from src.db.sqlite_client import SQLiteClient
+from src.services.comparison_service import ComparisonService
+from src.services.config_editor import ConfigEditor
+from src.services.config_service import ConfigService
+from src.services.data_initializer import TechniqueDataInitializer
+from src.services.embedding_gateway import EmbeddingGateway
+from src.services.explanation_service import (
+    ExplanationResult,
+    ExplanationService,
 )
-
-from .core.feedback_manager import FeedbackManager
-from .core.llm_gateway import LLMGateway
-from .core.orchestrator import Orchestrator
-from .core.logging_setup import configure_logging, set_runtime_level
-from .db.feedback_repository import FeedbackRepository
-from .db.preference_repository import PreferenceRepository
-from .db.sqlite_client import SQLiteClient
-from .services.config_editor import ConfigEditor
-from .services.config_service import ConfigService
-from .services.data_initializer import TechniqueDataInitializer
-from .services.embedding_gateway import EmbeddingGateway
-from .services.explanation_service import ExplanationResult, ExplanationService
-from .services.feedback_service import FeedbackService
-from .services.plan_generator import PlanGenerator
-from .services.preference_service import PreferenceService
-from .services.prompt_service import PromptService
-from .services.simulation_service import SimulationService
-from .services.comparison_service import ComparisonService
-from .services.technique_catalog import TechniqueCatalogService
-from .services.technique_selector import TechniqueSelector
-from .workflows.config_update import ConfigUpdateWorkflow
-from .workflows.detect_technique import DetectTechniqueWorkflow
-from .workflows.feedback_loop import FeedbackWorkflow
-from .workflows.generate_plan import GeneratePlanWorkflow
-from .workflows.simulate_technique import SimulateTechniqueWorkflow
-from .workflows.compare_candidates import CompareCandidatesWorkflow
+from src.services.feedback_service import FeedbackService
+from src.services.plan_generator import PlanGenerator
+from src.services.preference_service import PreferenceService
+from src.services.prompt_service import PromptService
+from src.services.simulation_service import SimulationService
+from src.services.technique_catalog import TechniqueCatalogService
+from src.services.technique_selector import TechniqueSelector
+from src.workflows.compare_candidates import CompareCandidatesWorkflow
+from src.workflows.config_update import ConfigUpdateWorkflow
+from src.workflows.detect_technique import DetectTechniqueWorkflow
+from src.workflows.feedback_loop import FeedbackWorkflow
+from src.workflows.generate_plan import GeneratePlanWorkflow
+from src.workflows.simulate_technique import SimulateTechniqueWorkflow
 
 try:
     from .db.chroma_client import ChromaClient
 except RuntimeError:
     ChromaClient = None  # type: ignore
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+STATE_PATH = Path(
+    os.environ.get("CTM_STATE_PATH", PROJECT_ROOT / "data" / "state.json")
+)
 
 console = Console()
 app = typer.Typer(add_completion=False, help="Cognitive Technique Mapper CLI")
@@ -71,8 +69,12 @@ settings_app = typer.Typer(
 techniques_app = typer.Typer(
     add_completion=False, help="Manage techniques in the catalog."
 )
-history_app = typer.Typer(add_completion=False, help="Inspect or clear session history.")
-preferences_app = typer.Typer(add_completion=False, help="Inspect personalization preferences.")
+history_app = typer.Typer(
+    add_completion=False, help="Inspect or clear session history."
+)
+preferences_app = typer.Typer(
+    add_completion=False, help="Inspect personalization preferences."
+)
 logger = logging.getLogger(__name__)
 
 
@@ -107,7 +109,7 @@ class AppState:
 
         if path.exists():
             try:
-                data = _json.loads(path.read_text(encoding="utf-8"))
+                data = json.loads(path.read_text(encoding="utf-8"))
             except Exception:
                 data = {}
         else:
@@ -137,7 +139,7 @@ class AppState:
             "context_history": self.context_history,
         }
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(_json.dumps(payload, indent=2), encoding="utf-8")
+        path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
 def _apply_log_override(log_level: Optional[str]) -> None:
@@ -264,7 +266,37 @@ def initialize_runtime() -> tuple[Orchestrator, AppState]:
     return orchestrator, state
 
 
-orchestrator, state = initialize_runtime()
+_RUNTIME: tuple[Orchestrator, AppState] | None = None
+
+
+def get_runtime() -> tuple[Orchestrator, AppState]:
+    """Return the lazily-initialized orchestrator and CLI state."""
+
+    global _RUNTIME
+    if _RUNTIME is None:
+        _RUNTIME = initialize_runtime()
+    return _RUNTIME
+
+
+def set_runtime(runtime: tuple[Orchestrator, AppState]) -> None:
+    """Replace the cached runtime tuple."""
+
+    global _RUNTIME
+    _RUNTIME = runtime
+
+
+def get_orchestrator() -> Orchestrator:
+    """Return the cached orchestrator instance."""
+
+    orchestrator, _ = get_runtime()
+    return orchestrator
+
+
+def get_state() -> AppState:
+    """Return the cached application state."""
+
+    _, state = get_runtime()
+    return state
 
 
 @app.command()
@@ -288,6 +320,7 @@ def describe(
     """
     _apply_log_override(log_level)
 
+    state = get_state()
     state.problem_description = problem
     state.context_history.append({"problem_description": problem})
     state.save()
@@ -318,11 +351,13 @@ def analyze(
         typer.BadParameter: If no problem description has been captured.
         typer.Exit: When analysis fails due to runtime errors.
     """
+    state = get_state()
     if not state.problem_description:
         raise typer.BadParameter("No problem description found. Use `describe` first.")
 
     _apply_log_override(log_level)
 
+    orchestrator = get_orchestrator()
     context = {"problem_description": state.problem_description}
     try:
         result = orchestrator.execute("detect_technique", context)
@@ -525,6 +560,7 @@ def _render_comparison_output(comparison: dict[str, Any]) -> None:
 
 
 def _active_preference_summary() -> Optional[str]:
+    state = get_state()
     if not state.preference_service:
         return None
     summary = state.preference_service.preference_summary()
@@ -565,6 +601,7 @@ def explain(
         typer.BadParameter: If no recommendation is available or the gateway is missing.
         typer.Exit: When the explain workflow fails.
     """
+    state = get_state()
     if not state.last_recommendation:
         raise typer.BadParameter("No recommendation available. Run `analyze` first.")
 
@@ -606,6 +643,7 @@ def simulate(
 ) -> None:
     """Simulate applying the recommended technique across scenario variations."""
 
+    state = get_state()
     if not state.last_recommendation:
         raise typer.BadParameter("No recommendation available. Run `analyze` first.")
 
@@ -621,6 +659,7 @@ def simulate(
         "scenario": scenario or state.problem_description,
         "preference_summary": preference_summary,
     }
+    orchestrator = get_orchestrator()
     try:
         result = orchestrator.execute("simulate_technique", context)
     except RuntimeError as exc:
@@ -658,6 +697,7 @@ def compare(
 ) -> None:
     """Compare shortlisted techniques and highlight trade-offs."""
 
+    state = get_state()
     if not state.last_recommendation:
         raise typer.BadParameter("No recommendation available. Run `analyze` first.")
 
@@ -677,6 +717,7 @@ def compare(
         "focus": focus,
         "preference_summary": preference_summary,
     }
+    orchestrator = get_orchestrator()
     try:
         result = orchestrator.execute("compare_candidates", context)
     except RuntimeError as exc:
@@ -914,6 +955,9 @@ def feedback(
     Raises:
         typer.Exit: When feedback operations fail.
     """
+    state = get_state()
+    orchestrator = get_orchestrator()
+
     _apply_log_override(log_level)
     if rating is not None and (rating < 1 or rating > 5):
         raise typer.BadParameter("Rating must be between 1 and 5.")
@@ -946,6 +990,15 @@ def feedback(
     except RuntimeError as exc:
         console.print(f"[red]Feedback failed: {exc}[/]")
         raise typer.Exit(code=1) from exc
+
+    if state.preference_service:
+        state.preference_service.record_preference(
+            technique=technique,
+            category=category,
+            rating=rating,
+            notes=message,
+        )
+
     logger.info("Feedback recorded (rating=%s)", rating)
     console.print(
         Panel(summary.get("summary", "No summary available."), title="Feedback Summary")
@@ -969,6 +1022,7 @@ def history_show(
 ) -> None:
     """Display recent session history captured by the CLI."""
 
+    state = get_state()
     entries = state.context_history
     if not entries:
         console.print(Panel("History is empty.", title="History"))
@@ -1002,6 +1056,7 @@ def history_clear(
 ) -> None:
     """Erase the stored session history."""
 
+    state = get_state()
     if not state.context_history:
         console.print("[yellow]History is already empty.[/]")
         return
@@ -1019,6 +1074,7 @@ def history_clear(
 def preferences_summary() -> None:
     """Show a human-readable summary of recorded preferences."""
 
+    state = get_state()
     if not state.preference_service:
         console.print("[yellow]Preference service unavailable.[/]")
         return
@@ -1035,6 +1091,7 @@ def preferences_summary() -> None:
 def preferences_export() -> None:
     """Export the full preference profile as JSON."""
 
+    state = get_state()
     if not state.preference_service:
         console.print("[yellow]Preference service unavailable.[/]")
         return
@@ -1054,6 +1111,7 @@ def preferences_reset(
 ) -> None:
     """Remove all stored feedback-based preferences."""
 
+    state = get_state()
     if not state.preference_service:
         console.print("[yellow]Preference service unavailable.[/]")
         return
@@ -1307,21 +1365,21 @@ def techniques_import(
 
 
 def _show_settings() -> None:
+    orchestrator = get_orchestrator()
     config_summary = orchestrator.execute("config_update", {})
     console.print_json(data=config_summary)
 
 
 def _refresh_runtime() -> None:
-    global orchestrator, state
-
-    orchestrator, refreshed_state = initialize_runtime()
-    refreshed_state.problem_description = state.problem_description
-    refreshed_state.last_recommendation = state.last_recommendation
-    refreshed_state.last_explanation = state.last_explanation
-    refreshed_state.last_simulation = state.last_simulation
-    refreshed_state.last_comparison = state.last_comparison
-    refreshed_state.context_history = state.context_history
-    state = refreshed_state
+    current_orchestrator, current_state = get_runtime()
+    new_orchestrator, refreshed_state = initialize_runtime()
+    refreshed_state.problem_description = current_state.problem_description
+    refreshed_state.last_recommendation = current_state.last_recommendation
+    refreshed_state.last_explanation = current_state.last_explanation
+    refreshed_state.last_simulation = current_state.last_simulation
+    refreshed_state.last_comparison = current_state.last_comparison
+    refreshed_state.context_history = current_state.context_history
+    set_runtime((new_orchestrator, refreshed_state))
 
 
 def _prompt_value(label: str, current: str | None) -> str | None:

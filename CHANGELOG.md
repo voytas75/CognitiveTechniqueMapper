@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-11-09
+
 ### Added
 - Structured `detect_technique` responses with JSON parsing and automatic plan generation.
 - `settings` subcommands to edit workflow models and provider metadata with optional interactive prompts.
@@ -22,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `history` CLI group to inspect or clear session records.
 - `preferences` CLI group to review/export/reset personalization signals.
 - `techniques import`/`techniques export` commands for bulk catalog management.
+- Comprehensive CLI regression tests with ≥85% coverage and CI enforcement for linting and type checks.
 
 ### Changed
 - Align `max_tokens` handling with LiteLLM per-model limits to avoid provider rejections.
@@ -29,3 +32,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Extend `settings` CLI output with embedding configuration metadata.
 - Adopt `pyproject.toml` with uv-generated `requirements.lock` for dependency management (single lock covers runtime and dev dependencies).
 - Prevent `explain` command from raising a `NameError` during module import by scoping console rendering correctly.
+- Lazily initialize CLI runtime dependencies to improve import ergonomics and testability.
+- Added GitHub Actions workflow plus mypy/pyright strict configuration for core modules.

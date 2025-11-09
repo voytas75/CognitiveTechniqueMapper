@@ -1,4 +1,8 @@
+import json
 from pathlib import Path
+from typing import Any
+
+import pytest
 
 from src.db.sqlite_client import SQLiteClient
 from src.services.config_service import ConfigService
@@ -120,3 +124,76 @@ def test_refresh_replaces_dataset(tmp_path: Path, monkeypatch) -> None:
     rows = sqlite_client.fetch_all()
     assert len(rows) == 1
     assert rows[0]["name"] == "Updated Technique"
+
+
+def test_refresh_updates_chroma_index(tmp_path: Path, monkeypatch) -> None:
+    config_dir = tmp_path / "config"
+    config_dir.mkdir()
+    _write_config(config_dir)
+
+    dataset = [
+        {
+            "name": "Technique",
+            "description": "Desc",
+            "origin_year": 2024,
+            "creator": "Author",
+            "category": "Category",
+            "core_principles": "Principle",
+        }
+    ]
+    dataset_path = tmp_path / "techniques.json"
+    dataset_path.write_text(json.dumps(dataset), encoding="utf-8")
+
+    monkeypatch.setenv("CTM_CONFIG_PATH", str(config_dir))
+
+    class StubEmbedder(EmbeddingGateway):
+        def __init__(self) -> None:
+            pass
+
+        def embed_batch(self, texts: Any) -> list[list[float]]:
+            return [[0.1, 0.2] for _ in texts]
+
+    class StubChroma:
+        def __init__(self) -> None:
+            self.upserts: list[Any] = []
+            self.deleted: list[Any] = []
+
+        def upsert_embeddings(self, records: Any) -> None:
+            self.upserts.extend(records)
+
+        def delete(self, ids: Any) -> None:
+            self.deleted.extend(ids)
+
+    sqlite_client = SQLiteClient(tmp_path / "techniques.db")
+    sqlite_client.initialize_schema()
+
+    chroma = StubChroma()
+
+    initializer = TechniqueDataInitializer(
+        sqlite_client=sqlite_client,
+        embedder=StubEmbedder(),
+        chroma_client=chroma,
+        dataset_path=dataset_path,
+    )
+
+    initializer.initialize()
+    initializer.refresh(rebuild_embeddings=True)
+
+    assert chroma.upserts
+
+
+def test_load_dataset_validates_structure(tmp_path: Path) -> None:
+    dataset_path = tmp_path / "invalid.json"
+    dataset_path.write_text(json.dumps({"name": "Invalid"}), encoding="utf-8")
+
+    initializer = TechniqueDataInitializer(
+        sqlite_client=SQLiteClient(tmp_path / "test.db"),
+        embedder=None,  # type: ignore[arg-type]
+        chroma_client=None,
+        dataset_path=dataset_path,
+    )
+
+    initializer._sqlite.initialize_schema()
+
+    with pytest.raises(ValueError):
+        initializer._load_dataset()

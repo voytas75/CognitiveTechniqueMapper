@@ -8,7 +8,6 @@ Updates:
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Dict, List
 
 from ..core.feedback_manager import FeedbackManager
 from ..core.llm_gateway import LLMGateway
@@ -90,7 +89,7 @@ class FeedbackService:
                 notes=message,
             )
 
-    def summarize_feedback(self) -> Dict[str, str]:
+    def summarize_feedback(self) -> dict[str, str]:
         """Summarize recent feedback entries with the LLM.
 
         Returns:

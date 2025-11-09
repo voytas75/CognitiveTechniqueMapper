@@ -19,6 +19,8 @@ from tenacity import (
     wait_exponential,
 )
 
+from ..services.config_service import ConfigService, WorkflowModelConfig
+
 try:
     import litellm
     from litellm import completion
@@ -26,10 +28,8 @@ except ImportError as exc:  # pragma: no cover - guidance for missing dependency
     raise RuntimeError(
         "litellm is required for LLMGateway. Install via `pip install litellm`."
     ) from exc
-
-litellm.drop_params = True
-
-from ..services.config_service import ConfigService, WorkflowModelConfig
+else:
+    litellm.drop_params = True
 
 logger = logging.getLogger(__name__)
 

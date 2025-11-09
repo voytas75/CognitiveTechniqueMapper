@@ -1,21 +1,27 @@
+import importlib
 import json
 import sys
 import types
-from typing import Any, Dict
+from typing import Any
 
 
 litellm_stub = types.ModuleType("litellm")
 litellm_stub.drop_params = True
 
 
-def _unused_completion(*_: Any, **__: Any) -> Dict[str, Any]:  # pragma: no cover
+def _unused_completion(*_: Any, **__: Any) -> dict[str, Any]:  # pragma: no cover
     raise RuntimeError("litellm completion should not be invoked in tests")
 
 
 litellm_stub.completion = _unused_completion
 sys.modules.setdefault("litellm", litellm_stub)
 
-from src.services.explanation_service import ExplanationService
+
+def import_explanation_service() -> type:
+    module_name = "src.services.explanation_service"
+    if module_name in sys.modules:
+        del sys.modules[module_name]
+    return importlib.import_module(module_name).ExplanationService
 
 
 class StubLLM:
@@ -38,6 +44,7 @@ class StubPrompts:
 
 
 def test_explanation_service_returns_structured_result() -> None:
+    ExplanationService = import_explanation_service()
     service = ExplanationService(  # type: ignore[arg-type]
         llm_gateway=StubLLM(), prompt_service=StubPrompts()
     )
