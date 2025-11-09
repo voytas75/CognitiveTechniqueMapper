@@ -10,6 +10,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Structured `detect_technique` responses with JSON parsing and automatic plan generation.
 - `settings` subcommands to edit workflow models and provider metadata with optional interactive prompts.
 - `refresh` CLI command to reload the techniques dataset and rebuild embeddings on demand.
+- Structured `explain_logic` prompt with JSON parsing plus CLI rendering of key factors, risks, and next steps.
+- SQLite-backed feedback persistence with preloaded history and summaries.
+- `analyze --show-candidates` flag to display similarity-ranked technique matches.
 
 ### Changed
 - Align `max_tokens` handling with LiteLLM per-model limits to avoid provider rejections.

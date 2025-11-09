@@ -17,6 +17,7 @@ class FeedbackEntry:
     workflow: str
     message: str
     rating: int | None = None
+    created_at: str | None = None
 
 
 @dataclass
@@ -25,7 +26,14 @@ class FeedbackManager:
 
     entries: List[FeedbackEntry] = field(default_factory=list)
 
-    def add(self, workflow: str, message: str, rating: int | None = None) -> None:
+    def add(
+        self,
+        workflow: str,
+        message: str,
+        rating: int | None = None,
+        *,
+        created_at: str | None = None,
+    ) -> None:
         """Store a new feedback entry.
 
         Args:
@@ -35,7 +43,12 @@ class FeedbackManager:
         """
 
         self.entries.append(
-            FeedbackEntry(workflow=workflow, message=message, rating=rating)
+            FeedbackEntry(
+                workflow=workflow,
+                message=message,
+                rating=rating,
+                created_at=created_at,
+            )
         )
 
     def latest(self, limit: int = 5) -> List[FeedbackEntry]:

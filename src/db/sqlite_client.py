@@ -23,6 +23,16 @@ CREATE TABLE IF NOT EXISTS techniques (
 );
 """
 
+FEEDBACK_TABLE_SCHEMA = """
+CREATE TABLE IF NOT EXISTS feedback (
+    id INTEGER PRIMARY KEY,
+    workflow TEXT NOT NULL,
+    message TEXT NOT NULL,
+    rating INTEGER,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+"""
+
 
 class SQLiteClient:
     """Lightweight wrapper around sqlite3 for the techniques knowledge base."""
@@ -50,6 +60,7 @@ class SQLiteClient:
         """Ensure the base techniques table exists."""
         with self.connection as conn:
             conn.execute(TECHNIQUES_TABLE_SCHEMA)
+            conn.execute(FEEDBACK_TABLE_SCHEMA)
 
     def insert_technique(
         self,

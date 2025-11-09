@@ -33,11 +33,13 @@ from .core.feedback_manager import FeedbackManager
 from .core.llm_gateway import LLMGateway
 from .core.orchestrator import Orchestrator
 from .core.logging_setup import configure_logging, set_runtime_level
+from .db.feedback_repository import FeedbackRepository
 from .db.sqlite_client import SQLiteClient
 from .services.config_editor import ConfigEditor
 from .services.config_service import ConfigService
 from .services.data_initializer import TechniqueDataInitializer
 from .services.embedding_gateway import EmbeddingGateway
+from .services.explanation_service import ExplanationResult, ExplanationService
 from .services.feedback_service import FeedbackService
 from .services.plan_generator import PlanGenerator
 from .services.prompt_service import PromptService
@@ -66,8 +68,12 @@ class AppState:
 
     problem_description: Optional[str] = None
     last_recommendation: Optional[dict] = None
+    last_explanation: Optional[dict] = None
     context_history: list[dict] = field(default_factory=list)
     llm_gateway: Optional[LLMGateway] = field(default=None, repr=False, compare=False)
+    explanation_service: Optional[ExplanationService] = field(
+        default=None, repr=False, compare=False
+    )
 
     @classmethod
     def load(cls, path: Path = STATE_PATH) -> "AppState":
@@ -90,6 +96,7 @@ class AppState:
         return cls(
             problem_description=data.get("problem_description"),
             last_recommendation=data.get("last_recommendation"),
+            last_explanation=data.get("last_explanation"),
             context_history=data.get("context_history", []),
         )
 
@@ -103,6 +110,7 @@ class AppState:
         payload = {
             "problem_description": self.problem_description,
             "last_recommendation": self.last_recommendation,
+            "last_explanation": self.last_explanation,
             "context_history": self.context_history,
         }
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -191,8 +199,14 @@ def initialize_runtime() -> tuple[Orchestrator, AppState]:
     )
     plan_generator = PlanGenerator(llm_gateway=llm_gateway)
     feedback_manager = FeedbackManager()
+    feedback_repository = FeedbackRepository(sqlite_client=sqlite_client)
     feedback_service = FeedbackService(
-        feedback_manager=feedback_manager, llm_gateway=llm_gateway
+        feedback_manager=feedback_manager,
+        llm_gateway=llm_gateway,
+        repository=feedback_repository,
+    )
+    explanation_service = ExplanationService(
+        llm_gateway=llm_gateway, prompt_service=prompt_service
     )
 
     orchestrator = Orchestrator(
@@ -206,6 +220,7 @@ def initialize_runtime() -> tuple[Orchestrator, AppState]:
 
     state = AppState.load()
     state.llm_gateway = llm_gateway
+    state.explanation_service = explanation_service
     return orchestrator, state
 
 
@@ -242,6 +257,11 @@ def describe(
 
 @app.command()
 def analyze(
+    show_candidates: bool = typer.Option(
+        False,
+        "--show-candidates/--hide-candidates",
+        help="Display the candidate shortlist with similarity scores.",
+    ),
     log_level: str = typer.Option(
         None,
         "--log-level",
@@ -289,10 +309,16 @@ def analyze(
     state.context_history.append(result)
     state.save()
     logger.info("Analysis completed.")
-    _render_analysis_output(recommendation, result.get("plan"))
+    _render_analysis_output(
+        recommendation,
+        result.get("plan"),
+        matches=result.get("matches") if show_candidates else None,
+    )
 
 
-def _render_analysis_output(recommendation: dict[str, Any], plan: Any) -> None:
+def _render_analysis_output(
+    recommendation: dict[str, Any], plan: Any, *, matches: Any = None
+) -> None:
     """Display structured recommendation and optional plan to the console."""
 
     if not recommendation:
@@ -319,6 +345,58 @@ def _render_analysis_output(recommendation: dict[str, Any], plan: Any) -> None:
 
     console.print(Panel("\n".join(lines), title="Suggested Technique"))
 
+    if matches is not None:
+        _render_candidate_matches(matches)
+
+
+def _render_candidate_matches(matches: Any) -> None:
+    if not matches:
+        console.print(
+            Panel("No candidate techniques were returned.", title="Candidate Matches")
+        )
+        return
+
+    lines: list[str] = []
+    for idx, match in enumerate(matches, start=1):
+        metadata = match.get("metadata") or {}
+        name = metadata.get("name") or match.get("id") or "Unknown"
+        score = match.get("score")
+        score_display = (
+            f"{float(score):.3f}" if isinstance(score, (int, float)) else "n/a"
+        )
+        category = metadata.get("category") or ""
+        lines.append(f"{idx}. {name} (score: {score_display})")
+        if category:
+            lines.append(f"   Category: {category}")
+        description = metadata.get("description") or match.get("document") or ""
+        if description:
+            lines.append(f"   Summary: {description}")
+    console.print(Panel("\n".join(lines), title="Candidate Matches"))
+
+
+def _render_explanation_output(result: ExplanationResult) -> None:
+    lines = []
+    if result.overview:
+        lines.append(f"[bold]Overview:[/]\n{result.overview}")
+
+    if result.key_factors:
+        lines.append("[bold]Key factors:[/]")
+        for idx, factor in enumerate(result.key_factors, start=1):
+            lines.append(f"{idx}. {factor}")
+
+    if result.risks:
+        lines.append("\n[bold]Risks & caveats:[/]")
+        for idx, risk in enumerate(result.risks, start=1):
+            lines.append(f"{idx}. {risk}")
+
+    if result.next_steps:
+        lines.append("\n[bold]Suggested next steps:[/]")
+        for idx, step in enumerate(result.next_steps, start=1):
+            lines.append(f"{idx}. {step}")
+
+    content = "\n".join(lines) if lines else "No explanation details available."
+    console.print(Panel(content, title="Explain Logic"))
+
 
 @app.command()
 def explain(
@@ -343,20 +421,23 @@ def explain(
 
     _apply_log_override(log_level)
 
-    prompt = (
-        "Explain the reasoning that led to the following recommendation.\n"
-        f"Recommendation payload:\n{json.dumps(state.last_recommendation, indent=2)}"
-    )
-    if not state.llm_gateway:
-        raise typer.BadParameter("LLM gateway not initialized.")
+    if not state.explanation_service:
+        raise typer.BadParameter("Explanation service not initialized.")
 
     try:
-        llm_output = state.llm_gateway.invoke("explain_logic", prompt)
+        explanation = state.explanation_service.explain(
+            state.last_recommendation or {},
+            problem_description=state.problem_description,
+        )
     except RuntimeError as exc:
         console.print(f"[red]Explain failed: {exc}[/]")
         raise typer.Exit(code=1) from exc
+
     logger.info("Explain workflow executed.")
-    console.print(Panel(llm_output, title="Explain Logic"))
+    state.last_explanation = explanation.as_dict()
+    state.context_history.append({"explanation": state.last_explanation})
+    state.save()
+    _render_explanation_output(explanation)
 
 
 @settings_app.callback(invoke_without_command=True)
