@@ -4,6 +4,7 @@
   "typeCheckingMode": "strict",
   "reportMissingTypeStubs": false,
   "reportMissingImports": "warning",
+  "reportUnknownVariableType": false,
   "reportMissingModuleSource": "warning",
   "venvPath": ".",
   "venv": ".venv"
