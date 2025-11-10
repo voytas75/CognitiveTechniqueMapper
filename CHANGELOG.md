@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Removed
+- Removed mypy dependency and configuration; Pyright now serves as the sole static type checker.
+
 ## [0.2.0] - 2025-11-09
 
 ### Added

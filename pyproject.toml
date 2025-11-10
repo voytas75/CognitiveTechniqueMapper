@@ -24,7 +24,6 @@ dev = [
     "pytest>=8.2",
     "pytest-cov>=5.0",
     "ruff>=0.4",
-    "mypy>=1.10",
     "pyright>=1.1.377",
     "types-PyYAML>=6.0.12",
 ]
@@ -36,23 +35,3 @@ target-version = ["py312"]
 [tool.isort]
 profile = "black"
 line_length = 88
-
-[tool.mypy]
-python_version = "3.12"
-pretty = true
-show_error_codes = true
-ignore_missing_imports = false
-strict = false
-mypy_path = ["src"]
-
-[[tool.mypy.overrides]]
-module = "src.core.*"
-strict = true
-
-[[tool.mypy.overrides]]
-module = ["litellm", "yaml"]
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "tests.*"
-ignore_errors = true
