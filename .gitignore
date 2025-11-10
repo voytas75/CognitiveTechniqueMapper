@@ -65,3 +65,5 @@ chromadb/
 build/
 config/config.json
 .uv-cache
+data/techniques.db
+data/state.json
