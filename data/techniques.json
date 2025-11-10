@@ -214,5 +214,77 @@
     "creator": "Mike Rother",
     "category": "Continuous Improvement",
     "core_principles": null
+  },
+  {
+    "name": "Double-Loop Learning",
+    "description": "Learning process where individuals or organizations question and modify underlying assumptions, not just actions, to improve performance.",
+    "origin_year": 1974,
+    "creator": "Chris Argyris",
+    "category": "Reflection / Organizational Learning",
+    "core_principles": null
+  },
+  {
+    "name": "Ladder of Inference",
+    "description": "Framework illustrating how individuals move from observable data to assumptions and conclusions, promoting awareness of cognitive biases.",
+    "origin_year": 1990,
+    "creator": "Chris Argyris",
+    "category": "Decision-Making / Reflection",
+    "core_principles": null
+  },
+  {
+    "name": "Balanced Scorecard",
+    "description": "Strategic management tool that measures organizational performance across financial and non-financial perspectives.",
+    "origin_year": 1992,
+    "creator": "Robert Kaplan and David Norton",
+    "category": "Strategy / Performance Management",
+    "core_principles": null
+  },
+  {
+    "name": "Theory of Change",
+    "description": "Comprehensive framework describing how and why a desired change is expected to happen through a sequence of outcomes and assumptions.",
+    "origin_year": 1990,
+    "creator": "Carol Weiss",
+    "category": "Planning / Evaluation",
+    "core_principles": null
+  },
+  {
+    "name": "Appreciative Inquiry",
+    "description": "Change management approach focusing on identifying and amplifying what works well instead of fixing problems.",
+    "origin_year": 1987,
+    "creator": "David Cooperrider",
+    "category": "Organizational Development / Coaching",
+    "core_principles": null
+  },
+  {
+    "name": "Fishbone Diagram",
+    "description": "Visual tool used to identify root causes of a problem by categorizing potential factors.",
+    "origin_year": 1968,
+    "creator": "Kaoru Ishikawa",
+    "category": "Problem-Solving",
+    "core_principles": null
+  },
+  {
+    "name": "Mind Mapping",
+    "description": "Visual technique for organizing information, ideas, and relationships around a central concept.",
+    "origin_year": 1974,
+    "creator": "Tony Buzan",
+    "category": "Creativity / Learning",
+    "core_principles": null
+  },
+  {
+    "name": "PESTLE Analysis",
+    "description": "Strategic framework analyzing external factors: Political, Economic, Social, Technological, Legal, and Environmental.",
+    "origin_year": 1967,
+    "creator": "Harvard Business School community",
+    "category": "Strategic Planning",
+    "core_principles": null
+  },
+  {
+    "name": "SOAR Analysis",
+    "description": "Strategic planning framework focusing on Strengths, Opportunities, Aspirations, and Results to drive positive change.",
+    "origin_year": 2003,
+    "creator": "Jacqueline Stavros",
+    "category": "Strategic Planning / Coaching",
+    "core_principles": null
   }
 ]
