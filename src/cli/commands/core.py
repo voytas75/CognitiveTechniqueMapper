@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import sys
+from pathlib import Path
 from typing import Any, Optional
 
 import typer
@@ -21,6 +22,7 @@ from src.cli.utils import (
     apply_log_override,
     infer_category_from_matches,
 )
+from src.cli.reporting import build_report_payload, render_report_markdown
 
 logger = logging.getLogger(__name__)
 
@@ -352,6 +354,40 @@ def feedback(
     )
 
 
+def report(
+    output: Optional[Path] = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Optional file to write the report as Markdown.",
+        dir_okay=False,
+        resolve_path=True,
+    ),
+    log_level: str | None = typer.Option(
+        None,
+        "--log-level",
+        "-l",
+        help="Override logging level for this invocation.",
+    ),
+) -> None:
+    """Generate a Markdown report of the latest analysis artifacts."""
+
+    apply_log_override(log_level)
+
+    state = _cli().get_state()
+    if not state.last_recommendation:
+        raise typer.BadParameter("No recommendation available. Run `analyze` first.")
+
+    payload = build_report_payload(state)
+    markdown = render_report_markdown(payload)
+
+    if output:
+        output.write_text(markdown, encoding="utf-8")
+        console.print(Panel(f"Report saved to {output}", title="Report"))
+    else:
+        console.print(markdown)
+
+
 __all__ = [
     "analyze",
     "compare",
@@ -359,5 +395,6 @@ __all__ = [
     "explain",
     "feedback",
     "refresh",
+    "report",
     "simulate",
 ]
