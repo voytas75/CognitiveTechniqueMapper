@@ -18,7 +18,7 @@ workflows:
     model: "azure/gpt-4.1"
     temperature: 0.5
 embeddings:
-  model: "UDTEMBED3L"
-  provider: "azure"
+  model: "azure/UDTEMBED3L"
+  provider: "azure_openai"
 defaults:
   provider: "azure_openai"

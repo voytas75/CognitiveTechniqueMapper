@@ -19,15 +19,15 @@ def _write_embedding_config(base_dir: Path) -> None:
     (base_dir / "models.yaml").write_text(
         """
 workflows: {}
-defaults: {provider: azure}
-embeddings: {model: UDTEMBED3L, provider: azure}
+defaults: {provider: azure_openai}
+embeddings: {model: azure/UDTEMBED3L, provider: azure_openai}
 """.strip(),
         encoding="utf-8",
     )
     (base_dir / "providers.yaml").write_text(
         """
 providers:
-  azure:
+  azure_openai:
     api_base: "https://azure.example.com"
     api_version: "2024-05-01-preview"
     api_key_env: "AZURE_KEY"
@@ -63,9 +63,9 @@ def test_embedding_gateway_uses_provider_metadata(
     result = gateway.embed_batch(["some text"])
 
     assert result == [[0.1, 0.2, 0.3]]
-    assert captured["model"] == "UDTEMBED3L"
+    assert captured["model"] == "azure/UDTEMBED3L"
     assert captured["input"] == ["some text"]
-    assert captured["custom_llm_provider"] == "azure"
+    assert captured["custom_llm_provider"] == "azure_openai"
     assert captured["api_key"] == "secret"
     assert captured["api_base"] == "https://azure.example.com"
     assert captured["api_version"] == "2024-05-01-preview"

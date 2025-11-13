@@ -22,15 +22,15 @@ def _write_llm_config(base_dir: Path) -> None:
             "  detect_technique:\n"
             "    model: 'azure/gpt-4.1'\n"
             "    temperature: 0.2\n"
-            "defaults: {provider: azure}\n"
-            "embeddings: {model: UDTEMBED3L, provider: azure}\n"
+            "defaults: {provider: azure_openai}\n"
+            "embeddings: {model: azure/UDTEMBED3L, provider: azure_openai}\n"
         ),
         encoding="utf-8",
     )
     (base_dir / "providers.yaml").write_text(
         (
             "providers:\n"
-            "  azure:\n"
+            "  azure_openai:\n"
             "    api_base: 'https://azure.example.com'\n"
             "    api_version: '2024-05-01-preview'\n"
             "    api_key_env: 'AZURE_KEY'\n"
