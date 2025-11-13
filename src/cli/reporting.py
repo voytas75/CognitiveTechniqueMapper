@@ -11,6 +11,7 @@ from src.cli.state import AppState
 def build_report_payload(state: AppState) -> Dict[str, Any]:
     """Construct a report payload from the current CLI state."""
 
+<<<<<<< HEAD
     recommendation: Optional[Dict[str, Any]] = None
     if state.last_recommendation:
         recommendation = dict(
@@ -23,6 +24,11 @@ def build_report_payload(state: AppState) -> Dict[str, Any]:
     return {
         "problem_description": state.problem_description,
         "recommendation": recommendation,
+=======
+    return {
+        "problem_description": state.problem_description,
+        "recommendation": state.last_recommendation,
+>>>>>>> a5ff1106c426316af52b3c650e2afc274453d6fc
         "explanation": state.last_explanation,
         "simulation": state.last_simulation,
         "comparison": state.last_comparison,

@@ -7,10 +7,14 @@ from tests.helpers.cli import make_cli_runtime
 def test_build_report_payload_includes_state() -> None:
     _orchestrator, state = make_cli_runtime()
     state.problem_description = "Need a decision framework"
+<<<<<<< HEAD
     state.last_recommendation = {
         "recommendation": {"suggested_technique": "Decisional Balance"},
         "plan": {"milestones": ["Step1"]},
     }
+=======
+    state.last_recommendation = {"recommendation": "Decisional Balance"}
+>>>>>>> a5ff1106c426316af52b3c650e2afc274453d6fc
     state.last_explanation = {"overview": "Explanation"}
     state.last_simulation = {"simulation_overview": "Sim overview"}
     state.last_comparison = {"current_recommendation": "Decisional Balance"}
@@ -18,8 +22,12 @@ def test_build_report_payload_includes_state() -> None:
     payload = build_report_payload(state)
 
     assert payload["problem_description"] == "Need a decision framework"
+<<<<<<< HEAD
     assert payload["recommendation"]["suggested_technique"] == "Decisional Balance"
     assert payload["recommendation"]["plan"] == {"milestones": ["Step1"]}
+=======
+    assert payload["recommendation"]["recommendation"] == "Decisional Balance"
+>>>>>>> a5ff1106c426316af52b3c650e2afc274453d6fc
 
 
 def test_render_report_markdown_contains_sections() -> None:
