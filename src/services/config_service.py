@@ -8,6 +8,7 @@ Updates:
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -72,7 +73,12 @@ class ConfigService:
     def providers(self) -> dict[str, Any]:
         """Return provider configuration registry."""
         provider_section = self._providers.get("providers", {})
-        return dict(provider_section) if isinstance(provider_section, dict) else {}
+        if not isinstance(provider_section, dict):
+            return {}
+        return {
+            name: self._expand_env_values(config)
+            for name, config in provider_section.items()
+        }
 
     def get_workflow_model_config(self, workflow: str) -> WorkflowModelConfig:
         """Return configuration for the requested workflow.
@@ -136,3 +142,20 @@ class ConfigService:
         """Clear cached configuration to reflect file updates."""
 
         ConfigLoader.load.cache_clear()
+
+    @staticmethod
+    def _expand_env_values(value: Any, *, current_key: str | None = None) -> Any:
+        if isinstance(value, dict):
+            return {
+                key: ConfigService._expand_env_values(entry, current_key=key)
+                for key, entry in value.items()
+            }
+        if isinstance(value, list):
+            return [
+                ConfigService._expand_env_values(item, current_key=current_key)
+                for item in value
+            ]
+        if isinstance(value, str) and current_key != "api_key_env":
+            expanded = os.path.expandvars(value)
+            return expanded
+        return value

@@ -6,6 +6,7 @@ Updates:
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Sequence
@@ -32,6 +33,8 @@ class EmbeddingRecord:
 
 class ChromaClient:
     """Wrapper around ChromaDB to manage technique embeddings."""
+
+    _logger = logging.getLogger(__name__)
 
     def __init__(self, persist_directory: str | Path, collection_name: str) -> None:
         """Initialize the Chroma client instance.
@@ -77,9 +80,26 @@ class ChromaClient:
             metadatas.append(record.metadata or {})
             documents.append(record.document)
 
-        self.collection.upsert(
-            ids=ids, embeddings=vectors, metadatas=metadatas, documents=documents
-        )
+        try:
+            self.collection.upsert(
+                ids=ids, embeddings=vectors, metadatas=metadatas, documents=documents
+            )
+        except Exception as exc:  # pragma: no cover - recoverable path
+            if "dimension" in str(exc).lower():
+                self._logger.warning(
+                    "Resetting Chroma collection '%s' due to dimension mismatch: %s",
+                    self._collection_name,
+                    exc,
+                )
+                self._reset_collection()
+                self.collection.upsert(
+                    ids=ids,
+                    embeddings=vectors,
+                    metadatas=metadatas,
+                    documents=documents,
+                )
+            else:
+                raise
 
     def query(
         self,
@@ -112,3 +132,15 @@ class ChromaClient:
         """
 
         self.collection.delete(ids=list(ids))
+
+    def _reset_collection(self) -> None:
+        try:
+            self.client.delete_collection(self._collection_name)
+        except Exception as exc:  # pragma: no cover - best effort cleanup
+            self._logger.debug(
+                "Failed to delete Chroma collection '%s': %s",
+                self._collection_name,
+                exc,
+            )
+        finally:
+            self._collection = None
