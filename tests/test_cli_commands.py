@@ -1,165 +1,107 @@
 from __future__ import annotations
 
-import json
-from dataclasses import dataclass
 from typing import Any
 
 import pytest
 
 import src.cli as cli
-
-
-@dataclass
-class PreferenceProfile:
-    summary: str
-
-
-class StubPreferenceService:
-    def __init__(self) -> None:
-        self._summary = "Prefers structured analysis."
-        self.recorded: list[dict[str, Any]] = []
-        self.cleared = False
-
-    def preference_summary(self) -> str:
-        return self._summary
-
-    def export_profile(self) -> PreferenceProfile:
-        return PreferenceProfile(summary=self._summary)
-
-    def record_preference(
-        self,
-        *,
-        technique: str | None,
-        category: str | None,
-        rating: int | None,
-        notes: str,
-    ) -> None:
-        self.recorded.append(
-            {
-                "technique": technique,
-                "category": category,
-                "rating": rating,
-                "notes": notes,
-            }
-        )
-
-    def clear(self) -> None:
-        self.cleared = True
-
-
-class StubExplanationService:
-    def explain(
-        self,
-        recommendation: dict[str, Any],
-        *,
-        problem_description: str | None = None,
-    ) -> cli.ExplanationResult:
-        assert recommendation
-        assert problem_description
-        return cli.ExplanationResult(
-            overview="Technique fits the scenario.",
-            key_factors=["Clear trade-off analysis"],
-            risks=["May ignore intuition"],
-            next_steps=["List pros and cons"],
-            raw_response=json.dumps({"ok": True}),
-        )
-
-
-class StubSimulationResult:
-    simulation_overview = "Walkthrough"
-
-
-class StubOrchestrator:
-    def __init__(self) -> None:
-        self.calls: list[tuple[str, dict[str, Any]]] = []
-        self._feedback_summary = {"summary": "Captured"}
-
-    def execute(self, workflow: str, context: dict[str, Any]) -> dict[str, Any]:
-        self.calls.append((workflow, context))
-        if workflow == "detect_technique":
-            return {
-                "recommendation": {
-                    "suggested_technique": "Decisional Balance",
-                    "why_it_fits": "Balances pros and cons",
-                    "steps": ["List options", "Score trade-offs"],
-                },
-                "matches": [
-                    {
-                        "metadata": {
-                            "name": "Decisional Balance",
-                            "category": "Decision Making",
-                            "description": "Compare pros and cons.",
-                        },
-                        "score": 0.92,
-                    }
-                ],
-                "preference_summary": "Prefers structured analysis.",
-            }
-        if workflow == "summarize_result":
-            assert "technique_summary" in context
-            return {"plan": {"milestones": ["Gather data", "Evaluate"]}}
-        if workflow == "simulate_technique":
-            assert context["recommendation"]
-            return {
-                "simulation": {
-                    "simulation_overview": "Simulation overview",
-                    "scenario_variations": [
-                        {
-                            "name": "Best case",
-                            "outcome": "Success",
-                            "guidance": "Stay on plan",
-                        }
-                    ],
-                    "cautions": ["Time pressure"],
-                    "recommended_follow_up": ["Review outcomes"],
-                }
-            }
-        if workflow == "compare_candidates":
-            assert context["matches"]
-            return {
-                "comparison": {
-                    "current_recommendation": "Decisional Balance",
-                    "best_alternative": "Six Thinking Hats",
-                    "comparison_points": [
-                        {
-                            "technique": "Decisional Balance",
-                            "strengths": "Structured",
-                            "risks": "Slow",
-                            "best_for": "Trade-offs",
-                        }
-                    ],
-                    "decision_guidance": ["Use hats for creativity"],
-                    "confidence_notes": "High",
-                }
-            }
-        if workflow == "feedback_loop":
-            if context.get("action") == "record":
-                return {"status": "ok"}
-            return self._feedback_summary
-        if workflow == "config_update":
-            return {"config": "ok"}
-        raise AssertionError(f"Unsupported workflow: {workflow}")
+from tests.helpers.cli import (
+    RecordingOrchestrator,
+    StubExplanationService,
+    StubPreferenceService,
+    mute_console,
+    patch_runtime,
+)
 
 
 @pytest.fixture()
 def patched_runtime(monkeypatch: pytest.MonkeyPatch) -> tuple[StubOrchestrator, cli.AppState, StubPreferenceService]:
-    orchestrator = StubOrchestrator()
+    def detect_handler(context: dict[str, Any], _: RecordingOrchestrator) -> dict[str, Any]:
+        return {
+            "recommendation": {
+                "suggested_technique": "Decisional Balance",
+                "why_it_fits": "Balances pros and cons",
+                "steps": ["List options", "Score trade-offs"],
+            },
+            "matches": [
+                {
+                    "metadata": {
+                        "name": "Decisional Balance",
+                        "category": "Decision Making",
+                        "description": "Compare pros and cons.",
+                    },
+                    "score": 0.92,
+                }
+            ],
+            "preference_summary": "Prefers structured analysis.",
+        }
+
+    def summarize_handler(context: dict[str, Any], _: RecordingOrchestrator) -> dict[str, Any]:
+        assert "technique_summary" in context
+        return {"plan": {"milestones": ["Gather data", "Evaluate"]}}
+
+    def simulate_handler(context: dict[str, Any], _: RecordingOrchestrator) -> dict[str, Any]:
+        assert context["recommendation"]
+        return {
+            "simulation": {
+                "simulation_overview": "Simulation overview",
+                "scenario_variations": [
+                    {
+                        "name": "Best case",
+                        "outcome": "Success",
+                        "guidance": "Stay on plan",
+                    }
+                ],
+                "cautions": ["Time pressure"],
+                "recommended_follow_up": ["Review outcomes"],
+            }
+        }
+
+    def compare_handler(context: dict[str, Any], _: RecordingOrchestrator) -> dict[str, Any]:
+        assert context["matches"]
+        return {
+            "comparison": {
+                "current_recommendation": "Decisional Balance",
+                "best_alternative": "Six Thinking Hats",
+                "comparison_points": [
+                    {
+                        "technique": "Decisional Balance",
+                        "strengths": "Structured",
+                        "risks": "Slow",
+                        "best_for": "Trade-offs",
+                    }
+                ],
+                "decision_guidance": ["Use hats for creativity"],
+                "confidence_notes": "High",
+            }
+        }
+
+    def feedback_handler(context: dict[str, Any], orchestrator: RecordingOrchestrator) -> dict[str, Any]:
+        if context.get("action") == "record":
+            orchestrator.data.setdefault("feedback_records", []).append(context)
+            orchestrator.data["feedback_summary"] = {"summary": "Captured"}
+            return {"status": "ok"}
+        return orchestrator.data.get("feedback_summary", {"summary": ""})
+
+    orchestrator = RecordingOrchestrator(
+        handlers={
+            "detect_technique": detect_handler,
+            "summarize_result": summarize_handler,
+            "simulate_technique": simulate_handler,
+            "compare_candidates": compare_handler,
+            "feedback_loop": feedback_handler,
+        },
+        default=lambda workflow, _context, _self: {"config": {}} if workflow == "config_update" else {},
+    )
     state = cli.AppState()
-    state.save = lambda path=cli.STATE_PATH: None  # type: ignore[assignment]
     state.preference_service = StubPreferenceService()
     state.explanation_service = StubExplanationService()
-    monkeypatch.setattr(cli, "get_runtime", lambda: (orchestrator, state))
-    monkeypatch.setattr(cli, "get_state", lambda: state)
-    monkeypatch.setattr(cli, "get_orchestrator", lambda: orchestrator)
-    monkeypatch.setattr(cli, "set_runtime", lambda runtime: None)
-    monkeypatch.setattr(cli.console, "print", lambda *args, **kwargs: None)
-    monkeypatch.setattr(cli.console, "print_json", lambda *args, **kwargs: None)
-    monkeypatch.setattr(cli.console, "print_panel", lambda *args, **kwargs: None, raising=False)
-    monkeypatch.setattr(cli.console, "log", lambda *args, **kwargs: None, raising=False)
+    patch_runtime(monkeypatch, orchestrator, state)
+    mute_console(monkeypatch)
     return orchestrator, state, state.preference_service  # type: ignore[return-value]
 
 
-def test_cli_happy_path_flow(patched_runtime: tuple[StubOrchestrator, cli.AppState, StubPreferenceService]) -> None:
+def test_cli_happy_path_flow(patched_runtime: tuple[RecordingOrchestrator, cli.AppState, StubPreferenceService]) -> None:
     orchestrator, state, preference_service = patched_runtime
 
     cli.describe("Need a decision framework", log_level=None)

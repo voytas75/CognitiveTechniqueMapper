@@ -8,15 +8,7 @@ import pytest
 
 import src.cli as cli
 from src.services.config_service import WorkflowModelConfig
-
-
-class StubOrchestrator:
-    def __init__(self) -> None:
-        self.calls: list[tuple[str, dict[str, Any]]] = []
-
-    def execute(self, workflow: str, context: dict[str, Any]) -> dict[str, Any]:
-        self.calls.append((workflow, context))
-        return {"config": {}}
+from tests.helpers.cli import RecordingOrchestrator, mute_console
 
 
 class StubConfigEditor:
@@ -101,8 +93,7 @@ class StubSQLiteClient:
 
 @pytest.fixture()
 def patched_console(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(cli.console, "print", lambda *args, **kwargs: None)
-    monkeypatch.setattr(cli.console, "print_json", lambda *args, **kwargs: None)
+    mute_console(monkeypatch)
 
 
 def test_settings_update_workflow_interactive(monkeypatch: pytest.MonkeyPatch, patched_console: None) -> None:
@@ -121,7 +112,7 @@ def test_settings_update_workflow_interactive(monkeypatch: pytest.MonkeyPatch, p
     monkeypatch.setattr(cli, "ConfigService", StubConfigService)
     editor = StubConfigEditor()
     monkeypatch.setattr(cli, "ConfigEditor", lambda: editor)
-    orchestrator = StubOrchestrator()
+    orchestrator = RecordingOrchestrator()
     monkeypatch.setattr(cli, "get_orchestrator", lambda: orchestrator)
     monkeypatch.setattr(cli, "_refresh_runtime", lambda: None)
     monkeypatch.setattr(cli, "_prompt_value", lambda label, current: current or "detect_technique")
@@ -156,7 +147,7 @@ def test_settings_update_provider(monkeypatch: pytest.MonkeyPatch, patched_conso
     monkeypatch.setattr(cli, "ConfigService", StubConfigService)
     editor = StubConfigEditor()
     monkeypatch.setattr(cli, "ConfigEditor", lambda: editor)
-    monkeypatch.setattr(cli, "get_orchestrator", lambda: StubOrchestrator())
+    monkeypatch.setattr(cli, "get_orchestrator", lambda: RecordingOrchestrator())
     monkeypatch.setattr(cli, "_refresh_runtime", lambda: None)
     monkeypatch.setattr(cli, "_prompt_value", lambda label, current: current or "openai")
 

@@ -7,6 +7,7 @@ import pytest
 import typer
 
 import src.cli as cli
+from tests.helpers.cli import StubPreferenceService
 
 
 class StubConfigService:
@@ -34,17 +35,6 @@ class StubInitializer:
 
     def initialize(self) -> None:
         self.initialized = True
-
-
-class StubPreferenceService:
-    def __init__(self, repository: Any = None) -> None:
-        self.repository = repository
-
-    def preference_summary(self) -> str:
-        return "Prefers structure"
-
-    def score_adjustment(self, metadata: Dict[str, Any]) -> float:
-        return 0.1
 
 
 class StubOrchestrator:
