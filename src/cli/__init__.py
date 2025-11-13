@@ -13,6 +13,7 @@ from src.cli.commands.core import (
     describe,
     explain,
     feedback,
+    report,
     refresh,
     simulate,
 )
@@ -198,6 +199,7 @@ app.command()(simulate)
 app.command()(compare)
 app.command()(refresh)
 app.command()(feedback)
+app.command()(report)
 
 settings_app.command("show")(settings_show)
 settings_app.command("update-workflow")(settings_update_workflow)
@@ -276,6 +278,7 @@ __all__: list[str] = [
     "simulate",
     "compare",
     "refresh",
+    "report",
     "feedback",
     "settings_show",
     "settings_update_workflow",

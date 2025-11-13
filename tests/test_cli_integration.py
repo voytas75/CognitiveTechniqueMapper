@@ -11,17 +11,17 @@ from tests.helpers.cli import make_cli_runtime, mute_console, patch_runtime
 
 
 @pytest.fixture()
-def cli_session(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> tuple[CliRunner, cli.AppState, Any]:
+def cli_session(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> tuple[CliRunner, cli.AppState, Any, Path]:
     runner = CliRunner()
     orchestrator, state = make_cli_runtime()
     state.save = lambda path=cli.STATE_PATH: None  # type: ignore[assignment]
     patch_runtime(monkeypatch, orchestrator, state)
     cli.set_runtime((orchestrator, state))
-    return runner, state, orchestrator
+    return runner, state, orchestrator, tmp_path
 
 
-def test_end_to_end_cli_flow(cli_session: tuple[CliRunner, cli.AppState, Any]) -> None:
-    runner, state, orchestrator = cli_session
+def test_end_to_end_cli_flow(cli_session: tuple[CliRunner, cli.AppState, Any, Path]) -> None:
+    runner, state, orchestrator, tmp_path = cli_session
 
     result = runner.invoke(cli.app, ["describe", "Need a decision framework"])
     assert result.exit_code == 0
@@ -66,6 +66,16 @@ def test_end_to_end_cli_flow(cli_session: tuple[CliRunner, cli.AppState, Any]) -
 
     result = runner.invoke(cli.app, ["preferences", "summary"])
     assert result.exit_code == 0
+
+    report_path = tmp_path / "report.md"
+    try:
+        result = runner.invoke(cli.app, ["report", "--output", str(report_path)])
+        assert result.exit_code == 0
+        assert report_path.exists()
+        contents = report_path.read_text(encoding="utf-8")
+        assert "# Cognitive Technique Report" in contents
+    finally:
+        report_path.unlink(missing_ok=True)
 
     result = runner.invoke(cli.app, ["settings", "show"])
     assert result.exit_code == 0

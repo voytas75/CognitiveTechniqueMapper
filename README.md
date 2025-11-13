@@ -11,6 +11,7 @@ Cognitive Technique Mapper (CTM) is a modular CLI application that pairs problem
 - **Technique detection & planning:** `analyze` blends vector search with LLM reasoning, parses structured responses, and calls the plan generator for actionable steps.
 - **Justification & exploration:** `explain`, `simulate`, and `compare` commands surface rationale, scenario walkthroughs, and trade-off comparisons for the selected technique.
 - **Guided CLI flow:** Top-level commands (`describe`, `analyze`, `explain`, `simulate`, `compare`, `feedback`) provide an end-to-end session from problem capture to feedback.
+- **Shareable reports:** `report` assembles the latest recommendation, explanation, simulation, and comparison into a Markdown snapshot for stakeholders.
 
 ### Personalization & History
 
@@ -96,6 +97,7 @@ python -m src.cli refresh --skip-embeddings
 python -m src.cli analyze --show-candidates
 python -m src.cli feedback "Loved the recommendation" --rating 5 --technique "Decisional Balance"
 python -m src.cli analyze --log-level DEBUG  # temporary verbose logging
+python -m src.cli report --output latest-report.md
 ```
 
 Notes:
@@ -123,6 +125,7 @@ The CLI lives under `src/cli/` and is broken into focused modules so commands re
 - `state.py` — Dataclass for persisted CLI state (`data/state.json` by default).
 - `commands/` — One module per concern (`core.py`, `settings.py`, `techniques.py`, `history.py`, `preferences.py`). Each module focuses on Typer command bindings only.
 - `renderers.py` — Rich output helpers shared by commands.
+- `reporting.py` — Builds shareable Markdown reports from the current session state.
 - `utils.py` — Small wrappers (logging overrides, prompt helpers) that respect monkeypatched dependencies.
 - `io.py` — Shared `Console` instance to keep Rich output consistent.
 

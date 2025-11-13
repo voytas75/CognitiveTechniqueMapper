@@ -12,6 +12,7 @@ The Cognitive Technique Mapper CLI is organised as a small package under `src/cl
 | `state.py` | `AppState` dataclass and persistence helpers (`data/state.json` by default). |
 | `commands/` | Typer command modules (`core.py`, `settings.py`, `techniques.py`, `history.py`, `preferences.py`). |
 | `renderers.py` | Rich output helpers shared by commands. |
+| `reporting.py` | Utilities that convert session state into shareable Markdown reports. |
 | `utils.py` | Lightweight helpers (log overrides, prompts) that respect monkeypatched dependencies. |
 | `io.py` | Shared Rich `Console` instance. |
 
