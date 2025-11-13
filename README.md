@@ -34,7 +34,7 @@ Cognitive Technique Mapper (CTM) is a modular CLI application that pairs problem
 ├── embeddings/            # Chroma DB persistence
 ├── prompts/               # Prompt templates and registry
 ├── src/
-│   ├── cli.py             # Typer CLI entry point
+│   ├── cli/               # CLI entrypoint, commands, runtime wiring
 │   ├── core/              # Orchestrator, LLM gateway, config loader, etc.
 │   ├── db/                # SQLite and Chroma clients
 │   ├── services/          # Technique selector, embeddings, plan generator…
@@ -108,6 +108,36 @@ Notes:
 - `analyze --show-candidates` prints the shortlist with similarity scores for transparency.
 
 If the LLM provider rejects a parameter (e.g., unsupported temperature), adjust `config/models.yaml` or set `litellm.drop_params = True` before running the CLI.
+
+---
+
+## 🧭 CLI Architecture
+
+The CLI lives under `src/cli/` and is broken into focused modules so commands remain easy to extend:
+
+- `__init__.py` — Typer root app. Wires command groups and re-exports runtime helpers for compatibility.
+- `__main__.py` — Enables `python -m src.cli`.
+- `runtime.py` — Builds the orchestrator, initializes services, and exposes helpers like `get_state()` and `create_catalog_service()`.
+- `state.py` — Dataclass for persisted CLI state (`data/state.json` by default).
+- `commands/` — One module per concern (`core.py`, `settings.py`, `techniques.py`, `history.py`, `preferences.py`). Each module focuses on Typer command bindings only.
+- `renderers.py` — Rich output helpers shared by commands.
+- `utils.py` — Small wrappers (logging overrides, prompt helpers) that respect monkeypatched dependencies.
+- `io.py` — Shared `Console` instance to keep Rich output consistent.
+
+### Adding a new command
+
+1. Decide whether it belongs in `commands/core.py` (primary flows) or a dedicated module under `commands/`.
+2. Implement the command function, reusing helpers such as `apply_log_override`, `get_orchestrator()`, and `render_*` utilities.
+3. Register the command in `src/cli/__init__.py` via `app.command()` or the relevant sub-app (e.g., `settings_app`).
+4. Update or create tests using fixtures from `tests/helpers/cli.py` to simulate orchestrator behaviour and mute console output.
+
+### Extending runtime behaviour
+
+- Use `runtime.py` for wiring new services/workflows. The `_resolve_dependency` helper lets tests override components by monkeypatching attributes on `src.cli`.
+- Persist additional state by extending `AppState` in `state.py`; remember to update `save()` and `load()`.
+- Keep render logic in `renderers.py` so Typer command modules stay thin.
+
+This separation keeps individual files well below the 300–400 line target in `AGENTS.md` and makes it obvious where to place new functionality.
 
 ---
 
