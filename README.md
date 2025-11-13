@@ -6,22 +6,24 @@ Cognitive Technique Mapper (CTM) is a modular CLI application that pairs problem
 
 ## 🚀 Features
 
-- **Technique Knowledge Base:** SQLite schema for storing named techniques with descriptions, origins, categories, and core principles. Optional Chroma collection holds vector embeddings for semantic search.
-- **Workflow-Oriented Reasoning:** `litellm` gateway routes requests to different models per workflow (detection, explanation, summarization, feedback).
-- **Structured Recommendations:** `analyze` now parses LLM replies into technique, rationale, and concrete steps, and automatically generates an implementation plan.
-- **Structured Explanations:** `explain` renders JSON-backed insights covering key factors, risks, and suggested follow-ups.
-- **Scenario Simulation:** `simulate` explores how the recommended technique performs under different what-if paths and highlights cautions.
-- **Candidate Comparison:** `compare` contrasts the shortlist, surfaces the strongest alternative, and offers decision guidance.
-- **Preference-Aware Personalization:** Feedback ratings train a lightweight preference model that influences recommendations and prompts.
-- **CLI Experience:** `describe`, `analyze`, `explain`, `settings`, `refresh`, and `feedback` commands guide users from problem input to actionable recommendations.
-- **Config-Driven:** YAML files under `config/` define app metadata, database paths, model mappings, and providers.
-- **Bootstrap & Persistence:** `TechniqueDataInitializer` seeds the database (and Chroma) from `data/techniques.json`, while CLI state persistence (`data/state.json`) allows multi-command sessions.
-- **Interactive Technique Catalog:** `techniques` subcommands let you list/add/update/remove techniques with automatic dataset and embedding synchronization.
-- **History & Preferences:** `history` commands reveal or clear session context, while `preferences` surfaces personalization signals and allows resets.
-- **Bulk Catalog I/O:** `techniques export` and `techniques import` handle JSON backups and restores with optional append mode and embedding rebuilds.
-- **Interactive Configuration:** `settings show`, `settings update-workflow`, and `settings update-provider` offer in-CLI editing with optional interactive prompts.
-- **Dataset Refresh:** `refresh` rebuilds the SQLite dataset and (optionally) regenerates vector embeddings without manual file management.
-- **Persistent Feedback:** Feedback entries are stored in SQLite, so summaries span sessions and retain historical context.
+### Core Workflows
+
+- **Technique detection & planning:** `analyze` blends vector search with LLM reasoning, parses structured responses, and calls the plan generator for actionable steps.
+- **Justification & exploration:** `explain`, `simulate`, and `compare` commands surface rationale, scenario walkthroughs, and trade-off comparisons for the selected technique.
+- **Guided CLI flow:** Top-level commands (`describe`, `analyze`, `explain`, `simulate`, `compare`, `feedback`) provide an end-to-end session from problem capture to feedback.
+
+### Personalization & History
+
+- **Preference-aware recommendations:** Feedback ratings train a lightweight preference model that adjusts rankings and summaries.
+- **Feedback loops:** `feedback` persists entries to SQLite and summarizes recent sentiment; `history` commands inspect or clear session context; `preferences` exposes or resets personalization signals.
+
+### Configuration & Catalog Management
+
+- **Config-driven setup:** YAML files under `config/` define app metadata, database paths, provider credentials, and workflow model mappings.
+- **Interactive configuration tools:** `settings show`, `settings update-workflow`, and `settings update-provider` support inline edits (with optional interactive prompts).
+- **Dataset lifecycle:** `TechniqueDataInitializer` seeds SQLite/Chroma from `data/techniques.json`; `refresh` reloads datasets and optionally rebuilds embeddings.
+- **Catalog administration:** `techniques` subcommands list, add, update, remove, import, and export techniques with automatic synchronization to vectors and storage.
+- **Persistent storage:** Session state (`data/state.json`) and feedback/preference tables ensure continuity across CLI runs.
 
 ---
 
@@ -173,6 +175,7 @@ Coverage includes config loading, SQLite operations, prompt registry validation,
 - For future enhancements consider:
   - Additional workflows (e.g., scenario simulation).
   - Extended prompts and richer feedback analysis.
+- See `docs/cli-contrib.md` for CLI-specific contribution tips and testing expectations.
 
 ---
 

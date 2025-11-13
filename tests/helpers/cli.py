@@ -137,11 +137,101 @@ def patch_runtime(monkeypatch: Any, orchestrator: RecordingOrchestrator, state: 
     monkeypatch.setattr(cli, "set_runtime", lambda runtime: None)
 
 
+def build_default_handlers() -> Dict[str, Handler]:
+    """Return handlers covering the primary CLI workflows for tests."""
+
+    def detect_handler(context: Dict[str, Any], _: RecordingOrchestrator) -> Dict[str, Any]:
+        return {
+            "recommendation": {
+                "suggested_technique": "Decisional Balance",
+                "why_it_fits": "Balances pros and cons",
+                "steps": ["List options", "Score trade-offs"],
+            },
+            "matches": [
+                {
+                    "metadata": {
+                        "name": "Decisional Balance",
+                        "category": "Decision Making",
+                        "description": "Compare pros and cons.",
+                    },
+                    "score": 0.92,
+                }
+            ],
+            "preference_summary": "Prefers structured analysis.",
+        }
+
+    def summarize_handler(context: Dict[str, Any], _: RecordingOrchestrator) -> Dict[str, Any]:
+        assert "technique_summary" in context
+        return {"plan": {"milestones": ["Gather data", "Evaluate"]}}
+
+    def simulate_handler(context: Dict[str, Any], _: RecordingOrchestrator) -> Dict[str, Any]:
+        assert context["recommendation"]
+        return {
+            "simulation": {
+                "simulation_overview": "Simulation overview",
+                "scenario_variations": [
+                    {"name": "Best case", "outcome": "Success", "guidance": "Stay on plan"}
+                ],
+                "cautions": ["Time pressure"],
+                "recommended_follow_up": ["Review outcomes"],
+            }
+        }
+
+    def compare_handler(context: Dict[str, Any], _: RecordingOrchestrator) -> Dict[str, Any]:
+        assert context["matches"]
+        return {
+            "comparison": {
+                "current_recommendation": "Decisional Balance",
+                "best_alternative": "Six Thinking Hats",
+                "comparison_points": [
+                    {
+                        "technique": "Decisional Balance",
+                        "strengths": "Structured",
+                        "risks": "Slow",
+                        "best_for": "Trade-offs",
+                    }
+                ],
+                "decision_guidance": ["Use hats for creativity"],
+                "confidence_notes": "High",
+            }
+        }
+
+    def feedback_handler(context: Dict[str, Any], orchestrator: RecordingOrchestrator) -> Dict[str, Any]:
+        if context.get("action") == "record":
+            orchestrator.data.setdefault("feedback_records", []).append(context)
+            orchestrator.data["feedback_summary"] = {"summary": "Captured"}
+            return {"status": "ok"}
+        return orchestrator.data.get("feedback_summary", {"summary": ""})
+
+    return {
+        "detect_technique": detect_handler,
+        "summarize_result": summarize_handler,
+        "simulate_technique": simulate_handler,
+        "compare_candidates": compare_handler,
+        "feedback_loop": feedback_handler,
+    }
+
+
+def make_cli_runtime() -> tuple[RecordingOrchestrator, cli.AppState]:
+    """Build a ready-to-use CLI runtime with default handlers."""
+
+    orchestrator = RecordingOrchestrator(
+        handlers=build_default_handlers(),
+        default=lambda workflow, _context, _self: {"config": {}} if workflow == "config_update" else {},
+    )
+    state = cli.AppState()
+    state.preference_service = StubPreferenceService(repository=None)
+    state.explanation_service = StubExplanationService()
+    return orchestrator, state
+
+
 __all__ = [
     "PreferenceProfile",
     "RecordingOrchestrator",
     "StubExplanationService",
     "StubPreferenceService",
+    "build_default_handlers",
+    "make_cli_runtime",
     "mute_console",
     "patch_runtime",
 ]
