@@ -23,7 +23,7 @@ def _write_llm_config(base_dir: Path) -> None:
             "    model: 'azure/gpt-4.1'\n"
             "    temperature: 0.2\n"
             "defaults: {provider: azure_openai}\n"
-            "embeddings: {model: azure/UDTEMBED3L, provider: azure_openai}\n"
+            "embeddings: {model: azure/UDTEMBED3L}\n"
         ),
         encoding="utf-8",
     )

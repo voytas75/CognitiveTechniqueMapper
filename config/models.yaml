@@ -19,6 +19,5 @@ workflows:
     temperature: 0.5
 embeddings:
   model: "azure/UDTEMBED3L"
-  provider: "azure_openai"
 defaults:
   provider: "azure_openai"

@@ -125,8 +125,10 @@ class ConfigService:
         data = self._models.get("embeddings")
         if not data:
             raise KeyError("Embedding configuration missing in config/models.yaml")
+        defaults = self._models.get("defaults", {})
+        provider = data.get("provider", defaults.get("provider"))
         return EmbeddingModelConfig(
-            model=data.get("model"), provider=data.get("provider")
+            model=data.get("model"), provider=provider
         )
 
     @staticmethod

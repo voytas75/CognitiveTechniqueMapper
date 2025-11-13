@@ -20,7 +20,7 @@ def _write_embedding_config(base_dir: Path) -> None:
         """
 workflows: {}
 defaults: {provider: azure_openai}
-embeddings: {model: azure/UDTEMBED3L, provider: azure_openai}
+embeddings: {model: azure/UDTEMBED3L}
 """.strip(),
         encoding="utf-8",
     )
