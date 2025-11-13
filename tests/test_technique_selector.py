@@ -147,6 +147,33 @@ def test_vector_search_with_embeddings_scores_results(monkeypatch: pytest.Monkey
     assert matches[0]["score"] is not None
 
 
+def test_recommendation_reuses_cached_embeddings() -> None:
+    TechniqueSelector = import_technique_selector()
+
+    class CountingEmbedder:
+        def __init__(self) -> None:
+            self.calls: list[str] = []
+
+        def embed(self, text: str) -> list[float]:
+            self.calls.append(text)
+            return [1.0, 0.0, 0.5]
+
+    embedder = CountingEmbedder()
+    selector = TechniqueSelector(
+        sqlite_client=StubSQLite(),
+        llm_gateway=StubLLM(),
+        prompt_service=StubPromptService(),
+        embedder=embedder,
+        chroma_client=None,
+    )
+
+    selector.recommend("I need to compare choices.")
+    selector.recommend("I need to compare choices.")
+
+    technique_text = "Evaluate pros and cons. \nCompare options \nDecision Making"
+    assert embedder.calls.count(technique_text) == 1
+
+
 def test_apply_preference_adjustments_reorders_matches() -> None:
     TechniqueSelector = import_technique_selector()
     selector = TechniqueSelector(

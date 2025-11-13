@@ -121,10 +121,11 @@ class EmbeddingGateway:
         if litellm_embedding is None:
             raise RuntimeError("litellm is not installed; cannot request embeddings.")
         params = {"model": self._config.model, "input": list(texts)}
-        provider_config = {}
+        provider_config: dict[str, Any] = {}
         if self._config.provider:
-            provider_config = self._providers.get(self._config.provider, {})
-            api_key_env = provider_config.get("api_key_env")
+            provider_config = dict(self._providers.get(self._config.provider, {}))
+            api_key_env = provider_config.pop("api_key_env", None)
+            litellm_provider = provider_config.pop("litellm_provider", None)
             if api_key_env:
                 from os import environ
 
@@ -135,9 +136,10 @@ class EmbeddingGateway:
                     raise RuntimeError(message)
                 params.setdefault("api_key", api_key)
             for key, value in provider_config.items():
-                if key not in {"api_key_env"}:
-                    params.setdefault(key, value)
-            params.setdefault("custom_llm_provider", self._config.provider)
+                params.setdefault(key, value)
+            params.setdefault(
+                "custom_llm_provider", litellm_provider or self._config.provider
+            )
 
         params.setdefault("timeout", self.DEFAULT_TIMEOUT_SECONDS)
 

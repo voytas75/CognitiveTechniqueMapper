@@ -34,6 +34,7 @@ def _write_llm_config(base_dir: Path) -> None:
             "    api_base: 'https://azure.example.com'\n"
             "    api_version: '2024-05-01-preview'\n"
             "    api_key_env: 'AZURE_KEY'\n"
+            "    litellm_provider: 'azure'\n"
         ),
         encoding="utf-8",
     )

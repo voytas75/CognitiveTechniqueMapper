@@ -9,3 +9,4 @@ providers:
     api_base: "${AZURE_API_BASE}"
     api_version: "2024-04-01-preview"
     api_key_env: "AZURE_OPENAI_KEY"
+    litellm_provider: "azure"

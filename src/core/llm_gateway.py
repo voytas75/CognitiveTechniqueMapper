@@ -184,10 +184,9 @@ class LLMGateway:
 
         provider_name = config.provider
         if provider_name:
-            provider_config = dict(
-                self._config_service.providers.get(provider_name, {})
-            )
+            provider_config = dict(self._config_service.providers.get(provider_name, {}))
             api_key_env = provider_config.pop("api_key_env", None)
+            litellm_provider = provider_config.pop("litellm_provider", None)
             params.update(
                 {
                     key: value
@@ -204,6 +203,9 @@ class LLMGateway:
                     logger.error(message)
                     raise RuntimeError(message)
                 params.setdefault("api_key", api_key)
+            params.setdefault(
+                "custom_llm_provider", litellm_provider or provider_name
+            )
 
         params.update(overrides)
         return params

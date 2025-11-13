@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import Any, Dict, List, Sequence
+from typing import Any, Dict, List, Sequence, Tuple
 
 from ..core.preprocessor import ProblemPreprocessor
 from ..core.llm_gateway import LLMGateway
@@ -76,6 +76,7 @@ class TechniqueSelector:
         self._preprocessor = preprocessor or ProblemPreprocessor()
         self._embedder = embedder
         self._preferences = preference_service
+        self._embedding_cache: Dict[str, Tuple[str, List[float]]] = {}
 
     def recommend(self, problem_description: str) -> Dict[str, Any]:
         """Recommend a technique for a problem description.
@@ -166,7 +167,7 @@ class TechniqueSelector:
         scored_matches = []
         for item in stored:
             technique_text = compose_embedding_text(item)
-            technique_embedding = self._embedder.embed(technique_text)
+            technique_embedding = self._get_cached_embedding(item, technique_text)
             score = self._cosine_similarity(query_embedding, technique_embedding)
             scored_matches.append(
                 {
@@ -405,3 +406,36 @@ class TechniqueSelector:
             return float(str(value))
         except (TypeError, ValueError):
             return None
+
+    def _get_cached_embedding(
+        self, item: Dict[str, Any], technique_text: str
+    ) -> List[float]:
+        """Return a cached embedding for a technique, computing it when necessary."""
+
+        if self._embedder is None:
+            raise RuntimeError("Embedding gateway is unavailable for technique cache.")
+
+        key = self._cache_key(item)
+        fingerprint = technique_text
+        cached = self._embedding_cache.get(key)
+        if cached and cached[0] == fingerprint:
+            return cached[1]
+
+        vector = self._embedder.embed(technique_text)
+        self._embedding_cache[key] = (fingerprint, vector)
+        return vector
+
+    @staticmethod
+    def _cache_key(item: Dict[str, Any]) -> str:
+        identifier = item.get("id")
+        if identifier is not None:
+            return f"id:{identifier}"
+        name = item.get("name")
+        if isinstance(name, str) and name.strip():
+            return f"name:{name.strip().lower()}"
+        return f"anon:{hash(json.dumps(item, sort_keys=True, default=str))}"
+
+    def clear_embedding_cache(self) -> None:
+        """Clear cached embeddings. Useful after dataset refresh operations."""
+
+        self._embedding_cache.clear()
