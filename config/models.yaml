@@ -21,4 +21,4 @@ embeddings:
   model: "UDTEMBED3L"
   provider: "azure"
 defaults:
-  provider: "azure"
+  provider: "azure_openai"
