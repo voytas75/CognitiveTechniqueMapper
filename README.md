@@ -157,7 +157,6 @@ To extend the library:
 - Run `python -m src.cli refresh` to reload the dataset (use `--skip-embeddings` when you only need SQLite updates).
 
 ---
-
 ## 🧪 Testing
 
 After syncing dependencies with `uv pip sync requirements.lock`, run:
@@ -184,7 +183,7 @@ Coverage includes config loading, SQLite operations, prompt registry validation,
 
 ## 📄 License
 
-Project licensing has not been specified. Add a `LICENSE` file if you plan to open-source the repository.
+Cognitive Technique Mapper is distributed under the MIT License. Review `LICENSE` for the complete terms, including usage permissions, conditions, and disclaimers.
 
 ---
 
