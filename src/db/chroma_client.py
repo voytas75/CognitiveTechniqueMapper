@@ -133,6 +133,13 @@ class ChromaClient:
 
         self.collection.delete(ids=list(ids))
 
+    def list_ids(self) -> list[str]:
+        """Return all identifiers currently stored in the collection."""
+
+        snapshot = self.collection.get()
+        ids = snapshot.get("ids", []) if isinstance(snapshot, dict) else []
+        return list(ids)
+
     def _reset_collection(self) -> None:
         try:
             self.client.delete_collection(self._collection_name)

@@ -156,13 +156,23 @@ def test_refresh_updates_chroma_index(tmp_path: Path, monkeypatch) -> None:
     class StubChroma:
         def __init__(self) -> None:
             self.upserts: list[Any] = []
-            self.deleted: list[Any] = []
+            self.deleted: list[list[str]] = []
+            self._ids: list[str] = []
 
         def upsert_embeddings(self, records: Any) -> None:
             self.upserts.extend(records)
+            for record in records:
+                identifier = getattr(record, "identifier", None)
+                if identifier is not None and identifier not in self._ids:
+                    self._ids.append(identifier)
 
         def delete(self, ids: Any) -> None:
-            self.deleted.extend(ids)
+            id_list = list(ids)
+            self.deleted.append(id_list)
+            self._ids = [identifier for identifier in self._ids if identifier not in id_list]
+
+        def list_ids(self) -> list[str]:
+            return list(self._ids)
 
     sqlite_client = SQLiteClient(tmp_path / "techniques.db")
     sqlite_client.initialize_schema()
@@ -180,6 +190,7 @@ def test_refresh_updates_chroma_index(tmp_path: Path, monkeypatch) -> None:
     initializer.refresh(rebuild_embeddings=True)
 
     assert chroma.upserts
+    assert chroma.deleted and chroma.deleted[-1] == ["Technique"]
 
 
 def test_initialize_skips_reembedding_when_dataset_already_seeded(tmp_path: Path) -> None:
@@ -203,9 +214,23 @@ def test_initialize_skips_reembedding_when_dataset_already_seeded(tmp_path: Path
     class StubChroma:
         def __init__(self) -> None:
             self.upserts: list[Any] = []
+            self.deleted: list[list[str]] = []
+            self._ids: list[str] = []
 
         def upsert_embeddings(self, records: Any) -> None:
             self.upserts.extend(records)
+            for record in records:
+                identifier = getattr(record, "identifier", None)
+                if identifier is not None and identifier not in self._ids:
+                    self._ids.append(identifier)
+
+        def delete(self, ids: Any) -> None:
+            id_list = list(ids)
+            self.deleted.append(id_list)
+            self._ids = [identifier for identifier in self._ids if identifier not in id_list]
+
+        def list_ids(self) -> list[str]:
+            return list(self._ids)
 
     sqlite_client = SQLiteClient(tmp_path / "techniques.db")
     sqlite_client.initialize_schema()
@@ -224,6 +249,65 @@ def test_initialize_skips_reembedding_when_dataset_already_seeded(tmp_path: Path
 
     initializer.initialize()
     assert len(chroma.upserts) == 1
+
+
+def test_refresh_clears_chroma_when_dataset_empty(tmp_path: Path) -> None:
+    dataset = [
+        {
+            "name": "Technique",
+            "description": "Desc",
+            "origin_year": 2024,
+            "creator": "Author",
+            "category": "Category",
+            "core_principles": "Principle",
+        }
+    ]
+    dataset_path = tmp_path / "techniques.json"
+    dataset_path.write_text(json.dumps(dataset), encoding="utf-8")
+
+    class StubEmbedder:
+        def embed_batch(self, texts: Any) -> list[list[float]]:
+            return [[0.1, 0.2] for _ in texts]
+
+    class StubChroma:
+        def __init__(self) -> None:
+            self.deleted: list[list[str]] = []
+            self._ids: list[str] = []
+
+        def upsert_embeddings(self, records: Any) -> None:
+            for record in records:
+                identifier = getattr(record, "identifier", None)
+                if identifier is not None and identifier not in self._ids:
+                    self._ids.append(identifier)
+
+        def delete(self, ids: Any) -> None:
+            id_list = list(ids)
+            self.deleted.append(id_list)
+            self._ids = [identifier for identifier in self._ids if identifier not in id_list]
+
+        def list_ids(self) -> list[str]:
+            return list(self._ids)
+
+    sqlite_client = SQLiteClient(tmp_path / "techniques.db")
+    sqlite_client.initialize_schema()
+
+    chroma = StubChroma()
+
+    initializer = TechniqueDataInitializer(
+        sqlite_client=sqlite_client,
+        embedder=StubEmbedder(),  # type: ignore[arg-type]
+        chroma_client=chroma,  # type: ignore[arg-type]
+        dataset_path=dataset_path,
+    )
+
+    initializer.initialize()
+    assert chroma.list_ids() == ["Technique"]
+
+    dataset_path.write_text("[]", encoding="utf-8")
+    initializer.refresh(rebuild_embeddings=True)
+
+    assert chroma.deleted and chroma.deleted[-1] == ["Technique"]
+    assert chroma.list_ids() == []
 
 
 def test_load_dataset_validates_structure(tmp_path: Path) -> None:

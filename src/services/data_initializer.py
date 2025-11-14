@@ -83,22 +83,28 @@ class TechniqueDataInitializer:
         """Reload the dataset and rebuild embeddings if requested."""
 
         dataset = self._load_dataset()
-        if not dataset:
-            logger.warning("No dataset available for refresh at %s", self._dataset_path)
-            return
-
         self._sqlite.replace_all(dataset)
 
         if self._chroma and EmbeddingRecord and rebuild_embeddings:
+            try:
+                existing_ids = self._chroma.list_ids()
+            except Exception as exc:  # pragma: no cover - defensive path
+                logger.warning("Failed to enumerate existing embeddings: %s", exc)
+                existing_ids = []
+
+            if existing_ids:
+                try:
+                    self._chroma.delete(existing_ids)
+                except Exception as exc:  # pragma: no cover - Chroma optional
+                    logger.warning("Failed to delete existing embeddings: %s", exc)
+
             records = self._build_embedding_records(dataset)
             if not records:
                 return
-            identifiers = [record.identifier for record in records]
             try:
-                self._chroma.delete(ids=identifiers)
+                self._chroma.upsert_embeddings(records)
             except Exception as exc:  # pragma: no cover - Chroma optional
-                logger.warning("Failed to delete existing embeddings: %s", exc)
-            self._chroma.upsert_embeddings(records)
+                logger.warning("Failed to upsert embeddings: %s", exc)
 
     def _load_dataset(self) -> List[dict]:
         """Load the technique dataset from disk.
