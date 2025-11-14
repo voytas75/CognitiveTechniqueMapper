@@ -111,10 +111,12 @@ def initialize_runtime() -> tuple[Orchestrator, AppState]:
     embedding_gateway_cls = _resolve_dependency("EmbeddingGateway", _DEFAULT_EMBEDDING_GATEWAY)
     embedding_gateway = embedding_gateway_cls(config_service=config_service)
     initializer_cls = _resolve_dependency("TechniqueDataInitializer", _DEFAULT_INITIALIZER)
+    dataset_path = PROJECT_ROOT / "data" / "techniques.json"
     initializer = initializer_cls(
         sqlite_client=sqlite_client,
         embedder=embedding_gateway,
         chroma_client=chroma_client,
+        dataset_path=dataset_path,
     )
     initializer.initialize()
     logger.debug("Initialization completed (Chroma enabled=%s).", bool(chroma_client))
@@ -310,10 +312,12 @@ def create_initializer() -> tuple[TechniqueDataInitializer, SQLiteClient]:
     embedder_cls = _resolve_dependency("EmbeddingGateway", _DEFAULT_EMBEDDING_GATEWAY)
     embedder = embedder_cls(config_service=config_service)
     initializer_cls = _resolve_dependency("TechniqueDataInitializer", _DEFAULT_INITIALIZER)
+    dataset_path = PROJECT_ROOT / "data" / "techniques.json"
     initializer = initializer_cls(
         sqlite_client=sqlite_client,
         embedder=embedder,
         chroma_client=chroma_client,
+        dataset_path=dataset_path,
     )
     return initializer, sqlite_client
 

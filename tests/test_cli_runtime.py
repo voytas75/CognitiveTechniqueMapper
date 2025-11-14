@@ -65,7 +65,13 @@ def test_initialize_runtime_bootstraps_dependencies(monkeypatch: pytest.MonkeyPa
     monkeypatch.setattr(cli, "ChromaClient", None)
     monkeypatch.setattr(cli, "LLMGateway", lambda config_service: object())
     monkeypatch.setattr(cli, "EmbeddingGateway", lambda config_service: object())
-    monkeypatch.setattr(cli, "TechniqueDataInitializer", lambda *args, **kwargs: initializer)
+    captured_kwargs: dict[str, Any] = {}
+
+    def _initializer_factory(*args: Any, **kwargs: Any) -> StubInitializer:
+        captured_kwargs.update(kwargs)
+        return initializer
+
+    monkeypatch.setattr(cli, "TechniqueDataInitializer", _initializer_factory)
     monkeypatch.setattr(cli, "PromptService", lambda: object())
     monkeypatch.setattr(cli, "PreferenceRepository", lambda sqlite_client: object())
     monkeypatch.setattr(cli, "PreferenceService", StubPreferenceService)
@@ -92,6 +98,7 @@ def test_initialize_runtime_bootstraps_dependencies(monkeypatch: pytest.MonkeyPa
     assert isinstance(orchestrator, StubOrchestrator)
     assert state.preference_service is not None
     assert initializer.initialized is True
+    assert captured_kwargs["dataset_path"] == cli.PROJECT_ROOT / "data" / "techniques.json"
 
 
 def test_settings_update_workflow_requires_argument(monkeypatch: pytest.MonkeyPatch) -> None:

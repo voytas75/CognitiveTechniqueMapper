@@ -94,6 +94,7 @@ python -m src.cli compare --limit 3
 python -m src.cli settings show
 python -m src.cli settings update-workflow detect_technique --model openai/gpt-4.1 --temperature 0.4
 python -m src.cli refresh --skip-embeddings
+python -m src.cli techniques refresh --rebuild-embeddings
 python -m src.cli analyze --show-candidates
 python -m src.cli feedback "Loved the recommendation" --rating 5 --technique "Decisional Balance"
 python -m src.cli analyze --log-level DEBUG  # temporary verbose logging
@@ -109,6 +110,7 @@ Notes:
 - `simulate` replays the current recommendation with scenario variations and safeguards.
 - `compare` analyzes the candidate shortlist, highlighting trade-offs and flow-on guidance.
 - `refresh` reloads `data/techniques.json`, replaces existing rows, and optionally rebuilds embeddings.
+- `techniques refresh` refreshes catalog data via the `techniques` subcommand (same effect as the top-level command but scoped to catalog administration).
 - `analyze --show-candidates` prints the shortlist with similarity scores for transparency.
 
 If the LLM provider rejects a parameter (e.g., unsupported temperature), adjust `config/models.yaml` or set `litellm.drop_params = True` before running the CLI.

@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from src.services.config_service import ConfigService
 
 
@@ -56,3 +58,43 @@ def test_config_service_expands_provider_env_vars(tmp_path: Path, monkeypatch) -
 
     assert providers["mock"]["api_base"] == "https://example.com"
     assert providers["mock"]["api_key_env"] == "MOCK_KEY"
+
+
+def test_get_workflow_model_config_requires_model(tmp_path: Path, monkeypatch) -> None:
+    config_dir = tmp_path / "config"
+    config_dir.mkdir()
+
+    (config_dir / "settings.yaml").write_text("app: {}\n", encoding="utf-8")
+    (config_dir / "database.yaml").write_text(
+        "database: {sqlite_path: ':memory:'}\n", encoding="utf-8"
+    )
+    (config_dir / "models.yaml").write_text(
+        "workflows: {detect_technique: {}}\n", encoding="utf-8"
+    )
+    (config_dir / "providers.yaml").write_text("providers: {}\n", encoding="utf-8")
+
+    monkeypatch.setenv("CTM_CONFIG_PATH", str(config_dir))
+    service = ConfigService(config_path=config_dir)
+
+    with pytest.raises(ValueError):
+        service.get_workflow_model_config("detect_technique")
+
+
+def test_get_embedding_config_requires_model(tmp_path: Path, monkeypatch) -> None:
+    config_dir = tmp_path / "config"
+    config_dir.mkdir()
+
+    (config_dir / "settings.yaml").write_text("app: {}\n", encoding="utf-8")
+    (config_dir / "database.yaml").write_text(
+        "database: {sqlite_path: ':memory:'}\n", encoding="utf-8"
+    )
+    (config_dir / "models.yaml").write_text(
+        "embeddings: {}\n", encoding="utf-8"
+    )
+    (config_dir / "providers.yaml").write_text("providers: {}\n", encoding="utf-8")
+
+    monkeypatch.setenv("CTM_CONFIG_PATH", str(config_dir))
+    service = ConfigService(config_path=config_dir)
+
+    with pytest.raises(ValueError):
+        service.get_embedding_config()

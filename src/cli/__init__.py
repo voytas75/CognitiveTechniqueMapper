@@ -33,6 +33,7 @@ from src.cli.commands.techniques import (
     techniques_export,
     techniques_import,
     techniques_list,
+    techniques_refresh,
     techniques_remove,
     techniques_update,
 )
@@ -218,6 +219,7 @@ techniques_app.command("update")(techniques_update)
 techniques_app.command("remove")(techniques_remove)
 techniques_app.command("export")(techniques_export)
 techniques_app.command("import")(techniques_import)
+techniques_app.command("refresh")(techniques_refresh)
 
 app.add_typer(history_app, name="history")
 app.add_typer(preferences_app, name="preferences")
@@ -294,6 +296,7 @@ __all__: list[str] = [
     "techniques_remove",
     "techniques_export",
     "techniques_import",
+    "techniques_refresh",
     # Renderers
     "render_analysis_output",
     "render_candidate_matches",

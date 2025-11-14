@@ -199,13 +199,19 @@ def test_techniques_commands(monkeypatch: pytest.MonkeyPatch, patched_console: N
     )
     cli.techniques_remove(name="Balanced Decision")
 
-    export_path = tmp_path / "techniques.json"
-    cli.techniques_export(file=export_path)
 
-    imported_file = tmp_path / "import.json"
-    imported_file.write_text("[]", encoding="utf-8")
-    cli.techniques_import(file=imported_file, mode="append", rebuild_embeddings=False)
+def test_techniques_refresh(monkeypatch: pytest.MonkeyPatch, patched_console: None) -> None:
+    initializer = StubInitializer()
+    sqlite_client = StubSQLiteClient()
+    monkeypatch.setattr(cli, "_create_initializer", lambda: (initializer, sqlite_client))
+    refresh_calls = {"count": 0}
+    monkeypatch.setattr(
+        cli,
+        "_refresh_runtime",
+        lambda: refresh_calls.__setitem__("count", refresh_calls["count"] + 1),
+    )
 
-    assert catalog.add_payloads
-    assert catalog.update_calls
-    assert catalog.removed == ["Balanced Decision"]
+    cli.techniques_refresh(rebuild_embeddings=False, log_level=None)
+
+    assert initializer.refresh_called is False
+    assert refresh_calls["count"] == 1

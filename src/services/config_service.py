@@ -97,12 +97,19 @@ class ConfigService:
         defaults = self._models.get("defaults", {})
         data = workflows.get(workflow)
 
-        if not data:
+        if not isinstance(data, dict):
             raise KeyError(f"Workflow config not found for '{workflow}'")
+
+        model = data.get("model")
+        if not isinstance(model, str) or not model.strip():
+            raise ValueError(
+                f"Workflow config for '{workflow}' requires a non-empty 'model' value."
+            )
+        normalized_model = model.strip()
 
         return WorkflowModelConfig(
             workflow=workflow,
-            model=data.get("model"),
+            model=normalized_model,
             temperature=data.get("temperature", defaults.get("temperature")),
             provider=data.get("provider", defaults.get("provider")),
             max_tokens=data.get("max_tokens"),
@@ -129,12 +136,15 @@ class ConfigService:
         """
 
         data = self._models.get("embeddings")
-        if not data:
+        if not isinstance(data, dict):
             raise KeyError("Embedding configuration missing in config/models.yaml")
         defaults = self._models.get("defaults", {})
         provider = data.get("provider", defaults.get("provider"))
+        model = data.get("model")
+        if not isinstance(model, str) or not model.strip():
+            raise ValueError("Embedding configuration requires a non-empty 'model' value.")
         return EmbeddingModelConfig(
-            model=data.get("model"), provider=provider
+            model=model.strip(), provider=provider
         )
 
     @staticmethod

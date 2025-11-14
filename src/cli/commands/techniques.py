@@ -238,10 +238,41 @@ def techniques_import(
     console.print_json(data={"mode": mode.lower(), **summary})
 
 
+def techniques_refresh(
+    rebuild_embeddings: bool = typer.Option(
+        True,
+        "--rebuild-embeddings/--skip-embeddings",
+        help="Recompute embeddings after refreshing the dataset.",
+    ),
+    log_level: str | None = typer.Option(
+        None,
+        "--log-level",
+        "-l",
+        help="Override logging level for this invocation.",
+    ),
+) -> None:
+    """Reload the canonical dataset and optionally rebuild embeddings."""
+
+    apply_log_override(log_level)
+
+    initializer, sqlite_client = _cli()._create_initializer()
+    try:
+        initializer.refresh(rebuild_embeddings=rebuild_embeddings)
+    except Exception as exc:  # pragma: no cover - dependent on optional services
+        console.print(f"[red]Technique refresh failed: {exc}[/]")
+        raise typer.Exit(code=1) from exc
+    finally:
+        sqlite_client.close()
+
+    _cli()._refresh_runtime()
+    console.print(Panel("Technique dataset refreshed.", title="Techniques"))
+
+
 __all__ = [
     "techniques_add",
     "techniques_export",
     "techniques_import",
+    "techniques_refresh",
     "techniques_list",
     "techniques_remove",
     "techniques_update",
