@@ -64,3 +64,15 @@ def test_prompt_service_rejects_non_mapping_registry(
 
     with pytest.raises(ValueError):
         PromptService()
+
+
+def test_prompt_service_rejects_non_string_paths(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    prompts_dir = tmp_path / "prompts"
+    prompts_dir.mkdir()
+    (prompts_dir / "registry.yaml").write_text("sample: []\n", encoding="utf-8")
+    monkeypatch.setenv("CTM_PROMPTS_PATH", str(prompts_dir))
+
+    with pytest.raises(ValueError):
+        PromptService()

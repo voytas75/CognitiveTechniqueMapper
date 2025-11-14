@@ -78,6 +78,16 @@ class PromptService:
         mapping = raw_mapping
         normalized: Dict[str, Path] = {}
         for name, relative in mapping.items():
+            if not isinstance(name, str):
+                raise ValueError(
+                    f"Prompt registry keys must be strings, got {type(name).__name__}"
+                )
+            if not isinstance(relative, (str, os.PathLike)):
+                raise ValueError(
+                    "Prompt registry entries must map to string or path values, "
+                    f"got {type(relative).__name__} for '{name}'"
+                )
+
             prompt_path = Path(relative)
             if not prompt_path.is_absolute():
                 parts = prompt_path.parts
