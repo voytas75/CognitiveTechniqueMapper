@@ -44,6 +44,7 @@ def test_cli_happy_path_flow(patched_runtime: tuple[RecordingOrchestrator, cli.A
         category=None,
         log_level=None,
     )
+    assert len(preference_service.recorded) == 1
     assert preference_service.recorded[-1]["technique"] == "Decisional Balance"
 
     cli.history_show(limit=2, raw=True)

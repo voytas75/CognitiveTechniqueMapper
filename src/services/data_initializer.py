@@ -58,13 +58,26 @@ class TechniqueDataInitializer:
         if not dataset:
             return
 
-        if not self._sqlite.fetch_all():
-            self._sqlite.bulk_insert(dataset)
+        seeded = self._seed_sqlite(dataset)
 
-        if self._chroma and EmbeddingRecord:
+        if seeded and self._chroma and EmbeddingRecord:
             records = self._build_embedding_records(dataset)
             if records:
                 self._chroma.upsert_embeddings(records)
+
+    def _seed_sqlite(self, dataset: List[dict]) -> bool:
+        """Seed SQLite with the dataset if the techniques table is empty."""
+
+        with self._sqlite.connection as conn:
+            cursor = conn.execute("SELECT 1 FROM techniques LIMIT 1")
+            has_existing = cursor.fetchone() is not None
+
+        if has_existing:
+            return False
+
+        if dataset:
+            self._sqlite.bulk_insert(dataset)
+        return True
 
     def refresh(self, *, rebuild_embeddings: bool = True) -> None:
         """Reload the dataset and rebuild embeddings if requested."""

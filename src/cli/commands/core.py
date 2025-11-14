@@ -340,14 +340,6 @@ def feedback(
         console.print(f"[red]Feedback failed: {exc}[/]")
         raise typer.Exit(code=1) from exc
 
-    if state.preference_service:
-        state.preference_service.record_preference(
-            technique=technique,
-            category=category,
-            rating=rating,
-            notes=message,
-        )
-
     logger.info("Feedback recorded (rating=%s)", rating)
     console.print(
         Panel(summary.get("summary", "No summary available."), title="Feedback Summary")

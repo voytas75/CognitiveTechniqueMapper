@@ -199,6 +199,14 @@ def build_default_handlers() -> Dict[str, Handler]:
     def feedback_handler(context: Dict[str, Any], orchestrator: RecordingOrchestrator) -> Dict[str, Any]:
         if context.get("action") == "record":
             orchestrator.data.setdefault("feedback_records", []).append(context)
+            preference_service = orchestrator.data.get("preference_service")
+            if preference_service is not None:
+                preference_service.record_preference(
+                    technique=context.get("technique"),
+                    category=context.get("category"),
+                    rating=context.get("rating"),
+                    notes=context["message"],
+                )
             orchestrator.data["feedback_summary"] = {"summary": "Captured"}
             return {"status": "ok"}
         return orchestrator.data.get("feedback_summary", {"summary": ""})
@@ -222,6 +230,7 @@ def make_cli_runtime() -> tuple[RecordingOrchestrator, cli.AppState]:
     state = cli.AppState()
     state.preference_service = StubPreferenceService(repository=None)
     state.explanation_service = StubExplanationService()
+    orchestrator.data["preference_service"] = state.preference_service
     return orchestrator, state
 
 

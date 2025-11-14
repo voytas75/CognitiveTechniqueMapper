@@ -182,6 +182,50 @@ def test_refresh_updates_chroma_index(tmp_path: Path, monkeypatch) -> None:
     assert chroma.upserts
 
 
+def test_initialize_skips_reembedding_when_dataset_already_seeded(tmp_path: Path) -> None:
+    dataset = [
+        {
+            "name": "Technique",
+            "description": "Desc",
+            "origin_year": 2024,
+            "creator": "Author",
+            "category": "Category",
+            "core_principles": "Principle",
+        }
+    ]
+    dataset_path = tmp_path / "techniques.json"
+    dataset_path.write_text(json.dumps(dataset), encoding="utf-8")
+
+    class StubEmbedder:
+        def embed_batch(self, texts: Any) -> list[list[float]]:
+            return [[0.1, 0.2] for _ in texts]
+
+    class StubChroma:
+        def __init__(self) -> None:
+            self.upserts: list[Any] = []
+
+        def upsert_embeddings(self, records: Any) -> None:
+            self.upserts.extend(records)
+
+    sqlite_client = SQLiteClient(tmp_path / "techniques.db")
+    sqlite_client.initialize_schema()
+
+    chroma = StubChroma()
+
+    initializer = TechniqueDataInitializer(
+        sqlite_client=sqlite_client,
+        embedder=StubEmbedder(),  # type: ignore[arg-type]
+        chroma_client=chroma,  # type: ignore[arg-type]
+        dataset_path=dataset_path,
+    )
+
+    initializer.initialize()
+    assert len(chroma.upserts) == 1
+
+    initializer.initialize()
+    assert len(chroma.upserts) == 1
+
+
 def test_load_dataset_validates_structure(tmp_path: Path) -> None:
     dataset_path = tmp_path / "invalid.json"
     dataset_path.write_text(json.dumps({"name": "Invalid"}), encoding="utf-8")
