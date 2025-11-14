@@ -84,6 +84,14 @@ def test_update_modifies_dataset_and_db(catalog: TechniqueCatalogService) -> Non
     assert dataset_entries[0]["description"] == "Updated"
 
 
+def test_update_rejects_conflicting_name(catalog: TechniqueCatalogService) -> None:
+    catalog.add({"name": "First", "description": "Desc"})
+    catalog.add({"name": "Existing", "description": "Other"})
+
+    with pytest.raises(ValueError):
+        catalog.update("First", {"name": "Existing"})
+
+
 def test_remove_deletes_from_all_sources(catalog: TechniqueCatalogService) -> None:
     catalog.add({"name": "Temporary", "description": "To delete"})
     catalog.remove("Temporary")

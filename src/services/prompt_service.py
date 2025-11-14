@@ -67,13 +67,22 @@ class PromptService:
     def _load_registry(self) -> Dict[str, Path]:
         """Load and normalize the prompt registry mapping."""
 
-        mapping = yaml.safe_load(self._registry_path.read_text(encoding="utf-8"))
+        raw_mapping = yaml.safe_load(self._registry_path.read_text(encoding="utf-8"))
+        if raw_mapping is None:
+            return {}
+        if not isinstance(raw_mapping, dict):
+            raise ValueError(
+                f"Prompt registry must be a mapping, got {type(raw_mapping).__name__}"
+            )
+
+        mapping = raw_mapping
         normalized: Dict[str, Path] = {}
         for name, relative in mapping.items():
             prompt_path = Path(relative)
             if not prompt_path.is_absolute():
-                if prompt_path.parts and prompt_path.parts[0] == self._base_path.name:
-                    prompt_path = (Path.cwd() / prompt_path).resolve()
+                parts = prompt_path.parts
+                if parts and parts[0] == self._base_path.name:
+                    prompt_path = self._base_path.joinpath(*parts[1:]).resolve()
                 else:
                     prompt_path = (self._base_path / prompt_path).resolve()
             normalized[name] = prompt_path

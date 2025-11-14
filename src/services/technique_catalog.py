@@ -99,6 +99,11 @@ class TechniqueCatalogService:
             return dict(existing_row)
 
         new_name = normalized_updates.get("name") or existing_row["name"]
+        if new_name and new_name.lower() != existing_row["name"].lower():
+            conflict = self.sqlite_client.fetch_by_name(new_name)
+            if conflict:
+                raise ValueError(f"Technique '{new_name}' already exists.")
+
         self.sqlite_client.update_technique(name, normalized_updates)
 
         dataset = self._load_dataset()
