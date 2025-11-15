@@ -186,6 +186,55 @@ def render_comparison_output(comparison: dict[str, Any]) -> None:
     console.print(Panel("\n".join(lines), title="Comparison"))
 
 
+def render_coverage_summary(records: list[dict[str, Any]], *, threshold: int) -> None:
+    """Render coverage insights for technique categories."""
+
+    if not records:
+        console.print(
+            Panel("No technique categories available.", title="Category Coverage")
+        )
+        return
+
+    table = Table(title=f"Category Coverage (target ≥ {threshold})", show_lines=False)
+    table.add_column("Category", style="bold")
+    table.add_column("Techniques", justify="right")
+    table.add_column("Status")
+
+    show_preferences = any(
+        record.get("avg_rating") is not None
+        or record.get("negative_ratio") is not None
+        for record in records
+    )
+    if show_preferences:
+        table.add_column("Avg Rating", justify="right")
+        table.add_column("Negative %", justify="right")
+
+    for record in records:
+        category = record.get("category", "Uncategorized")
+        count = record.get("count", 0)
+        status = record.get("status") or "OK"
+        if show_preferences:
+            avg_cell = _format_average(record.get("avg_rating"))
+            negative_cell = _format_negative_ratio(record.get("negative_ratio"))
+            table.add_row(str(category), str(count), status, avg_cell, negative_cell)
+        else:
+            table.add_row(str(category), str(count), status)
+
+    console.print(table)
+
+
+def _format_average(value: Optional[float]) -> str:
+    if value is None:
+        return "-"
+    return f"{value:.1f}"
+
+
+def _format_negative_ratio(value: Optional[float]) -> str:
+    if value is None:
+        return "-"
+    return f"{value * 100:.0f}%"
+
+
 def render_technique_table(entries: list[dict[str, Any]]) -> None:
     """Render a techniques table."""
 
@@ -218,6 +267,7 @@ __all__ = [
     "render_analysis_output",
     "render_candidate_matches",
     "render_comparison_output",
+    "render_coverage_summary",
     "render_explanation_output",
     "render_simulation_output",
     "render_technique_table",

@@ -7,6 +7,7 @@ from typing import Any, Dict, Optional
 import pytest
 
 import src.cli as cli
+from src.cli.commands import techniques as techniques_module
 from src.services.config_service import WorkflowModelConfig
 from tests.helpers.cli import RecordingOrchestrator, mute_console
 
@@ -246,3 +247,96 @@ def test_techniques_status(monkeypatch: pytest.MonkeyPatch, patched_console: Non
     assert captured["dataset"]["count"] == len(catalog.entries)
     assert captured["embeddings"]["enabled"] is True
     assert captured["embeddings"]["count"] == 2
+
+
+def test_techniques_gaps(monkeypatch: pytest.MonkeyPatch, patched_console: None) -> None:
+    catalog = StubCatalog()
+    catalog.entries = [
+        {
+            "name": "Decisional Balance",
+            "category": "Decision Making",
+            "origin_year": 1960,
+            "creator": "Author",
+            "description": "Compare options",
+        },
+        {
+            "name": "Six Thinking Hats",
+            "category": "Creativity",
+            "origin_year": 1985,
+            "creator": "Edward de Bono",
+            "description": "Parallel thinking",
+        },
+        {
+            "name": "Brainwriting",
+            "category": "Creativity",
+            "origin_year": 1968,
+            "creator": "Osborn",
+            "description": "Group ideation",
+        },
+        {
+            "name": "Root Cause Analysis",
+            "category": "",
+            "origin_year": 1950,
+            "creator": "Toyoda",
+            "description": "Find root causes",
+        },
+    ]
+    sqlite_client = StubSQLiteClient()
+    monkeypatch.setattr(cli, "_create_catalog_service", lambda: (catalog, sqlite_client))
+
+    class PreferenceProfileStub:
+        def __init__(self) -> None:
+            self.categories = {
+                "Creativity": {
+                    "count": 5,
+                    "negatives": 3,
+                    "rating_sum": 10,
+                    "rating_count": 3,
+                },
+                "Decision Making": {
+                    "count": 2,
+                    "negatives": 0,
+                    "rating_sum": 8,
+                    "rating_count": 2,
+                },
+            }
+
+    class PreferenceServiceStub:
+        def export_profile(self) -> PreferenceProfileStub:
+            return PreferenceProfileStub()
+
+    state = type("State", (), {"preference_service": PreferenceServiceStub()})()
+    monkeypatch.setattr(cli, "get_state", lambda: state)
+
+    captured: dict[str, Any] = {}
+
+    def capture(records: list[dict[str, Any]], *, threshold: int) -> None:
+        captured["records"] = records
+        captured["threshold"] = threshold
+
+    monkeypatch.setattr(techniques_module, "render_coverage_summary", capture)
+
+    cli.techniques_gaps(threshold=3, include_preferences=True, log_level=None)
+
+    assert captured["threshold"] == 3
+    records = captured["records"]
+    assert len(records) == 3
+
+    creativity = next(record for record in records if record["category"] == "Creativity")
+    assert creativity["count"] == 2
+    assert creativity["status"].startswith("⚠ Below target")
+    assert "Negative trend" in creativity["status"]
+    assert creativity["avg_rating"] == pytest.approx(10 / 3, rel=1e-3)
+    assert creativity["negative_ratio"] == pytest.approx(0.6, rel=1e-3)
+
+    decision = next(record for record in records if record["category"] == "Decision Making")
+    assert decision["count"] == 1
+    assert decision["status"] == "⚠ Below target"
+    assert decision["avg_rating"] == pytest.approx(4.0)
+    assert decision["negative_ratio"] == pytest.approx(0.0)
+
+    uncategorized = next(record for record in records if record["category"] == "Uncategorized")
+    assert uncategorized["count"] == 1
+    assert uncategorized["status"] == "⚠ Below target"
+    assert uncategorized["avg_rating"] is None
+    assert uncategorized["negative_ratio"] is None
