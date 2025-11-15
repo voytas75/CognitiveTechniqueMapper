@@ -58,6 +58,11 @@ def analyze(
         "--show-candidates/--hide-candidates",
         help="Display the candidate shortlist with similarity scores.",
     ),
+    show_diagnostics: bool = typer.Option(
+        False,
+        "--show-diagnostics/--hide-diagnostics",
+        help="Explain why the selected technique outranked alternatives.",
+    ),
     log_level: str | None = typer.Option(
         None,
         "--log-level",
@@ -75,7 +80,10 @@ def analyze(
     apply_log_override(log_level)
 
     orchestrator = cli_module.get_orchestrator()
-    context = {"problem_description": state.problem_description}
+    context = {
+        "problem_description": state.problem_description,
+        "include_diagnostics": show_diagnostics,
+    }
     try:
         result = orchestrator.execute("detect_technique", context)
     except RuntimeError as exc:
@@ -107,6 +115,7 @@ def analyze(
         result.get("plan"),
         preference_summary=result.get("preference_summary"),
         matches=result.get("matches") if show_candidates else None,
+        diagnostics=result.get("diagnostics") if show_diagnostics else None,
     )
 
 

@@ -1,4 +1,5 @@
 detect_technique: prompts/detect_technique.txt
+diagnose_selection: prompts/diagnose_selection.txt
 generate_plan: prompts/generate_plan.txt
 feedback: prompts/feedback.txt
 explain_logic: prompts/explain_logic.txt

@@ -78,11 +78,15 @@ class TechniqueSelector:
         self._preferences = preference_service
         self._embedding_cache: Dict[str, Tuple[str, List[float]]] = {}
 
-    def recommend(self, problem_description: str) -> Dict[str, Any]:
+    def recommend(
+        self, problem_description: str, *, include_diagnostics: bool = False
+    ) -> Dict[str, Any]:
         """Recommend a technique for a problem description.
 
         Args:
             problem_description (str): Raw problem statement supplied by the user.
+            include_diagnostics (bool): When true, request LLM diagnostics comparing
+                the recommendation with runner-up candidates.
 
         Returns:
             dict[str, Any]: Recommendation payload produced by the workflow.
@@ -95,11 +99,21 @@ class TechniqueSelector:
             self._preferences.preference_summary() if self._preferences else ""
         )
         adjusted_matches = self._apply_preference_adjustments(candidate_matches)
-        return self._llm_reason_about_candidates(
+        result = self._llm_reason_about_candidates(
             cleaned_description,
             adjusted_matches,
             preference_summary=preference_summary or None,
         )
+        if include_diagnostics:
+            diagnostics = self._generate_selection_diagnostics(
+                cleaned_description,
+                adjusted_matches,
+                result.get("recommendation"),
+                preference_summary or None,
+            )
+            if diagnostics:
+                result["diagnostics"] = diagnostics
+        return result
 
     def _generate_query_embedding(self, normalized_text: str) -> List[float] | None:
         """Generate an embedding for the normalized text if an embedder is available.
@@ -245,6 +259,36 @@ class TechniqueSelector:
             "preference_summary": preference_summary,
         }
 
+    def _generate_selection_diagnostics(
+        self,
+        normalized_text: str,
+        candidates: List[Dict[str, Any]],
+        recommendation: Dict[str, Any] | None,
+        preference_summary: str | None = None,
+    ) -> Dict[str, Any] | None:
+        """Produce diagnostic insight explaining the winning technique."""
+
+        if not candidates or not recommendation:
+            return None
+        prompt = self._build_diagnostics_prompt(
+            normalized_text,
+            candidates,
+            recommendation=recommendation,
+            preference_summary=preference_summary,
+        )
+        try:
+            response = self._llm.invoke(
+                "diagnose_selection",
+                prompt,
+                response_format={"type": "json_object"},
+            )
+        except RuntimeError:
+            response = self._llm.invoke("diagnose_selection", prompt)
+
+        parsed = self._parse_json_response(response) or {}
+        parsed["raw_response"] = response
+        return parsed or None
+
     def _build_prompt(
         self,
         normalized_text: str,
@@ -301,6 +345,41 @@ class TechniqueSelector:
                 ]
             )
         return "\n".join(buffer)
+
+    def _build_diagnostics_prompt(
+        self,
+        normalized_text: str,
+        candidates: List[Dict[str, Any]],
+        *,
+        recommendation: Dict[str, Any],
+        preference_summary: str | None = None,
+    ) -> str:
+        """Construct a prompt describing candidate scores for diagnostics."""
+
+        template = self._prompts.get_prompt("diagnose_selection").strip()
+        payload = {
+            "problem": normalized_text,
+            "recommendation": recommendation,
+            "candidates": [
+                {
+                    "name": (entry.get("metadata") or {}).get("name")
+                    or entry.get("id")
+                    or entry.get("document"),
+                    "score": self._coerce_float(entry.get("score")),
+                    "base_score": self._coerce_float(entry.get("base_score")),
+                    "preference_adjustment": self._coerce_float(
+                        entry.get("preference_adjustment")
+                    ),
+                    "category": (entry.get("metadata") or {}).get("category"),
+                    "description": (entry.get("metadata") or {}).get("description")
+                    or entry.get("document"),
+                }
+                for entry in candidates
+            ],
+            "preference_summary": preference_summary,
+        }
+        serialized = json.dumps(payload, ensure_ascii=False, indent=2)
+        return f"{template}\n\nDiagnostics payload:\n{serialized}\n"
 
     def _apply_preference_adjustments(
         self, candidates: List[Dict[str, Any]]

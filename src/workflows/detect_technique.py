@@ -32,4 +32,7 @@ class DetectTechniqueWorkflow:
         problem_description = context.get("problem_description")
         if not problem_description:
             raise ValueError("Context missing 'problem_description'.")
-        return self.selector.recommend(problem_description)
+        include_diagnostics = bool(context.get("include_diagnostics"))
+        return self.selector.recommend(
+            problem_description, include_diagnostics=include_diagnostics
+        )

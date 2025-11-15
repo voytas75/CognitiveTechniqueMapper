@@ -2,6 +2,9 @@ workflows:
   detect_technique:
     model: "azure/gpt-5"
     temperature: 1
+  diagnose_selection:
+    model: "azure/gpt-4.1"
+    temperature: 0.4
   summarize_result:
     model: "azure/gpt-4.1"
     temperature: 0.3

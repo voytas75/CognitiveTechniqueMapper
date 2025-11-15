@@ -17,6 +17,7 @@ def render_analysis_output(
     *,
     preference_summary: str | None = None,
     matches: Any = None,
+    diagnostics: Optional[dict[str, Any]] = None,
 ) -> None:
     """Display structured recommendation and optional plan to the console."""
 
@@ -50,6 +51,9 @@ def render_analysis_output(
     if matches is not None:
         render_candidate_matches(matches)
 
+    if diagnostics:
+        render_selection_diagnostics(diagnostics)
+
 
 def render_candidate_matches(matches: Any) -> None:
     """Render candidate technique matches."""
@@ -76,6 +80,48 @@ def render_candidate_matches(matches: Any) -> None:
         if description:
             lines.append(f"   Summary: {description}")
     console.print(Panel("\n".join(lines), title="Candidate Matches"))
+
+
+def render_selection_diagnostics(diagnostics: dict[str, Any]) -> None:
+    """Render LLM-provided diagnostics that contrast candidates."""
+
+    summary = diagnostics.get("summary") or diagnostics.get("overview")
+    preference_impact = diagnostics.get("preference_impact")
+    comparisons = diagnostics.get("comparisons") or []
+    follow_up = diagnostics.get("follow_up") or diagnostics.get("next_questions")
+
+    lines: list[str] = []
+    if summary:
+        lines.append(f"[bold]Why this technique won:[/]\n{summary}")
+
+    if comparisons:
+        lines.append("\n[bold]Runner-up insights:[/]")
+        for entry in comparisons:
+            technique = entry.get("technique") or entry.get("name") or "Candidate"
+            reason = entry.get("score_reason") or entry.get("summary") or ""
+            when = entry.get("when_to_choose") or entry.get("best_when") or ""
+            caution = entry.get("cautions") or entry.get("risks") or ""
+            lines.append(f"- {technique}")
+            if reason:
+                lines.append(f"  Reason: {reason}")
+            if when:
+                lines.append(f"  Use when: {when}")
+            if caution:
+                lines.append(f"  Watch for: {caution}")
+
+    if preference_impact:
+        lines.append(f"\n[bold]Preference adjustments:[/]\n{preference_impact}")
+
+    if follow_up:
+        lines.append("\n[bold]Follow-up prompts:[/]")
+        if isinstance(follow_up, list):
+            for idx, item in enumerate(follow_up, start=1):
+                lines.append(f"{idx}. {item}")
+        else:
+            lines.append(str(follow_up))
+
+    content = "\n".join(lines).strip() or "Diagnostics available but empty."
+    console.print(Panel(content, title="Selection Diagnostics"))
 
 
 def render_explanation_output(result: ExplanationResult) -> None:

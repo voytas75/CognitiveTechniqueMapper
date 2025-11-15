@@ -19,7 +19,12 @@ class StubSelector:
     def __init__(self) -> None:
         self.requested: list[str] = []
 
-    def recommend(self, description: str) -> dict[str, Any]:
+    def recommend(
+        self,
+        description: str,
+        *,
+        include_diagnostics: bool = False,
+    ) -> dict[str, Any]:
         self.requested.append(description)
         return {"recommendation": {"suggested_technique": "Decisional Balance"}}
 
