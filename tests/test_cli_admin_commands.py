@@ -64,6 +64,8 @@ class StubCatalog:
         self.removed: list[str] = []
         self.export_path = Path("techniques.json")
         self.import_summary = {"count": 1}
+        self.dataset_path = Path("techniques.json")
+        self.chroma_client: Any | None = None
 
     def list(self) -> list[dict[str, Any]]:
         return self.entries
@@ -87,6 +89,9 @@ class StubCatalog:
 
 
 class StubSQLiteClient:
+    def __init__(self) -> None:
+        self.path = Path("techniques.db")
+
     def close(self) -> None:  # pragma: no cover - trivial
         pass
 
@@ -215,3 +220,29 @@ def test_techniques_refresh(monkeypatch: pytest.MonkeyPatch, patched_console: No
 
     assert initializer.refresh_called is False
     assert refresh_calls["count"] == 1
+
+
+def test_techniques_status(monkeypatch: pytest.MonkeyPatch, patched_console: None) -> None:
+    catalog = StubCatalog()
+
+    class StubChroma:
+        def list_ids(self) -> list[str]:
+            return ["a", "b"]
+
+    catalog.chroma_client = StubChroma()
+    sqlite_client = StubSQLiteClient()
+
+    monkeypatch.setattr(cli, "_create_catalog_service", lambda: (catalog, sqlite_client))
+
+    captured: dict[str, Any] = {}
+
+    def capture_json(*, data: dict[str, Any], **_: Any) -> None:
+        captured.update(data)
+
+    monkeypatch.setattr(cli.console, "print_json", capture_json, raising=False)
+
+    cli.techniques_status(log_level=None)
+
+    assert captured["dataset"]["count"] == len(catalog.entries)
+    assert captured["embeddings"]["enabled"] is True
+    assert captured["embeddings"]["count"] == 2

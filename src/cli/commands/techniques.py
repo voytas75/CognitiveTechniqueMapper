@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 import sys
 from typing import Any, Optional
@@ -272,8 +273,78 @@ __all__ = [
     "techniques_add",
     "techniques_export",
     "techniques_import",
+    "techniques_status",
     "techniques_refresh",
     "techniques_list",
     "techniques_remove",
     "techniques_update",
 ]
+
+
+def _format_timestamp(path: Path | None) -> str | None:
+    if path is None:
+        return None
+    try:
+        mtime = path.stat().st_mtime
+    except OSError:
+        return None
+    dt = datetime.fromtimestamp(mtime, tz=timezone.utc)
+    return dt.isoformat().replace("+00:00", "Z")
+
+
+def techniques_status(
+    log_level: str | None = typer.Option(
+        None,
+        "--log-level",
+        "-l",
+        help="Override logging level for this invocation.",
+    ),
+) -> None:
+    """Display dataset and embedding status for the technique catalog."""
+
+    apply_log_override(log_level)
+
+    catalog, sqlite_client = _cli()._create_catalog_service()
+    try:
+        entries = catalog.list()
+        dataset_path_value = getattr(catalog, "dataset_path", None)
+        dataset_path = Path(dataset_path_value) if dataset_path_value else None
+        dataset_exists = dataset_path.exists() if dataset_path is not None else False
+        dataset_info: dict[str, Any] = {
+            "count": len(entries),
+            "path": str(dataset_path) if dataset_path else None,
+            "exists": dataset_exists,
+        }
+        timestamp = _format_timestamp(dataset_path if dataset_exists else None)
+        if timestamp:
+            dataset_info["last_modified"] = timestamp
+
+        sqlite_path = None
+        if hasattr(sqlite_client, "path"):
+            sqlite_path = str(getattr(sqlite_client, "path"))
+        elif hasattr(sqlite_client, "_db_path"):
+            sqlite_path = str(getattr(sqlite_client, "_db_path"))
+        if sqlite_path:
+            dataset_info["sqlite_path"] = sqlite_path
+
+        chroma_client = getattr(catalog, "chroma_client", None)
+        embedding_info: dict[str, Any] = {"enabled": bool(chroma_client)}
+        if chroma_client:
+            try:
+                identifiers = chroma_client.list_ids()
+            except Exception as exc:  # pragma: no cover - optional dependency path
+                embedding_info["error"] = str(exc)
+            else:
+                embedding_info["count"] = len(identifiers or [])
+        else:
+            embedding_info["count"] = 0
+
+    finally:
+        sqlite_client.close()
+
+    console.print_json(
+        data={
+            "dataset": dataset_info,
+            "embeddings": embedding_info,
+        }
+    )
