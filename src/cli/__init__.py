@@ -20,6 +20,7 @@ from src.cli.commands.core import (
 from src.cli.commands.history import history_clear, history_show
 from src.cli.commands.preferences import (
     preferences_export,
+    preferences_impact,
     preferences_reset,
     preferences_summary,
 )
@@ -215,6 +216,7 @@ history_app.command("clear")(history_clear)
 preferences_app.command("summary")(preferences_summary)
 preferences_app.command("export")(preferences_export)
 preferences_app.command("reset")(preferences_reset)
+preferences_app.command("impact")(preferences_impact)
 
 techniques_app.command("list")(techniques_list)
 techniques_app.command("add")(techniques_add)
@@ -293,6 +295,7 @@ __all__: list[str] = [
     "history_show",
     "history_clear",
     "preferences_summary",
+    "preferences_impact",
     "preferences_export",
     "preferences_reset",
     "techniques_list",

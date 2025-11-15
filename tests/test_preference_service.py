@@ -42,6 +42,10 @@ def test_preference_service_records_and_scores(tmp_path: Path) -> None:
     summary = service.preference_summary()
     assert "Decisional Balance" in summary
 
+    impacts = service.preference_impacts(limit=3)
+    assert impacts["techniques"]
+    assert impacts["categories"]
+
     service.clear()
     cleared_profile = service.export_profile()
     assert cleared_profile.totals["count"] == 0

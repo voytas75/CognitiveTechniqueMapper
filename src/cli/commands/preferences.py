@@ -9,6 +9,7 @@ import typer
 from rich.panel import Panel
 
 from src.cli.io import console
+from src.cli.renderers import render_preference_impacts
 
 
 def _cli():
@@ -65,9 +66,28 @@ def preferences_reset(
     state.preference_service.clear()
     console.print("[green]Preferences cleared.[/]")
 
+def preferences_impact(
+    limit: int = typer.Option(
+        5,
+        "--limit",
+        "-n",
+        help="Maximum number of entries to display per section.",
+    )
+) -> None:
+    """Show score adjustments derived from stored preferences."""
+
+    state = _cli().get_state()
+    if not state.preference_service:
+        console.print("[yellow]Preference service unavailable.[/]")
+        return
+
+    impacts = state.preference_service.preference_impacts(limit=limit)
+    render_preference_impacts(impacts)
+
 
 __all__ = [
     "preferences_export",
+    "preferences_impact",
     "preferences_reset",
     "preferences_summary",
 ]

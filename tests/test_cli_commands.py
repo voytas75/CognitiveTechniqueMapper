@@ -56,5 +56,6 @@ def test_cli_happy_path_flow(patched_runtime: tuple[RecordingOrchestrator, cli.A
 
     cli.preferences_summary()
     cli.preferences_export()
+    cli.preferences_impact(limit=3)
     cli.preferences_reset(force=True)
     assert preference_service.cleared

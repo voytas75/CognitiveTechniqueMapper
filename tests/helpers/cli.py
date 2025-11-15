@@ -60,6 +60,26 @@ class StubPreferenceService:
     def score_adjustment(self, _: Mapping[str, Any]) -> float:
         return self._adjustment
 
+    def preference_impacts(self, *, limit: int = 5) -> Dict[str, Any]:
+        return {
+            "techniques": [
+                {
+                    "name": "Decisional Balance",
+                    "adjustment": 0.12,
+                    "count": 3,
+                    "average_rating": 4.5,
+                }
+            ],
+            "categories": [
+                {
+                    "name": "Decision Making",
+                    "adjustment": 0.08,
+                    "count": 5,
+                    "average_rating": 4.0,
+                }
+            ],
+        }
+
     def clear(self) -> None:
         self.cleared = True
         self.recorded.clear()

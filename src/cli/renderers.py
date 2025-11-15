@@ -123,6 +123,40 @@ def render_selection_diagnostics(diagnostics: dict[str, Any]) -> None:
     content = "\n".join(lines).strip() or "Diagnostics available but empty."
     console.print(Panel(content, title="Selection Diagnostics"))
 
+def render_preference_impacts(impacts: dict[str, Any]) -> None:
+    """Display preference-derived score adjustments."""
+
+    techniques = impacts.get("techniques") or []
+    categories = impacts.get("categories") or []
+    if not techniques and not categories:
+        console.print(
+            Panel("No preference signals recorded yet.", title="Preference Impacts")
+        )
+        return
+
+    def _format_entry(entry: dict[str, Any]) -> str:
+        name = entry.get("name") or "Unknown"
+        adjustment = float(entry.get("adjustment") or 0.0)
+        count = int(entry.get("count") or 0)
+        average = entry.get("average_rating")
+        avg_display = (
+            f"{float(average):.2f}" if isinstance(average, (int, float)) else "n/a"
+        )
+        return f"- {name}: {adjustment:+0.3f} (signals: {count}, avg rating: {avg_display})"
+
+    lines: list[str] = []
+    if categories:
+        lines.append("[bold]Categories:[/]")
+        lines.extend(_format_entry(entry) for entry in categories)
+
+    if techniques:
+        if lines:
+            lines.append("")
+        lines.append("[bold]Techniques:[/]")
+        lines.extend(_format_entry(entry) for entry in techniques)
+
+    console.print(Panel("\n".join(lines), title="Preference Impacts"))
+
 
 def render_explanation_output(result: ExplanationResult) -> None:
     """Render explanation workflow output."""

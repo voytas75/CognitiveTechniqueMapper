@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from ..db.preference_repository import PreferenceRepository
 
@@ -109,6 +109,30 @@ class PreferenceService:
         """Expose the full preference profile for advanced consumers."""
 
         return self._ensure_profile()
+
+    def preference_impacts(
+        self, *, limit: int = 5
+    ) -> dict[str, List[dict[str, float | int | None | str]]]:
+        """Return score adjustments derived from stored preferences.
+
+        Args:
+            limit (int): Maximum number of entries to include per dimension.
+
+        Returns:
+            dict[str, list[dict[str, float | int | None | str]]]: Technique and category impact summaries.
+        """
+
+        profile = self._ensure_profile()
+        resolved_limit = limit if limit > 0 else 5
+        techniques = self._summarize_impacts(
+            profile.techniques, weight=0.15, limit=resolved_limit
+        )
+        categories = self._summarize_impacts(
+            profile.categories, weight=0.1, limit=resolved_limit
+        )
+        if not techniques and not categories:
+            return {"techniques": [], "categories": []}
+        return {"techniques": techniques, "categories": categories}
 
     def clear(self) -> None:
         """Remove all stored preferences and reset cached aggregates."""
@@ -244,3 +268,38 @@ class PreferenceService:
         if worst_score >= 0:
             return None
         return worst
+
+    @staticmethod
+    def _summarize_impacts(
+        buckets: Dict[str, PreferenceBucket],
+        *,
+        weight: float,
+        limit: int,
+    ) -> List[dict[str, float | int | None | str]]:
+        summaries: List[dict[str, float | int | None | str]] = []
+        for name, bucket in buckets.items():
+            adjustment = PreferenceService._bucket_score(bucket, weight=weight)
+            raw_score = PreferenceService._bucket_score(bucket, weight=1.0)
+            average = PreferenceService._bucket_average(bucket)
+            rating_count = int(bucket.get("rating_count", 0))
+            if adjustment == 0 and raw_score == 0:
+                continue
+            summaries.append(
+                {
+                    "name": name,
+                    "adjustment": round(adjustment, 4),
+                    "raw_score": round(raw_score, 4),
+                    "count": int(bucket.get("count", 0)),
+                    "positives": int(bucket.get("positives", 0)),
+                    "negatives": int(bucket.get("negatives", 0)),
+                    "average_rating": round(average, 2) if rating_count > 0 else None,
+                }
+            )
+
+        summaries.sort(
+            key=lambda entry: (abs(float(entry["adjustment"])), float(entry["adjustment"])),
+            reverse=True,
+        )
+        if limit and len(summaries) > limit:
+            return summaries[:limit]
+        return summaries
