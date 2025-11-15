@@ -123,6 +123,29 @@ def render_selection_diagnostics(diagnostics: dict[str, Any]) -> None:
     content = "\n".join(lines).strip() or "Diagnostics available but empty."
     console.print(Panel(content, title="Selection Diagnostics"))
 
+
+def render_prompt_sample(
+    prompt_name: str,
+    template: str,
+    *,
+    example: tuple[str, str] | None = None,
+    recent: tuple[str, str] | None = None,
+) -> None:
+    """Display a prompt template alongside optional sample payloads."""
+
+    sections: list[tuple[str, str]] = []
+    normalized_template = template.strip() or "(empty prompt template)"
+    sections.append((f"Prompt: {prompt_name}", normalized_template))
+
+    for payload in (example, recent):
+        if not payload:
+            continue
+        label, content = payload
+        sections.append((label, content.strip() or "(no content)"))
+
+    for title, body in sections:
+        console.print(Panel(body, title=title))
+
 def render_preference_impacts(impacts: dict[str, Any]) -> None:
     """Display preference-derived score adjustments."""
 
@@ -349,6 +372,8 @@ __all__ = [
     "render_comparison_output",
     "render_coverage_summary",
     "render_explanation_output",
+    "render_preference_impacts",
+    "render_prompt_sample",
     "render_simulation_output",
     "render_technique_table",
 ]

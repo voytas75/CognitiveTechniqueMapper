@@ -26,6 +26,7 @@ from src.cli.commands.preferences import (
 )
 from src.cli.commands.settings import (
     settings_show,
+    settings_show_prompt,
     settings_update_provider,
     settings_update_workflow,
 )
@@ -209,6 +210,7 @@ app.command()(report)
 settings_app.command("show")(settings_show)
 settings_app.command("update-workflow")(settings_update_workflow)
 settings_app.command("update-provider")(settings_update_provider)
+settings_app.command("prompt")(settings_show_prompt)
 
 history_app.command("show")(history_show)
 history_app.command("clear")(history_clear)
@@ -290,6 +292,7 @@ __all__: list[str] = [
     "report",
     "feedback",
     "settings_show",
+    "settings_show_prompt",
     "settings_update_workflow",
     "settings_update_provider",
     "history_show",
