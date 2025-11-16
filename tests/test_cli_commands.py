@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+from rich.panel import Panel
 
 import src.cli as cli
 from tests.helpers.cli import RecordingOrchestrator, make_cli_runtime, mute_console, patch_runtime
@@ -59,3 +60,24 @@ def test_cli_happy_path_flow(patched_runtime: tuple[RecordingOrchestrator, cli.A
     cli.preferences_impact(limit=3)
     cli.preferences_reset(force=True)
     assert preference_service.cleared
+
+
+def test_history_show_renders_human_readable_summary(monkeypatch: pytest.MonkeyPatch) -> None:
+    state = cli.AppState()
+    state.context_history.append({"problem_description": "Need a creative path"})
+
+    monkeypatch.setattr(cli, "get_state", lambda: state)
+
+    captured: list[Any] = []
+
+    def capture(renderable: Any, *args: Any, **kwargs: Any) -> None:
+        captured.append(renderable)
+
+    monkeypatch.setattr(cli.console, "print", capture)
+
+    cli.history_show(limit=1, raw=False)
+
+    assert captured, "Expected at least one rendered panel"
+    panel = captured[0]
+    assert isinstance(panel, Panel)
+    assert "Need a creative path" in str(panel.renderable)
