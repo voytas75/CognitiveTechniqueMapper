@@ -103,6 +103,62 @@ python -m src.cli report --output latest-report.md
 python -m src.cli interactive-flow --show-tree
 ```
 
+---
+
+## 🌐 Running the HTTP API
+
+The same workflows are now exposed through a lightweight FastAPI service so
+other tools or front‑ends can integrate without spawning the CLI.
+
+### Prerequisites
+
+```bash
+# Install FastAPI / Uvicorn (already pinned in pyproject.toml)
+uv pip sync requirements.lock        # or `uv pip install .[graphql]` for GraphQL
+```
+
+### Start the server
+
+```bash
+# Development (auto‑reload on file changes)
+uvicorn src.api:app --reload
+
+# Production example (4 workers on port 8080)
+uvicorn src.api:app --host 0.0.0.0 --port 8080 --workers 4
+```
+
+### Endpoints
+
+| Method | Path                         | Description                              |
+|--------|------------------------------|------------------------------------------|
+| GET    | `/health`                   | Liveness probe                           |
+| GET    | `/workflows`                | List registered workflow names           |
+| POST   | `/workflow/{name}`          | Execute workflow with JSON *context*     |
+| any    | `/docs`, `/redoc`           | Interactive Swagger / ReDoc API docs     |
+| any    | `/graphql` (optional)       | GraphiQL playground when `strawberry` is installed |
+
+#### Example request
+
+```bash
+curl -X POST http://127.0.0.1:8000/workflow/detect_technique \
+     -H "Content-Type: application/json" \
+     -d '{"problem_description": "I can\'t decide between two job offers."}'
+```
+
+GraphQL equivalent (requires `pip install .[graphql]`):
+
+```graphql
+query {
+  runWorkflow(
+    name: "detect_technique",
+    context: { problem_description: "Can't decide between two job offers." }
+  )
+}
+```
+
+This returns the same JSON structure the CLI prints, making it easy to embed
+CTM recommendations in dashboards or chatbots.
+
 Notes:
 - `describe` saves the problem description and persists it to `data/state.json`.
 - `analyze` runs the `detect_technique` workflow (LLM + vector search).

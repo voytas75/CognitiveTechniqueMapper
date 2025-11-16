@@ -17,6 +17,10 @@ dependencies = [
     "rich>=13.7",
     "sqlite-utils>=3.36",
     "tenacity>=9.1.0",
+
+    # REST/GraphQL API server
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.27.0",
 ]
 
 [project.optional-dependencies]
@@ -30,6 +34,10 @@ dev = [
     "ruff>=0.4",
     "pyright>=1.1.377",
     "types-PyYAML>=6.0.12",
+]
+
+graphql = [
+    "strawberry-graphql>=0.211.0",
 ]
 
 [tool.black]
