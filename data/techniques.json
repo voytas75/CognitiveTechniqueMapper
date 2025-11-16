@@ -109,7 +109,7 @@
     "origin_year": 1952,
     "creator": "Stuart Pugh",
     "category": "Decision",
-    "core_principles": null
+    "core_principles": "Define evaluation criteria before scoring options; weight criteria by relative importance; score consistently using defined scale; multiply scores by weights; sum weighted scores to rank objectively; validate top choice against intuition; useful when multiple comparable options exist."
   },
   {
     "name": "Design Thinking",
@@ -117,7 +117,7 @@
     "origin_year": 1990,
     "creator": "IDEO, Stanford d.school",
     "category": "Innovation / Problem Solving",
-    "core_principles": null
+    "core_principles": "Empathize with users to understand deep needs; define problem statement clearly; ideate without judgment to generate options; prototype rapidly with minimum viable solutions; test with real users and iterate; embrace failure as learning; maintain user-centricity throughout."
   },
   {
     "name": "Agile Retrospectives",
@@ -125,7 +125,7 @@
     "origin_year": 2001,
     "creator": "Agile Software Development community",
     "category": "Continuous Improvement / Team Collaboration",
-    "core_principles": null
+    "core_principles": "Create psychological safety for honest feedback; focus on team process not individual performance; identify what worked to sustain good practices; identify what didn't work without blame; generate actionable improvements with clear owners; time-box to maintain focus; conduct immediately after sprint while fresh."
   },
   {
     "name": "Lean Startup Methodology",
@@ -133,7 +133,7 @@
     "origin_year": 2008,
     "creator": "Eric Ries",
     "category": "Entrepreneurship / Product Development",
-    "core_principles": null
+    "core_principles": "Build minimum viable product to test assumptions; measure actual user behavior not opinions; learn from data to validate or invalidate hypotheses; pivot or persevere based on evidence; minimize time through build-measure-learn loop; embrace validated learning over vanity metrics; fail fast and cheap."
   },
   {
     "name": "OKR (Objectives and Key Results)",
@@ -141,7 +141,7 @@
     "origin_year": 1999,
     "creator": "Andy Grove",
     "category": "Goal Setting / Performance Management",
-    "core_principles": null
+    "core_principles": "Set aspirational but achievable objectives; define 3-5 measurable key results per objective; make progress visible and transparent; review regularly (weekly/monthly); maintain focus by limiting concurrent OKRs; accept 60-70% achievement as success; separate OKRs from performance reviews to encourage stretch goals."
   },
   {
     "name": "Liberating Structures",
@@ -149,7 +149,7 @@
     "origin_year": 2010,
     "creator": "Henri Lipmanowicz, Keith McCandless",
     "category": "Group Facilitation / Collaboration",
-    "core_principles": null
+    "core_principles": "Include everyone's voice through structured participation; distribute control to unleash local innovation; use simple rules to generate complex outcomes; integrate freedom and constraints; practice to build fluency; adapt structures to context; combine multiple structures for richer engagement."
   },
   {
     "name": "Cynefin Framework",
@@ -157,7 +157,7 @@
     "origin_year": 2007,
     "creator": "Dave Snowden",
     "category": "Decision-Making / Complexity Management",
-    "core_principles": null
+    "core_principles": "Sense the situation before acting; match response to domain type; Clear domain use best practice; Complicated domain analyze and apply good practice; Complex domain probe-sense-respond with safe-to-fail experiments; Chaotic domain act-sense-respond to stabilize; avoid one-size-fits-all solutions."
   },
   {
     "name": "Remote and Hybrid Team Strategies",
@@ -165,7 +165,7 @@
     "origin_year": 2020,
     "creator": "Various contributors",
     "category": "Team Management / Communication",
-    "core_principles": null
+    "core_principles": "Over-communicate to compensate for lack of physical presence; document decisions asynchronously for timezone flexibility; establish explicit working agreements and norms; invest in relationship building intentionally; balance synchronous and asynchronous communication; respect work-life boundaries across timezones; leverage digital tools effectively."
   },
   {
     "name": "5 Whys",
@@ -173,7 +173,7 @@
     "origin_year": 1939,
     "creator": "Taiichi Ohno",
     "category": "Problem-Solving",
-    "core_principles": null
+    "core_principles": "Ask why iteratively to move beyond symptoms; stop when root cause identified not automatically at five; validate cause-effect logic at each step; avoid blame focus on process; combine with other tools for complex problems; document chain for organizational learning."
   },
   {
     "name": "Eisenhower Matrix",
@@ -181,7 +181,7 @@
     "origin_year": 1954,
     "creator": "Dwight D. Eisenhower",
     "category": "Decision-Making",
-    "core_principles": null
+    "core_principles": "Quadrant 1 Urgent/Important do immediately; Quadrant 2 Important/Not Urgent schedule and prioritize; Quadrant 3 Urgent/Not Important delegate or minimize; Quadrant 4 Neither eliminate ruthlessly; invest time in Quadrant 2 to prevent Quadrant 1 fires; distinguish truly urgent from merely reactive."
   },
   {
     "name": "Jobs to be Done",
@@ -189,7 +189,7 @@
     "origin_year": 2005,
     "creator": "Clayton Christensen",
     "category": "Innovation / Problem Solving",
-    "core_principles": null
+    "core_principles": "Focus on customer outcome not product features; understand job context and constraints; identify emotional and social dimensions of job; recognize jobs are stable while solutions evolve; competition is anything hired for same job; innovate by executing job better than alternatives."
   },
   {
     "name": "MoSCoW Method",
@@ -197,7 +197,7 @@
     "origin_year": 1994,
     "creator": "Dai Clegg",
     "category": "Planning",
-    "core_principles": null
+    "core_principles": "Must Have are non-negotiable requirements for success; Should Have are important but have workarounds; Could Have are nice-to-have if time permits; Won't Have are explicitly out of scope this iteration; revisit categorization as priorities shift; use to manage stakeholder expectations and scope creep."
   },
   {
     "name": "SCAMPER",
@@ -205,7 +205,7 @@
     "origin_year": 1971,
     "creator": "Bob Eberle",
     "category": "Creativity",
-    "core_principles": null
+    "core_principles": "Systematically apply each prompt to current solution; Substitute components or materials; Combine with other products or processes; Adapt from other contexts; Modify scale or attributes; Put to another use; Eliminate unnecessary elements; Reverse or rearrange sequence; quantity of ideas leads to quality."
   },
   {
     "name": "Toyota Kata",
@@ -213,7 +213,7 @@
     "origin_year": 2009,
     "creator": "Mike Rother",
     "category": "Continuous Improvement",
-    "core_principles": null
+    "core_principles": "Improvement Kata: understand direction, grasp current condition, establish next target condition, experiment toward target through PDCA cycles; Coaching Kata: develop improvement capability through structured practice; make scientific thinking routine; focus on process not results; coach the thinking not the solution."
   },
   {
     "name": "Double-Loop Learning",
@@ -221,7 +221,7 @@
     "origin_year": 1974,
     "creator": "Chris Argyris",
     "category": "Reflection / Organizational Learning",
-    "core_principles": null
+    "core_principles": "Single-loop learning adjusts actions within existing assumptions; double-loop learning questions and modifies underlying assumptions and mental models; surface and test governing variables; distinguish espoused theory from theory-in-use; organizational learning requires changing shared assumptions."
   },
   {
     "name": "Ladder of Inference",
@@ -229,7 +229,7 @@
     "origin_year": 1990,
     "creator": "Chris Argyris",
     "category": "Decision-Making / Reflection",
-    "core_principles": null
+    "core_principles": "Start with observable data; recognize we select data based on beliefs; add meanings based on culture and experience; make assumptions based on meanings; draw conclusions; adopt beliefs about the world; take actions based on beliefs; slow down inference to test assumptions; distinguish observation from interpretation."
   },
   {
     "name": "Balanced Scorecard",
@@ -237,7 +237,7 @@
     "origin_year": 1992,
     "creator": "Robert Kaplan and David Norton",
     "category": "Strategy / Performance Management",
-    "core_principles": null
+    "core_principles": "Balance four perspectives: Financial, Customer, Internal Process, Learning and Growth; connect measures to strategy through cause-effect relationships; lead indicators predict future performance; lag indicators measure past results; cascade scorecard through organization; review regularly to drive strategic execution."
   },
   {
     "name": "Theory of Change",
@@ -245,7 +245,7 @@
     "origin_year": 1990,
     "creator": "Carol Weiss",
     "category": "Planning / Evaluation",
-    "core_principles": null
+    "core_principles": "Map backward from long-term goal through preconditions; make assumptions explicit and testable; identify early and intermediate outcomes; distinguish outputs from outcomes; show causal pathways not just logic; engage stakeholders in theory development; use for planning and evaluation; revise as learning occurs."
   },
   {
     "name": "Appreciative Inquiry",
@@ -253,7 +253,7 @@
     "origin_year": 1987,
     "creator": "David Cooperrider",
     "category": "Organizational Development / Coaching",
-    "core_principles": null
+    "core_principles": "Discover peak experiences when organization at its best; Dream ideal future building on strengths; Design provocative propositions bridging best of past with possibilities; Destiny/Deploy sustain change through ongoing learning and adjustment; focus on positive core strengths not deficits; language shapes reality."
   },
   {
     "name": "Fishbone Diagram",
@@ -261,7 +261,7 @@
     "origin_year": 1968,
     "creator": "Kaoru Ishikawa",
     "category": "Problem-Solving",
-    "core_principles": null
+    "core_principles": "Organize potential causes into major categories: Methods, Machines, Materials, Measurements, People, Environment; brainstorm causes within each category; trace from symptom to root cause along bones; validate causal relationships with data; useful for complex multi-factor problems; visual format aids team discussion."
   },
   {
     "name": "Mind Mapping",
@@ -269,7 +269,7 @@
     "origin_year": 1974,
     "creator": "Tony Buzan",
     "category": "Creativity / Learning",
-    "core_principles": null
+    "core_principles": "Start with central concept in middle; branch out with major themes radiating from center; add sub-branches for details; use colors and images to enhance memory; capture associations non-linearly; mirrors natural thinking patterns; useful for brainstorming, note-taking, and organizing complex information; emphasize relationships over hierarchy."
   },
   {
     "name": "PESTLE Analysis",
@@ -277,7 +277,7 @@
     "origin_year": 1967,
     "creator": "Harvard Business School community",
     "category": "Strategic Planning",
-    "core_principles": null
+    "core_principles": "Scan external macro-environment systematically; Political factors include regulation and tax policy; Economic factors include growth and exchange rates; Social factors include demographics and culture; Technological factors include innovation and automation; Legal factors include compliance requirements; Environmental factors include sustainability; update regularly as factors evolve."
   },
   {
     "name": "SOAR Analysis",
@@ -285,6 +285,278 @@
     "origin_year": 2003,
     "creator": "Jacqueline Stavros",
     "category": "Strategic Planning / Coaching",
-    "core_principles": null
+    "core_principles": "Strengths focus on what organization does well; Opportunities identify external possibilities; Aspirations articulate inspired future vision; Results define measurable outcomes; positive framing energizes stakeholders; builds on appreciative inquiry principles; contrasts with deficit-focused SWOT; emphasize collaboration over competition."
+  },
+  {
+    "name": "ITIL Incident Management",
+    "description": "Industry-standard framework for structured incident handling covering Detection, Diagnosis, Repair, Recovery, and Restoration with prioritization matrix based on Impact × Urgency.",
+    "origin_year": 1989,
+    "creator": "UK Government (CCTA)",
+    "category": "Incident Management",
+    "core_principles": "Minimize business impact through rapid restoration; prioritize by urgency and impact; maintain clear communication; document for continuous improvement."
+  },
+  {
+    "name": "Runbook Methodology",
+    "description": "Pre-documented decision trees and step-by-step procedures for known failure scenarios, encoding expert knowledge for consistent execution.",
+    "origin_year": 1950,
+    "creator": "Operations management practice",
+    "category": "Incident Management",
+    "core_principles": "Standardize responses to known scenarios; reduce mean time to resolution; enable less-experienced staff to execute expert solutions; maintain living documentation."
+  },
+  {
+    "name": "Blameless Post-Mortem",
+    "description": "Structured analysis of system failures focusing on technical failure chains, timeline reconstruction, contributing factors, and preventive controls without individual blame.",
+    "origin_year": 2009,
+    "creator": "John Allspaw (Etsy)",
+    "category": "Incident Management / Reflection",
+    "core_principles": "Focus on systems and processes, not people; assume good intent; identify contributing factors holistically; generate actionable preventive measures; psychological safety enables honest analysis."
+  },
+  {
+    "name": "Change Advisory Board (CAB)",
+    "description": "Governance framework for evaluating change requests through structured risk assessment including blast radius analysis, rollback planning, and approval workflows.",
+    "origin_year": 1989,
+    "creator": "ITIL framework",
+    "category": "Change Management / Governance",
+    "core_principles": "Assess risk before implementation; ensure stakeholder review; validate rollback capability; balance change velocity with stability; document decisions for audit trail."
+  },
+  {
+    "name": "Pre-Mortem Analysis",
+    "description": "Prospective failure identification technique where team assumes a project has failed spectacularly and works backward to identify potential causes and preventive measures.",
+    "origin_year": 1989,
+    "creator": "Gary Klein",
+    "category": "Risk Management / Planning",
+    "core_principles": "Assume failure to overcome optimism bias; surface hidden concerns through safe failure framing; identify preventive actions before commitment; leverage team's tacit knowledge of risks."
+  },
+  {
+    "name": "FMEA (Failure Mode and Effects Analysis)",
+    "description": "Quantitative risk assessment method calculating Risk Priority Number (RPN) as Severity × Occurrence × Detection to prioritize mitigation efforts.",
+    "origin_year": 1949,
+    "creator": "U.S. Military (MIL-P-1629)",
+    "category": "Risk Management / Quality",
+    "core_principles": "Systematically identify all potential failure modes; quantify risk through severity, occurrence, and detection scores; prioritize mitigation by RPN; track risk reduction over time."
+  },
+  {
+    "name": "Kano Model",
+    "description": "Framework categorizing requirements by impact on customer satisfaction: Basic (expected), Performance (linear satisfaction), Delight (unexpected value), Indifferent, and Reverse.",
+    "origin_year": 1984,
+    "creator": "Noriaki Kano",
+    "category": "Prioritization / Product Management",
+    "core_principles": "Distinguish must-haves from differentiators; invest in delighters for competitive advantage; recognize that features decay from delight to expected over time; balance portfolio across categories."
+  },
+  {
+    "name": "Value vs. Effort Matrix",
+    "description": "2×2 prioritization grid plotting initiatives by business value (high/low) against implementation effort (high/low) to identify quick wins and strategic bets.",
+    "origin_year": 1970,
+    "creator": "Management consulting practice",
+    "category": "Prioritization / Decision-Making",
+    "core_principles": "Prioritize high-value, low-effort quick wins first; defer low-value work regardless of effort; make strategic bets on high-value, high-effort initiatives intentionally."
+  },
+  {
+    "name": "RICE Scoring",
+    "description": "Prioritization framework calculating score as (Reach × Impact × Confidence) / Effort to rank features or initiatives objectively.",
+    "origin_year": 2014,
+    "creator": "Intercom (Sean McBride)",
+    "category": "Prioritization / Product Management",
+    "core_principles": "Use consistent metrics across all initiatives; factor in confidence level to penalize uncertain estimates; normalize by effort to compare fairly; recalibrate periodically based on outcomes."
+  },
+  {
+    "name": "Causal Loop Diagrams",
+    "description": "Visual modeling tool representing system dynamics through reinforcing and balancing feedback loops to understand non-linear causation and unintended consequences.",
+    "origin_year": 1956,
+    "creator": "Jay Forrester",
+    "category": "Systems Thinking / Problem-Solving",
+    "core_principles": "Map relationships, not just components; identify reinforcing loops that amplify change; identify balancing loops that resist change; recognize delays in feedback; anticipate unintended consequences."
+  },
+  {
+    "name": "Theory of Constraints",
+    "description": "Management methodology identifying and systematically exploiting the single bottleneck limiting system throughput through five focusing steps: Identify, Exploit, Subordinate, Elevate, Repeat.",
+    "origin_year": 1984,
+    "creator": "Eliyahu Goldratt",
+    "category": "Continuous Improvement / Systems Thinking",
+    "core_principles": "Focus improvement on the constraint; subordinate non-constraints to constraint needs; avoid local optimization that doesn't improve system throughput; constraint shifts after elevation."
+  },
+  {
+    "name": "Wardley Mapping",
+    "description": "Strategic situational awareness technique visualizing technology components on evolution axis (Genesis → Custom → Product → Commodity) to inform build-vs-buy decisions.",
+    "origin_year": 2005,
+    "creator": "Simon Wardley",
+    "category": "Strategic Planning / Technology Management",
+    "core_principles": "Map value chain from user needs downward; position components by evolution stage; anticipate component movement toward commodity; exploit inertia and ecosystem positioning."
+  },
+  {
+    "name": "RACI Matrix",
+    "description": "Responsibility assignment framework defining roles as Responsible (does work), Accountable (decision authority), Consulted (two-way input), Informed (one-way updates).",
+    "origin_year": 1950,
+    "creator": "Management consulting practice",
+    "category": "Team Management / Governance",
+    "core_principles": "One Accountable per task; multiple Responsible allowed; distinguish input-givers (Consulted) from recipients (Informed); clarify decision rights explicitly to reduce conflict."
+  },
+  {
+    "name": "Stakeholder Analysis (Power/Interest Grid)",
+    "description": "2×2 matrix categorizing stakeholders by power (high/low) and interest (high/low) to tailor engagement strategy: Manage Closely, Keep Satisfied, Keep Informed, Monitor.",
+    "origin_year": 1991,
+    "creator": "Aubrey Mendelow",
+    "category": "Stakeholder Management / Communication",
+    "core_principles": "Allocate engagement effort based on power and interest; manage closely those with both high power and high interest; satisfy high-power low-interest stakeholders; stakeholder positions shift over time."
+  },
+  {
+    "name": "BLUF (Bottom Line Up Front)",
+    "description": "Communication structure placing conclusion, decision needed, or recommendation in the first sentence, followed by supporting details for time-constrained audiences.",
+    "origin_year": 1940,
+    "creator": "U.S. Military writing practice",
+    "category": "Communication",
+    "core_principles": "State the most important information first; respect audience time; enable rapid decision-making; provide supporting detail for those who need it; invert traditional narrative structure."
+  },
+  {
+    "name": "Value Stream Mapping",
+    "description": "Lean technique visualizing end-to-end process flow with cycle times, wait times, and handoffs to identify non-value-added activities and waste.",
+    "origin_year": 1998,
+    "creator": "Mike Rother and John Shook (Toyota)",
+    "category": "Process Improvement / Lean",
+    "core_principles": "Map current state before designing future state; distinguish value-added from non-value-added time; identify waste types (waiting, transport, overprocessing); reduce handoffs and batch sizes."
+  },
+  {
+    "name": "Poka-Yoke",
+    "description": "Error-proofing design principle creating systems that prevent mistakes through constraints, forcing functions, or automatic error detection rather than relying on vigilance.",
+    "origin_year": 1961,
+    "creator": "Shigeo Shingo (Toyota)",
+    "category": "Quality Management / Process Design",
+    "core_principles": "Design out error possibility rather than detecting errors; use physical or procedural constraints; make errors immediately visible; prefer prevention over inspection."
+  },
+  {
+    "name": "Kanban Method",
+    "description": "Visual work-in-progress management system limiting concurrent tasks to reduce context-switching, with columns representing workflow stages and explicit WIP limits.",
+    "origin_year": 2007,
+    "creator": "David J. Anderson",
+    "category": "Workflow Management / Continuous Improvement",
+    "core_principles": "Visualize work; limit work in progress; manage flow; make policies explicit; implement feedback loops; improve collaboratively through experimentation."
+  },
+  {
+    "name": "After Action Review (AAR)",
+    "description": "Structured team learning dialogue addressing four questions: What was expected? What actually happened? Why the difference? What will we sustain or improve?",
+    "origin_year": 1973,
+    "creator": "U.S. Army",
+    "category": "Reflection / Team Learning",
+    "core_principles": "Conduct immediately after event while memory fresh; include all participants regardless of rank; focus on learning not blame; identify both sustains and improves; keep sessions short and focused."
+  },
+  {
+    "name": "Peer Assist",
+    "description": "Proactive knowledge-seeking workshop where team consults peers with relevant experience before starting significant work to identify risks and leverage lessons learned.",
+    "origin_year": 1990,
+    "creator": "British Petroleum (BP)",
+    "category": "Knowledge Management / Collaboration",
+    "core_principles": "Seek knowledge before starting not after failing; frame as help request to encourage honest input; focus on learning from similar experiences; apply insights to planning; follow up to share outcomes."
+  },
+  {
+    "name": "Knowledge-Centered Service (KCS)",
+    "description": "Methodology integrating knowledge creation and reuse into problem-solving workflow through capture during resolution, structuring for reuse, and continuous improvement.",
+    "origin_year": 1992,
+    "creator": "Consortium for Service Innovation",
+    "category": "Knowledge Management / Service Desk",
+    "core_principles": "Solve and document simultaneously; knowledge is by-product of problem resolution; collective ownership of content; reward knowledge sharing; continuous improvement of articles."
+  },
+  {
+    "name": "Interest-Based Relational (IBR) Approach",
+    "description": "Conflict resolution method separating people from problems, focusing on underlying interests rather than stated positions, and generating mutual-gain options.",
+    "origin_year": 1981,
+    "creator": "Roger Fisher and William Ury (Harvard)",
+    "category": "Conflict Resolution / Negotiation",
+    "core_principles": "Separate people from problem; focus on interests not positions; generate options for mutual gain; use objective criteria; maintain relationship while solving problem."
+  },
+  {
+    "name": "Crucial Conversations Framework",
+    "description": "Structured approach for high-stakes, emotional discussions using Start with Heart, Learn to Look, Make it Safe, Master My Stories, STATE (Share facts, Tell story, Ask, Talk tentatively, Encourage testing).",
+    "origin_year": 2002,
+    "creator": "Kerry Patterson, Joseph Grenny, Ron McMillan, Al Switzler",
+    "category": "Communication / Conflict Resolution",
+    "core_principles": "Clarify what you really want; watch for safety threats; separate facts from stories; speak persuasively not abrasively; encourage opposing views; move to action with clear commitments."
+  },
+  {
+    "name": "Getting Things Done (GTD)",
+    "description": "Comprehensive personal workflow management with five steps: Capture (collect everything), Clarify (process meaning), Organize (categorize), Reflect (review), Engage (do).",
+    "origin_year": 2001,
+    "creator": "David Allen",
+    "category": "Personal Productivity",
+    "core_principles": "Capture everything to free mental RAM; two-minute rule for quick tasks; organize by context and next action; weekly review to maintain system; stress-free productivity through trusted system."
+  },
+  {
+    "name": "Pomodoro Technique",
+    "description": "Time management method using 25-minute focused work intervals (pomodoros) followed by 5-minute breaks, with longer breaks after four pomodoros to maintain concentration and prevent burnout.",
+    "origin_year": 1987,
+    "creator": "Francesco Cirillo",
+    "category": "Personal Productivity / Time Management",
+    "core_principles": "Time-box work into manageable intervals; eliminate distractions during pomodoro; take mandatory breaks to sustain focus; track pomodoros to estimate effort; protect pomodoros from interruptions."
+  },
+  {
+    "name": "Time Blocking",
+    "description": "Calendar management strategy allocating specific time blocks for different work types (deep work, meetings, email) to prevent reactive context-switching and protect focus time.",
+    "origin_year": 2016,
+    "creator": "Cal Newport (popularized)",
+    "category": "Personal Productivity / Time Management",
+    "core_principles": "Proactively schedule deep work before reactive demands fill calendar; batch similar tasks; protect blocks from meeting encroachment; distinguish shallow from deep work; leave buffer time for unexpected."
+  },
+  {
+    "name": "Bloom's Taxonomy",
+    "description": "Hierarchical classification of learning objectives across six cognitive levels: Remember, Understand, Apply, Analyze, Evaluate, Create, progressing from lower-order to higher-order thinking.",
+    "origin_year": 1956,
+    "creator": "Benjamin Bloom",
+    "category": "Education / Learning",
+    "core_principles": "Build higher-order thinking on lower-order foundation; match assessment to cognitive level; progress systematically through levels; distinguish knowledge types (factual, conceptual, procedural, metacognitive)."
+  },
+  {
+    "name": "Scaffolding (Zone of Proximal Development)",
+    "description": "Instructional technique providing temporary support structures for learners working just beyond their independent capability, gradually reducing assistance as competence increases.",
+    "origin_year": 1976,
+    "creator": "Lev Vygotsky (theory), Jerome Bruner (term)",
+    "category": "Education / Coaching",
+    "core_principles": "Target zone just beyond independent capability; provide temporary support structures; gradually fade assistance as competence grows; make thinking visible through modeling; transfer responsibility to learner."
+  },
+  {
+    "name": "Socratic Method",
+    "description": "Teaching through disciplined questioning rather than direct instruction, guiding learners to discover principles and examine assumptions through guided inquiry.",
+    "origin_year": -400,
+    "creator": "Socrates",
+    "category": "Education / Coaching",
+    "core_principles": "Question to guide discovery not tell answers; expose contradictions in thinking; probe assumptions systematically; lead learner to self-correct; stimulate critical thinking through dialectic."
+  },
+  {
+    "name": "Threat Modeling",
+    "description": "Security analysis technique identifying potential threats through frameworks like STRIDE (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege).",
+    "origin_year": 1999,
+    "creator": "Microsoft (Adam Shostack)",
+    "category": "Security / Risk Management",
+    "core_principles": "Model system architecture first; identify assets and trust boundaries; enumerate threats systematically using STRIDE; assess risk and prioritize mitigations; iterate as system evolves."
+  },
+  {
+    "name": "Chaos Engineering",
+    "description": "Discipline of experimenting on distributed systems to build confidence in capability to withstand turbulent conditions by intentionally injecting failures in production.",
+    "origin_year": 2010,
+    "creator": "Netflix (Jesse Robbins)",
+    "category": "Reliability Engineering / Testing",
+    "core_principles": "Build hypothesis about steady-state behavior; introduce real-world failure events; run experiments in production; minimize blast radius; automate experiments; learn from outcomes to improve resilience."
+  },
+  {
+    "name": "Service Level Objectives (SLO)",
+    "description": "Target reliability metric framework defining acceptable service levels through Service Level Indicators (SLI) and error budgets to balance innovation velocity with stability.",
+    "origin_year": 2016,
+    "creator": "Google SRE (popularized)",
+    "category": "Service Management / Reliability",
+    "core_principles": "Define measurable SLIs tied to user experience; set realistic SLO targets below perfect reliability; use error budget to balance risk and velocity; burn budget intentionally for features; freeze changes when budget exhausted."
+  },
+  {
+    "name": "Hypothesis-Driven Development",
+    "description": "Experimental approach treating features as hypotheses to be validated through measurable outcomes before full implementation, minimizing waste on unvalidated assumptions.",
+    "origin_year": 2011,
+    "creator": "Lean Startup community",
+    "category": "Product Development / Lean",
+    "core_principles": "State assumptions as testable hypotheses; define success metrics upfront; build minimum test to validate; measure actual outcomes; pivot or persevere based on evidence; fail fast on invalid hypotheses."
+  },
+  {
+    "name": "Wardley Doctrine",
+    "description": "Set of strategic principles derived from gameplay patterns including focus on user needs, use appropriate tools, think small teams, manage inertia, and exploit ecosystems.",
+    "origin_year": 2016,
+    "creator": "Simon Wardley",
+    "category": "Strategic Planning",
+    "core_principles": "Focus on user needs not technology; use appropriate methods for evolution stage; think small teams with clear ownership; challenge assumptions; exploit ecosystems; manage inertia; effectiveness over efficiency in genesis; efficiency over effectiveness in commodity."
   }
 ]

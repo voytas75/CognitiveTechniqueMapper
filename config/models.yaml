@@ -1,6 +1,6 @@
 workflows:
   detect_technique:
-    model: "azure/gpt-5"
+    model: "azure/gpt-5.1"
     temperature: 1
   diagnose_selection:
     model: "azure/gpt-4.1"
