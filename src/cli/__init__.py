@@ -13,6 +13,7 @@ from src.cli.commands.core import (
     describe,
     explain,
     feedback,
+    interactive_flow,
     report,
     refresh,
     simulate,
@@ -203,6 +204,7 @@ app.command()(analyze)
 app.command()(explain)
 app.command()(simulate)
 app.command()(compare)
+app.command()(interactive_flow)
 app.command()(refresh)
 app.command()(feedback)
 app.command()(report)

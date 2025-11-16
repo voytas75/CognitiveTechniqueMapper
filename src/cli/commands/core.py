@@ -23,6 +23,7 @@ from src.cli.utils import (
     infer_category_from_matches,
 )
 from src.cli.reporting import build_report_payload, render_report_markdown
+from src.services.interactive_question_flow import create_interactive_flow
 
 logger = logging.getLogger(__name__)
 
@@ -389,12 +390,34 @@ def report(
         console.print(markdown)
 
 
+def interactive_flow(
+    show_tree: bool = typer.Option(
+        False,
+        "--show-tree",
+        help="Render the decision tree after completing the flow.",
+    ),
+) -> None:
+    """Run the interactive decision-tree question flow."""
+
+    flow = create_interactive_flow(console, show_visualization=show_tree)
+    technique_identifier, technique_label = flow.run()
+    if technique_identifier and technique_label:
+        console.print(
+            Panel(
+                f"Technique: {technique_identifier} ({technique_label})",
+                title="Interactive Flow Result",
+                style="green",
+            )
+        )
+
+
 __all__ = [
     "analyze",
     "compare",
     "describe",
     "explain",
     "feedback",
+    "interactive_flow",
     "refresh",
     "report",
     "simulate",

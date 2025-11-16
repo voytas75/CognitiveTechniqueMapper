@@ -10,7 +10,7 @@ Cognitive Technique Mapper (CTM) is a modular CLI application that pairs problem
 
 - **Technique detection & planning:** `analyze` blends vector search with LLM reasoning, parses structured responses, and calls the plan generator for actionable steps.
 - **Justification & exploration:** `explain`, `simulate`, and `compare` commands surface rationale, scenario walkthroughs, and trade-off comparisons for the selected technique.
-- **Guided CLI flow:** Top-level commands (`describe`, `analyze`, `explain`, `simulate`, `compare`, `feedback`) provide an end-to-end session from problem capture to feedback.
+- **Guided CLI flow:** Top-level commands (`describe`, `analyze`, `explain`, `simulate`, `compare`, `feedback`, `interactive-flow`) provide an end-to-end session from problem capture to feedback or manual decision trees.
 - **Shareable reports:** `report` assembles the latest recommendation, explanation, simulation, and comparison into a Markdown snapshot for stakeholders.
 
 ### Personalization & History
@@ -100,6 +100,7 @@ python -m src.cli analyze --show-candidates
 python -m src.cli feedback "Loved the recommendation" --rating 5 --technique "Decisional Balance"
 python -m src.cli analyze --log-level DEBUG  # temporary verbose logging
 python -m src.cli report --output latest-report.md
+python -m src.cli interactive-flow --show-tree
 ```
 
 Notes:
@@ -114,6 +115,7 @@ Notes:
 - `techniques refresh` refreshes catalog data via the `techniques` subcommand (same effect as the top-level command but scoped to catalog administration).
 - `techniques status` reports dataset statistics and whether embeddings exist in the configured vector store, so you can confirm catalog health before running workflows.
 - `analyze --show-candidates` prints the shortlist with similarity scores for transparency.
+- `interactive-flow` walks the built-in decision tree interactively and surfaces the corresponding technique (optionally printing the tree structure with `--show-tree`).
 
 If the LLM provider rejects a parameter (e.g., unsupported temperature), adjust `config/models.yaml` or set `litellm.drop_params = True` before running the CLI.
 
