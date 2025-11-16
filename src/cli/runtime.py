@@ -24,6 +24,7 @@ from src.services.preference_service import PreferenceService
 from src.services.prompt_service import PromptService
 from src.services.simulation_service import SimulationService
 from src.services.technique_catalog import TechniqueCatalogService
+from src.services.technique_search import TechniqueSearchService
 from src.services.technique_selector import TechniqueSelector
 from src.workflows.compare_candidates import CompareCandidatesWorkflow
 from src.workflows.config_update import ConfigUpdateWorkflow
@@ -71,6 +72,7 @@ _DEFAULT_CONFIG_UPDATE_WORKFLOW = ConfigUpdateWorkflow
 _DEFAULT_SIMULATE_WORKFLOW = SimulateTechniqueWorkflow
 _DEFAULT_COMPARE_WORKFLOW = CompareCandidatesWorkflow
 _DEFAULT_TECHNIQUE_CATALOG = TechniqueCatalogService
+_DEFAULT_TECHNIQUE_SEARCH_SERVICE = TechniqueSearchService
 
 
 def compose_plan_summary(recommendation: dict[str, Any]) -> str:
@@ -320,6 +322,36 @@ def create_initializer() -> tuple[TechniqueDataInitializer, SQLiteClient]:
         dataset_path=dataset_path,
     )
     return initializer, sqlite_client
+
+
+def create_search_service() -> tuple[TechniqueSearchService, SQLiteClient]:
+    """Instantiate a TechniqueSearchService with configured dependencies."""
+
+    config_service_cls = _resolve_dependency("ConfigService", _DEFAULT_CONFIG_SERVICE)
+    config_service = config_service_cls()
+    db_config = config_service.database_config
+
+    sqlite_cls = _resolve_dependency("SQLiteClient", _DEFAULT_SQLITE_CLIENT)
+    sqlite_client = sqlite_cls(db_config.get("sqlite_path", "./data/techniques.db"))
+    sqlite_client.initialize_schema()
+
+    chroma_client = _initialize_chroma_client(
+        db_config.get("chromadb_path", "./embeddings"),
+        db_config.get("chromadb_collection", "techniques"),
+    )
+
+    embedder_cls = _resolve_dependency("EmbeddingGateway", _DEFAULT_EMBEDDING_GATEWAY)
+    embedder = embedder_cls(config_service=config_service)
+
+    search_cls = _resolve_dependency(
+        "TechniqueSearchService", _DEFAULT_TECHNIQUE_SEARCH_SERVICE
+    )
+    service = search_cls(
+        sqlite_client=sqlite_client,
+        embedder=embedder,
+        chroma_client=chroma_client,
+    )
+    return service, sqlite_client
 
 
 def _initialize_chroma_client(

@@ -33,6 +33,7 @@ from src.cli.commands.settings import (
 )
 from src.cli.commands.techniques import (
     techniques_add,
+    techniques_search,
     techniques_export,
     techniques_gaps,
     techniques_import,
@@ -58,6 +59,7 @@ from src.cli.runtime import (
     ConfigService,
     compose_plan_summary,
     create_catalog_service,
+    create_search_service,
     create_initializer,
     get_orchestrator,
     get_runtime,
@@ -174,6 +176,10 @@ def _create_catalog_service() -> tuple[TechniqueCatalogService, SQLiteClient]:
     return create_catalog_service()
 
 
+def _create_search_service() -> tuple[TechniqueSearchService, SQLiteClient]:
+    return create_search_service()
+
+
 # Typer applications ---------------------------------------------------------
 
 app = typer.Typer(add_completion=False, help="Cognitive Technique Mapper CLI")
@@ -231,6 +237,7 @@ techniques_app.command("import")(techniques_import)
 techniques_app.command("refresh")(techniques_refresh)
 techniques_app.command("status")(techniques_status)
 techniques_app.command("gaps")(techniques_gaps)
+techniques_app.command("search")(techniques_search)
 
 app.add_typer(history_app, name="history")
 app.add_typer(preferences_app, name="preferences")
@@ -284,6 +291,7 @@ __all__: list[str] = [
     "_refresh_runtime",
     "_create_initializer",
     "_create_catalog_service",
+    "_create_search_service",
     # Commands
     "describe",
     "analyze",
@@ -312,6 +320,7 @@ __all__: list[str] = [
     "techniques_gaps",
     "techniques_status",
     "techniques_refresh",
+    "techniques_search",
     # Renderers
     "render_analysis_output",
     "render_candidate_matches",
@@ -355,4 +364,5 @@ __all__: list[str] = [
     "Orchestrator",
     "ExplanationResult",
     "TechniqueCatalogService",
+    "TechniqueSearchService",
 ]

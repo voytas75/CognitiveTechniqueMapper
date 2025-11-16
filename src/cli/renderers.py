@@ -9,6 +9,7 @@ from rich.table import Table
 
 from src.cli.io import console
 from src.services.explanation_service import ExplanationResult
+from src.services.technique_search import TechniqueSearchResult
 
 
 def render_analysis_output(
@@ -366,6 +367,38 @@ def render_technique_table(entries: list[dict[str, Any]]) -> None:
     console.print(table)
 
 
+def render_technique_search_results(
+    results: list[TechniqueSearchResult], *, mode: str
+) -> None:
+    """Render ranked technique search results."""
+
+    if not results:
+        console.print(Panel("No techniques matched your search.", title="Technique Search"))
+        return
+
+    table = Table(title=f"Technique Search ({mode})", show_lines=False)
+    table.add_column("Rank", justify="right")
+    table.add_column("Technique", style="bold")
+    table.add_column("Score", justify="right")
+    table.add_column("Breakdown")
+    table.add_column("Highlights", overflow="fold")
+
+    for idx, entry in enumerate(results, start=1):
+        breakdown = ", ".join(
+            f"{label}: {value:.3f}" for label, value in entry.breakdown.items()
+        )
+        highlights = "\n".join(entry.highlights)
+        table.add_row(
+            str(idx),
+            entry.name or entry.metadata.get("name") or "",
+            f"{entry.score:.3f}",
+            breakdown or "-",
+            highlights or "-",
+        )
+
+    console.print(table)
+
+
 __all__ = [
     "render_analysis_output",
     "render_candidate_matches",
@@ -376,4 +409,5 @@ __all__ = [
     "render_prompt_sample",
     "render_simulation_output",
     "render_technique_table",
+    "render_technique_search_results",
 ]

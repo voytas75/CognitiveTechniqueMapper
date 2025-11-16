@@ -11,8 +11,13 @@ import typer
 from rich.panel import Panel
 
 from src.cli.io import console
-from src.cli.renderers import render_coverage_summary, render_technique_table
+from src.cli.renderers import (
+    render_coverage_summary,
+    render_technique_table,
+    render_technique_search_results,
+)
 from src.cli.utils import apply_log_override
+from src.services.technique_search import TechniqueSearchMode
 
 
 def _cli():
@@ -317,6 +322,45 @@ def techniques_refresh(
     console.print(Panel("Technique dataset refreshed.", title="Techniques"))
 
 
+def techniques_search(
+    text: str = typer.Argument(..., help="Text describing what you are searching for."),
+    mode: TechniqueSearchMode = typer.Option(
+        TechniqueSearchMode.HYBRID,
+        "--mode",
+        "-m",
+        case_sensitive=False,
+        help="Search mode: semantic, keyword, hybrid, or fuzzy.",
+    ),
+    limit: int = typer.Option(
+        5,
+        "--limit",
+        "-l",
+        min=1,
+        max=20,
+        help="Maximum number of techniques to display.",
+    ),
+    log_level: str | None = typer.Option(
+        None,
+        "--log-level",
+        help="Override logging level for this invocation.",
+    ),
+) -> None:
+    """Search techniques without modifying the active problem description."""
+
+    apply_log_override(log_level)
+
+    search_service, sqlite_client = _cli()._create_search_service()
+    try:
+        matches = search_service.search(text, mode=mode, limit=limit)
+    except Exception as exc:  # pragma: no cover - defensive path
+        console.print(f"[red]Technique search failed: {exc}[/]")
+        raise typer.Exit(code=1) from exc
+    finally:
+        sqlite_client.close()
+
+    render_technique_search_results(matches, mode=str(mode.value))
+
+
 __all__ = [
     "techniques_add",
     "techniques_export",
@@ -324,6 +368,7 @@ __all__ = [
     "techniques_import",
     "techniques_status",
     "techniques_refresh",
+    "techniques_search",
     "techniques_list",
     "techniques_remove",
     "techniques_update",

@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional
+import types
 
 import pytest
 
@@ -10,6 +11,7 @@ import src.cli as cli
 from src.cli.commands import techniques as techniques_module
 from src.services.config_service import WorkflowModelConfig
 from tests.helpers.cli import RecordingOrchestrator, mute_console
+from src.services.technique_search import TechniqueSearchMode
 
 
 class StubConfigEditor:
@@ -95,6 +97,18 @@ class StubSQLiteClient:
 
     def close(self) -> None:  # pragma: no cover - trivial
         pass
+
+
+class StubSearchService:
+    def __init__(self) -> None:
+        self.requests: list[dict[str, Any]] = []
+        self.results: list[list[Any]] = []
+
+    def search(
+        self, text: str, *, mode: TechniqueSearchMode, limit: int
+    ) -> list[Any]:
+        self.requests.append({"text": text, "mode": mode, "limit": limit})
+        return self.results.pop(0) if self.results else []
 
 
 @pytest.fixture()
@@ -340,3 +354,36 @@ def test_techniques_gaps(monkeypatch: pytest.MonkeyPatch, patched_console: None)
     assert uncategorized["status"] == "⚠ Below target"
     assert uncategorized["avg_rating"] is None
     assert uncategorized["negative_ratio"] is None
+
+
+def test_techniques_search(monkeypatch: pytest.MonkeyPatch, patched_console: None) -> None:
+    search_service = StubSearchService()
+    result_entry = types.SimpleNamespace(
+        name="Decisional Balance",
+        score=0.9,
+        breakdown={"semantic": 0.9},
+        highlights=["Cosine similarity: 0.900"],
+        metadata={"category": "Decision Making"},
+    )
+    search_service.results = [[result_entry]]
+    sqlite_client = StubSQLiteClient()
+
+    monkeypatch.setattr(
+        cli, "_create_search_service", lambda: (search_service, sqlite_client)
+    )
+
+    captured: list[Any] = []
+
+    def capture(renderable: Any, *args: Any, **kwargs: Any) -> None:
+        captured.append(renderable)
+
+    monkeypatch.setattr(cli.console, "print", capture)
+
+    cli.techniques_search(
+        "decision making", mode=TechniqueSearchMode.HYBRID, limit=3, log_level=None
+    )
+
+    assert search_service.requests[0]["text"] == "decision making"
+    assert search_service.requests[0]["mode"] == TechniqueSearchMode.HYBRID
+    assert search_service.requests[0]["limit"] == 3
+    assert captured, "Expected renderer output"
