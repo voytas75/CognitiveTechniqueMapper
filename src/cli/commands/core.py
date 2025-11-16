@@ -24,6 +24,7 @@ from src.cli.utils import (
 )
 from src.cli.reporting import build_report_payload, render_report_markdown
 from src.services.interactive_question_flow import create_interactive_flow
+from src.services.interactive_question_flow import create_interactive_flow
 
 logger = logging.getLogger(__name__)
 
@@ -397,7 +398,12 @@ def interactive_flow(
         help="Render the decision tree after completing the flow.",
     ),
 ) -> None:
-    """Run the interactive decision-tree question flow."""
+    """Run the interactive decision-tree question flow.
+
+    Args:
+        show_tree (bool): Whether to render the full decision tree after
+            completing the flow.
+    """
 
     flow = create_interactive_flow(console, show_visualization=show_tree)
     technique_identifier, technique_label = flow.run()
