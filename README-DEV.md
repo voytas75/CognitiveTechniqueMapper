@@ -67,4 +67,4 @@ uvicorn src.api:app --reload
 - **Config drift:** Run `python -m src.cli settings show` to inspect current values; use `settings update-workflow`/`settings update-provider` for adjustments.
 - **Provider issues:** When parameters are rejected (e.g., unsupported temperature), edit `config/models.yaml` or set `litellm.drop_params = True` in the relevant config block.
 
-For additional CLI-specific contribution notes, see `docs/cli-contrib.md`. Keep `CHANGELOG.md` updated with ISO-8601 dates for every notable change.
+For additional CLI-specific contribution notes, see [docs/cli-contrib.md](docs/cli-contrib.md). Keep `CHANGELOG.md` updated with ISO-8601 dates for every notable change.
