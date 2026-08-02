@@ -60,7 +60,9 @@ class StubSimulationService:
         )
         return SimulationResult(
             simulation_overview="Walkthrough",
-            scenario_variations=[{"name": "Best case", "outcome": "Success", "guidance": "Stay on plan"}],
+            scenario_variations=[
+                {"name": "Best case", "outcome": "Success", "guidance": "Stay on plan"}
+            ],
             cautions=["Time pressure"],
             recommended_follow_up=["Review"],
             raw_response="{}",
@@ -79,7 +81,14 @@ class StubComparisonService:
         return ComparisonResult(
             current_recommendation=recommendation.get("suggested_technique"),
             best_alternative="Six Thinking Hats",
-            comparison_points=[{"technique": "Decisional Balance", "strengths": "Structured", "risks": "Slow", "best_for": "Trade-offs"}],
+            comparison_points=[
+                {
+                    "technique": "Decisional Balance",
+                    "strengths": "Structured",
+                    "risks": "Slow",
+                    "best_for": "Trade-offs",
+                }
+            ],
             decision_guidance=["Use hats for creativity"],
             confidence_notes="High",
             raw_response="{}",
@@ -179,7 +188,10 @@ def test_compare_candidates_workflow_returns_dict() -> None:
             "recommendation": {"suggested_technique": "Decisional Balance"},
             "matches": [
                 {
-                    "metadata": {"name": "Decisional Balance", "category": "Decision Making"},
+                    "metadata": {
+                        "name": "Decisional Balance",
+                        "category": "Decision Making",
+                    },
                     "score": 0.92,
                 }
             ],

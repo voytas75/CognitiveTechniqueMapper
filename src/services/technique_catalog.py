@@ -138,7 +138,9 @@ class TechniqueCatalogService:
             raise ValueError(f"Technique '{name}' not found.")
 
         dataset = self._load_dataset()
-        dataset = [entry for entry in dataset if entry.get("name", "").lower() != name.lower()]
+        dataset = [
+            entry for entry in dataset if entry.get("name", "").lower() != name.lower()
+        ]
         self._write_dataset(dataset)
         self._delete_embedding(name)
         logger.info(
@@ -152,7 +154,9 @@ class TechniqueCatalogService:
         dest_path = Path(destination)
         dest_path.parent.mkdir(parents=True, exist_ok=True)
         records = self._load_dataset()
-        dest_path.write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8")
+        dest_path.write_text(
+            json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
         logger.info(
             "technique_export_completed",
             extra={"tool": "technique_catalog", "technique_count": len(records)},
@@ -170,7 +174,9 @@ class TechniqueCatalogService:
 
         valid_modes = {"replace", "append"}
         if mode not in valid_modes:
-            raise ValueError(f"Unsupported import mode '{mode}'. Choose from {sorted(valid_modes)}.")
+            raise ValueError(
+                f"Unsupported import mode '{mode}'. Choose from {sorted(valid_modes)}."
+            )
 
         path = Path(source)
         if not path.exists():
@@ -178,7 +184,9 @@ class TechniqueCatalogService:
 
         payload = json.loads(path.read_text(encoding="utf-8"))
         if not isinstance(payload, list):
-            raise ValueError("Import file must contain a JSON list of technique objects.")
+            raise ValueError(
+                "Import file must contain a JSON list of technique objects."
+            )
 
         normalized_records = [self._normalize_record(item) for item in payload]
 
@@ -190,8 +198,12 @@ class TechniqueCatalogService:
             stats["added"] = len(normalized_records)
             stats["updated"] = 0
         else:
-            lookup = {entry.get("name", "").lower(): dict(entry) for entry in existing_dataset}
-            order: list[str] = [entry.get("name", "").lower() for entry in existing_dataset]
+            lookup = {
+                entry.get("name", "").lower(): dict(entry) for entry in existing_dataset
+            }
+            order: list[str] = [
+                entry.get("name", "").lower() for entry in existing_dataset
+            ]
             for record in normalized_records:
                 key = record["name"].lower()
                 if key in lookup:
@@ -224,7 +236,11 @@ class TechniqueCatalogService:
             },
         )
 
-        return {"added": stats["added"], "updated": stats["updated"], "total": len(combined_dataset)}
+        return {
+            "added": stats["added"],
+            "updated": stats["updated"],
+            "total": len(combined_dataset),
+        }
 
     def _prepare_update_payload(self, updates: dict[str, Any]) -> dict[str, Any]:
         prepared: dict[str, Any] = {}
@@ -238,7 +254,9 @@ class TechniqueCatalogService:
 
         return {k: v for k, v in prepared.items() if v not in {None, ""}}
 
-    def _sync_embedding(self, entry: dict[str, Any], *, previous_name: str | None = None) -> None:
+    def _sync_embedding(
+        self, entry: dict[str, Any], *, previous_name: str | None = None
+    ) -> None:
         if not self.chroma_client or EmbeddingRecord is None:
             return
 
