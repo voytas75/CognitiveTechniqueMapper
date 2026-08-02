@@ -77,6 +77,16 @@ class AppState:
             context_history=_history(payload.get("context_history")),
         )
 
+    def clear(self) -> None:
+        """Remove all persisted session artifacts while retaining runtime services."""
+
+        self.problem_description = None
+        self.last_recommendation = None
+        self.last_explanation = None
+        self.last_simulation = None
+        self.last_comparison = None
+        self.context_history.clear()
+
     def save(self, path: Path = STATE_PATH) -> None:
         """Persist application state to disk."""
 

@@ -95,3 +95,24 @@ def test_history_show_renders_human_readable_summary(
     panel = captured[0]
     assert isinstance(panel, Panel)
     assert "Need a creative path" in str(panel.renderable)
+
+
+def test_history_clear_all_removes_every_persisted_session_value(
+    patched_runtime: tuple[RecordingOrchestrator, cli.AppState, StubPreferenceService],
+) -> None:
+    _, state, _ = patched_runtime
+    state.problem_description = "Sensitive problem"
+    state.last_recommendation = {"raw_response": "Sensitive model response"}
+    state.last_explanation = {"overview": "Sensitive explanation"}
+    state.last_simulation = {"simulation_overview": "Sensitive simulation"}
+    state.last_comparison = {"best_alternative": "Sensitive comparison"}
+    state.context_history.append({"problem_description": "Sensitive problem"})
+
+    cli.history_clear(force=True, all_state=True)
+
+    assert state.problem_description is None
+    assert state.last_recommendation is None
+    assert state.last_explanation is None
+    assert state.last_simulation is None
+    assert state.last_comparison is None
+    assert state.context_history == []

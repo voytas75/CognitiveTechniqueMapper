@@ -72,21 +72,47 @@ def history_clear(
         "-f",
         help="Clear without confirmation prompt.",
     ),
+    all_state: bool = typer.Option(
+        False,
+        "--all",
+        help="Also clear the saved problem and latest analysis artifacts.",
+    ),
 ) -> None:
-    """Erase the stored session history."""
+    """Erase stored history or all persisted session artifacts."""
 
     state = _cli().get_state()
-    if not state.context_history:
+    if all_state:
+        has_saved_state = any(
+            (
+                state.problem_description,
+                state.last_recommendation,
+                state.last_explanation,
+                state.last_simulation,
+                state.last_comparison,
+                state.context_history,
+            )
+        )
+        if not has_saved_state:
+            console.print("[yellow]Session state is already empty.[/]")
+            return
+        prompt = "Clear all persisted session artifacts?"
+    elif not state.context_history:
         console.print("[yellow]History is already empty.[/]")
         return
+    else:
+        prompt = "Clear all history entries?"
 
-    if not force and not typer.confirm("Clear all history entries?"):
+    if not force and not typer.confirm(prompt):
         console.print("[yellow]History unchanged.[/]")
         return
 
-    state.context_history.clear()
+    if all_state:
+        state.clear()
+        console.print("[green]All persisted session artifacts cleared.[/]")
+    else:
+        state.context_history.clear()
+        console.print("[green]History cleared.[/]")
     state.save()
-    console.print("[green]History cleared.[/]")
 
 
 __all__ = ["history_clear", "history_show"]
