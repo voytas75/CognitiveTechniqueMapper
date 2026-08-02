@@ -230,6 +230,20 @@ def test_compare_candidates_requires_matches() -> None:
         workflow.run({"recommendation": {}})
 
 
+def test_compare_candidates_rejects_malformed_payloads() -> None:
+    workflow = CompareCandidatesWorkflow(comparison_service=StubComparisonService())
+
+    with pytest.raises(ValueError):
+        workflow.run({"recommendation": "not an object", "matches": []})
+    with pytest.raises(ValueError):
+        workflow.run(
+            {
+                "recommendation": {"suggested_technique": "Decisional Balance"},
+                "matches": ["not an object"],
+            }
+        )
+
+
 def test_feedback_workflow_dispatches_actions() -> None:
     service = StubFeedbackService()
     workflow = FeedbackWorkflow(feedback_service=service)
