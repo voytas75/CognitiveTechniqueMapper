@@ -196,6 +196,35 @@ def test_render_comparison_skips_malformed_entries(
     assert "Decision guidance" not in content
 
 
+def test_render_candidate_matches_skips_malformed_entries(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    printed: list[Any] = []
+
+    def capture(value: Any, **_: Any) -> None:
+        printed.append(value)
+
+    monkeypatch.setattr(renderers.console, "print", capture)
+    renderers.render_candidate_matches(
+        [
+            {
+                "metadata": {
+                    "name": "Valid candidate",
+                    "category": "Decision",
+                    "description": "Useful summary",
+                },
+                "score": 0.8,
+            },
+            {"metadata": "malformed metadata", "id": "Fallback candidate"},
+            "malformed match",
+        ]
+    )
+
+    content = str(printed[0].renderable)
+    assert "Valid candidate" in content
+    assert "Fallback candidate" in content
+
+
 def test_active_preference_summary_and_category(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

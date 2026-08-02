@@ -58,18 +58,19 @@ def render_analysis_output(
         render_selection_diagnostics(diagnostics)
 
 
-def render_candidate_matches(matches: Any) -> None:
+def render_candidate_matches(matches: object) -> None:
     """Render candidate technique matches."""
 
-    if not matches:
+    records = _object_records(matches)
+    if not records:
         console.print(
             Panel("No candidate techniques were returned.", title="Candidate Matches")
         )
         return
 
     lines: list[str] = []
-    for idx, match in enumerate(matches, start=1):
-        metadata = match.get("metadata") or {}
+    for idx, match in enumerate(records, start=1):
+        metadata = _object_record(match.get("metadata")) or {}
         name = metadata.get("name") or match.get("id") or "Unknown"
         score = match.get("score")
         score_display = (
