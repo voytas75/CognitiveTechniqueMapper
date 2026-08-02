@@ -1,13 +1,13 @@
 # Cognitive Technique Mapper — Developer Guide
 
 ## Current Status
-- Mature Typer-based CLI with a local-only FastAPI wrapper for registered workflow automation.
-- SQLite catalog seeded from `data/techniques.json` and optional Chroma embeddings for semantic retrieval.
+- Implemented Typer-based local CLI with a local-only FastAPI wrapper for registered workflow automation; first-release acceptance remains pending a controlled live-provider smoke of `describe` → `analyze` → `explain`.
+- SQLite catalog seeded from `data/techniques.json`; local Chroma embeddings are optional and require the explicit `chroma` extra.
 - Preference tracking, history, feedback loops, and Markdown reporting already implemented; new work typically adds workflows, prompts, or catalog management tooling.
 
 ## Environment & Tooling
 - Python 3.12+ with `uv`; `pyproject.toml` declares dependencies and the tracked `uv.lock` fixes their resolution.
-- Full development environment: `uv sync --all-extras --frozen`.
+- Base local CLI: `uv sync --frozen`. Optional local Chroma embeddings: `uv sync --extra chroma --frozen`. Full development environment: `uv sync --all-extras --frozen`.
 - Linting/formatting: Ruff with 88-character line length and import-order checks.
 - Type checking: Pyright in strict mode (config in `pyrightconfig.json`).
 - Tests: `uv run --all-extras --frozen pytest -n auto --cov=src --cov-fail-under=85 --disable-warnings -q`.

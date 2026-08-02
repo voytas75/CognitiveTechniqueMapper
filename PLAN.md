@@ -15,6 +15,11 @@ Cognitive Technique Mapper is a local CLI for the primary user and, indirectly, 
 - [ ] Interactive flow remains available for guided input.
 - [ ] Markdown report export remains available.
 
+## Current validation status
+- The planned CLI, catalog, feedback, simulation, comparison, interactive, and report surfaces are implemented and covered by local quality gates.
+- The checkboxes above remain **release-acceptance** criteria, not an inventory of source files. They stay unchecked until a controlled live-provider smoke verifies the primary `describe` → `analyze` → `explain` outcome.
+- The base installation uses SQLite only. Local Chroma embeddings require the explicit `chroma` extra and remain optional.
+
 ## Later / explicitly deferred
 - Public or production API deployment. The current HTTP surface remains a local loopback development utility until a dedicated security and deployment project is approved.
 
@@ -24,6 +29,7 @@ Cognitive Technique Mapper is a local CLI for the primary user and, indirectly, 
 ## Definition of done
 - The local CLI accepts a problem and returns one justified recommendation plus five candidates.
 - Local quality gates and CI are green.
+- A controlled live-provider smoke has verified the primary workflow without degraded embedding retrieval.
 
 ## Technology decisions
 - **Runtime/language:** Python 3.12+ with `uv` and Typer CLI.
@@ -33,7 +39,7 @@ Cognitive Technique Mapper is a local CLI for the primary user and, indirectly, 
 - **Dependencies:** Approval-only for every new dependency.
 
 ## Accepted temporary security risk
-- `chromadb` remains enabled only through the local `PersistentClient` integration. Version `1.5.9` is subject to critical advisory `GHSA-f4j7-r4q5-qw2c`; no patched version is currently available.
+- `chromadb` is available only through the optional `chroma` extra and remains enabled only through the local `PersistentClient` integration. Version `1.5.9` is subject to critical advisory `GHSA-f4j7-r4q5-qw2c`; no patched version is currently available.
 - This risk is accepted only for local use. Do not run or expose a Chroma server, and re-evaluate immediately when upstream publishes a patch or before any non-local deployment decision.
 
 ## Open decisions
