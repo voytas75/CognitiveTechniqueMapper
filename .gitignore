@@ -65,7 +65,8 @@ chromadb/
 build/
 config/config.json
 .uv-cache
-uv.lock
 data/techniques.db
+
+# `uv.lock` is the tracked, reproducible dependency resolution.
 data/state.json
 .uv-tools/

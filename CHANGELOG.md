@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Security
+- Replaced the stale locked dependency set with a tracked `uv.lock` and updated all currently fixable `pip-audit` findings. `chromadb` remains at `1.5.9` with CVE-2026-45829 / GHSA-f4j7-r4q5-qw2c pending an upstream fixed release; CTM uses only its local `PersistentClient` path.
+
+### Changed
+- Made `pyproject.toml` plus `uv.lock` the reproducible dependency source of truth; full development setup now uses `uv sync --all-extras --frozen`.
+- Added Black and isort to the development extra to match the documented quality gates.
+
 ### Removed
 - Removed mypy dependency and configuration; Pyright now serves as the sole static type checker.
 

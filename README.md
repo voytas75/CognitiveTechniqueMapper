@@ -5,10 +5,8 @@ Cognitive Technique Mapper (CTM) pairs real-world problem descriptions with the 
 ## Installation
 
 ```bash
-# Python 3.12+ recommended
-python -m venv .venv
-source .venv/bin/activate
-uv pip sync requirements.lock
+# Python 3.12+; install the reproducible full development environment.
+uv sync --all-extras --frozen
 
 # Configure provider credentials (example)
 cp .env.example .env  # or export directly
@@ -22,15 +20,15 @@ export ANTHROPIC_API_KEY="..."
 
 ```bash
 # Seed or refresh local data
-python -m src.cli refresh --skip-embeddings
+uv run --frozen python -m src.cli refresh --skip-embeddings
 
 # Capture a problem description, analyze it, and generate justification
-python -m src.cli describe "I'm torn between two job offers."
-python -m src.cli analyze --show-candidates
-python -m src.cli explain
+uv run --frozen python -m src.cli describe "I'm torn between two job offers."
+uv run --frozen python -m src.cli analyze --show-candidates
+uv run --frozen python -m src.cli explain
 
 # Optional: run the FastAPI service
-uvicorn src.api:app --reload
+uv run --frozen uvicorn src.api:app --reload
 ```
 
 ## Features

@@ -6,11 +6,11 @@
 - Preference tracking, history, feedback loops, and Markdown reporting already implemented; new work typically adds workflows, prompts, or catalog management tooling.
 
 ## Environment & Tooling
-- Python 3.12+ with `uv` for dependency syncing (`uv pip sync requirements.lock`).
-- Recommended local virtual environment: `python -m venv .venv && source .venv/bin/activate`.
-- Linting/formatting: `ruff --fix` and `black --line-length 88` (imports sorted via isort profile bundled with Ruff).
-- Type checking: `pyright` in strict mode (config in `pyrightconfig.json`).
-- Tests: `pytest -n auto --cov=src --cov-fail-under=85 --disable-warnings -q`.
+- Python 3.12+ with `uv`; `pyproject.toml` declares dependencies and the tracked `uv.lock` fixes their resolution.
+- Full development environment: `uv sync --all-extras --frozen`.
+- Linting/formatting: Ruff, Black (line length 88), and isort (Black profile).
+- Type checking: Pyright in strict mode (config in `pyrightconfig.json`).
+- Tests: `uv run --all-extras --frozen pytest -n auto --cov=src --cov-fail-under=85 --disable-warnings -q`.
 
 ## Configuration & Secrets
 All runtime credentials are loaded from environment variables (optionally via `.env`). Set at least the following before invoking workflows:
@@ -26,20 +26,19 @@ Model/provider wiring lives under `config/models.yaml` and `config/providers.yam
 ```bash
 git clone <repo-url>
 cd CognitiveTechniqueMapper
-python -m venv .venv && source .venv/bin/activate
-uv pip sync requirements.lock
+uv sync --all-extras --frozen
 cp .env.example .env  # fill in provider keys listed above
 
 # Initialize or refresh technique data
-python -m src.cli refresh --rebuild-embeddings
+uv run --frozen python -m src.cli refresh --rebuild-embeddings
 
 # Smoke-test the primary workflow
-python -m src.cli describe "Need a framework for prioritizing conflicting projects."
-python -m src.cli analyze --show-candidates
-python -m src.cli explain
+uv run --frozen python -m src.cli describe "Need a framework for prioritizing conflicting projects."
+uv run --frozen python -m src.cli analyze --show-candidates
+uv run --frozen python -m src.cli explain
 
 # Optional API surface
-uvicorn src.api:app --reload
+uv run --frozen uvicorn src.api:app --reload
 ```
 
 ## Directory Highlights
@@ -57,14 +56,15 @@ uvicorn src.api:app --reload
 - **Logging & Error Handling:** Use structured logging (via `structlog` or stdlib JSON handlers configured in settings). Wrap external calls with timeouts and apply `tenacity` retries (`wait_exponential(multiplier=1, min=4, max=10)`, max 5 attempts).
 
 ## Quality Gates
-1. `ruff --fix` — import sorting and lint fixes.
-2. `black .` — consistent formatting (line length 88).
-3. `pyright` — strict typing; no regressions accepted.
-4. `pytest -n auto --cov=src --cov-fail-under=85 --disable-warnings -q` — enforce coverage and regression checks.
+1. `uv run --all-extras --frozen ruff check src tests` — linting and import diagnostics.
+2. `uv run --all-extras --frozen black --check src tests` — formatting (line length 88).
+3. `uv run --all-extras --frozen isort --check-only src tests` — import ordering (Black profile).
+4. `uv run --all-extras --frozen pyright` — strict type checking.
+5. `uv run --all-extras --frozen pytest -n auto --cov=src --cov-fail-under=85 --disable-warnings -q` — coverage and regression checks.
 
 ## Troubleshooting
-- **Missing embeddings:** Remove `embeddings/` and rerun `python -m src.cli refresh --rebuild-embeddings`.
-- **Config drift:** Run `python -m src.cli settings show` to inspect current values; use `settings update-workflow`/`settings update-provider` for adjustments.
+- **Missing embeddings:** Remove `embeddings/` and rerun `uv run --frozen python -m src.cli refresh --rebuild-embeddings`.
+- **Config drift:** Run `uv run --frozen python -m src.cli settings show` to inspect current values; use `settings update-workflow`/`settings update-provider` for adjustments.
 - **Provider issues:** When parameters are rejected (e.g., unsupported temperature), edit `config/models.yaml` or set `litellm.drop_params = True` in the relevant config block.
 
 For additional CLI-specific contribution notes, see [docs/cli-contrib.md](docs/cli-contrib.md). Keep `CHANGELOG.md` updated with ISO-8601 dates for every notable change.
