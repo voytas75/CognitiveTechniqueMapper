@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any, Dict, List, cast
 
 from ..core.llm_gateway import LLMGateway
 from .prompt_service import PromptService
@@ -108,7 +108,11 @@ class ExplanationService:
     @staticmethod
     def _coerce_list(value: Any) -> List[str]:
         if isinstance(value, list):
-            return [str(item).strip() for item in value if str(item).strip()]
+            return [
+                str(item).strip()
+                for item in cast(list[object], value)
+                if str(item).strip()
+            ]
         if isinstance(value, str):
             parts = [
                 segment.strip() for segment in value.split("\n") if segment.strip()
