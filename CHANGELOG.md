@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Replaced the stale locked dependency set with a tracked `uv.lock` and updated all currently fixable `pip-audit` findings. `chromadb` remains at `1.5.9` with CVE-2026-45829 / GHSA-f4j7-r4q5-qw2c pending an upstream fixed release; CTM uses only its local `PersistentClient` path.
 
 ### Fixed
+- Made `create_interactive_flow()` reject a configured root that does not reference a decision-tree node.
 - Made `TechniqueSearchService.search()` return no results for nonpositive limits instead of applying Python's negative slicing semantics.
 - Restored the declared `src.cli.TechniqueSearchService` compatibility export and explicitly listed `ConfigEditor` in the CLI public surface.
 - Moved the explicit `create_search_service`, `create_catalog_service`, and `create_initializer` factories into `src.cli.service_factories`; `src.cli.runtime` keeps compatibility re-exports while retaining only runtime orchestration.

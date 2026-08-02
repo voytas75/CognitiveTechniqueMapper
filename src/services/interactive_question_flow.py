@@ -190,8 +190,10 @@ def create_interactive_flow(
     """
 
     definition = get_decision_tree_definition()
-    if not definition.root:
-        raise InvalidDecisionTreeError("Decision tree root is undefined")
+    if not definition.root or definition.get_node(definition.root) is None:
+        raise InvalidDecisionTreeError(
+            "Decision tree root is undefined or does not reference a node"
+        )
     return InteractiveQuestionFlow(
         definition=definition,
         console=console,
