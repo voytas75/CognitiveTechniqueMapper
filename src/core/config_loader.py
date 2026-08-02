@@ -13,6 +13,8 @@ from typing import Any, Dict
 
 import yaml
 
+PROJECT_CONFIG_PATH = Path(__file__).resolve().parents[2] / "config"
+
 
 class ConfigLoader:
     """Loads YAML configuration files from the project's config directory."""
@@ -27,8 +29,9 @@ class ConfigLoader:
             FileNotFoundError: If the resolved configuration path does not exist.
         """
 
-        self._base_path = (
-            base_path or Path(os.environ.get("CTM_CONFIG_PATH", "config")).resolve()
+        configured_path = os.environ.get("CTM_CONFIG_PATH")
+        self._base_path = base_path or (
+            Path(configured_path).resolve() if configured_path else PROJECT_CONFIG_PATH
         )
         if not self._base_path.exists():
             raise FileNotFoundError(f"Config directory not found: {self._base_path}")

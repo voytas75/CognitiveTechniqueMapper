@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+from src.core.config_loader import ConfigLoader
 from src.services.config_service import ConfigService
 
 
@@ -29,6 +30,17 @@ def test_config_service_loads(tmp_path: Path, monkeypatch) -> None:
     assert service.app_metadata["name"] == "test"
     workflow_config = service.get_workflow_model_config("detect_technique")
     assert workflow_config.model == "dummy"
+
+
+def test_config_loader_uses_project_config_outside_repository(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("CTM_CONFIG_PATH", raising=False)
+    monkeypatch.chdir(tmp_path)
+
+    settings = ConfigLoader().load("settings")
+
+    assert settings["app"]["name"] == "Cognitive Technique Mapper"
 
 
 def test_config_service_expands_provider_env_vars(tmp_path: Path, monkeypatch) -> None:
