@@ -6,7 +6,7 @@ import json
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Mapping, Optional, cast
 
 if TYPE_CHECKING:
     from src.core.llm_gateway import LLMGateway
@@ -17,6 +17,23 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 STATE_PATH = Path(
     os.environ.get("CTM_STATE_PATH", PROJECT_ROOT / "data" / "state.json")
 )
+
+
+def _object(value: object) -> dict[str, Any]:
+    if not isinstance(value, Mapping) or not all(isinstance(key, str) for key in value):
+        return {}
+    return cast(dict[str, Any], value)
+
+
+def _optional_object(value: object) -> dict[str, Any] | None:
+    result = _object(value)
+    return result or None
+
+
+def _history(value: object) -> list[dict[str, Any]]:
+    if not isinstance(value, list):
+        return []
+    return [record for item in cast(list[object], value) if (record := _object(item))]
 
 
 @dataclass
@@ -43,18 +60,21 @@ class AppState:
 
         if path.exists():
             try:
-                data = json.loads(path.read_text(encoding="utf-8"))
+                payload = _object(json.loads(path.read_text(encoding="utf-8")))
             except Exception:
-                data = {}
+                payload = {}
         else:
-            data = {}
+            payload = {}
+        problem_description = payload.get("problem_description")
         return cls(
-            problem_description=data.get("problem_description"),
-            last_recommendation=data.get("last_recommendation"),
-            last_explanation=data.get("last_explanation"),
-            last_simulation=data.get("last_simulation"),
-            last_comparison=data.get("last_comparison"),
-            context_history=data.get("context_history", []),
+            problem_description=(
+                problem_description if isinstance(problem_description, str) else None
+            ),
+            last_recommendation=_optional_object(payload.get("last_recommendation")),
+            last_explanation=_optional_object(payload.get("last_explanation")),
+            last_simulation=_optional_object(payload.get("last_simulation")),
+            last_comparison=_optional_object(payload.get("last_comparison")),
+            context_history=_history(payload.get("context_history")),
         )
 
     def save(self, path: Path = STATE_PATH) -> None:
