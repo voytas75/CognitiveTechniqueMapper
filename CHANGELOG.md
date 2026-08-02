@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Replaced the stale locked dependency set with a tracked `uv.lock` and updated all currently fixable `pip-audit` findings. `chromadb` remains at `1.5.9` with CVE-2026-45829 / GHSA-f4j7-r4q5-qw2c pending an upstream fixed release; CTM uses only its local `PersistentClient` path.
 
 ### Fixed
+- Made simulation rendering skip malformed scenario variations and ignore non-list cautions or follow-up payloads.
 - Made selection-diagnostics rendering skip malformed comparison entries instead of raising an `AttributeError`.
 - Made `FeedbackWorkflow` require a textual record message and coerce malformed optional feedback fields to safe defaults.
 - Made `CompareCandidatesWorkflow` require object-shaped recommendations and candidate entries before invoking the comparison service.

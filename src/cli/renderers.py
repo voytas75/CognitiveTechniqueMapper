@@ -104,6 +104,14 @@ def _object_records(value: object) -> list[dict[str, object]]:
     return records
 
 
+def _list_items(value: object) -> list[object]:
+    """Return list payload items without interpreting other iterables as lists."""
+
+    if not isinstance(value, list):
+        return []
+    return cast(list[object], value)
+
+
 def render_selection_diagnostics(diagnostics: Mapping[str, object]) -> None:
     """Render LLM-provided diagnostics that contrast candidates."""
 
@@ -230,7 +238,7 @@ def render_explanation_output(result: ExplanationResult) -> None:
     console.print(Panel(content, title="Explain Logic"))
 
 
-def render_simulation_output(simulation: dict[str, Any]) -> None:
+def render_simulation_output(simulation: Mapping[str, object]) -> None:
     """Render simulation workflow results."""
 
     if not simulation:
@@ -242,7 +250,7 @@ def render_simulation_output(simulation: dict[str, Any]) -> None:
     if overview:
         lines.append(f"[bold]Simulation overview:[/]\n{overview}")
 
-    variations = simulation.get("scenario_variations") or []
+    variations = _object_records(simulation.get("scenario_variations"))
     if variations:
         lines.append("\n[bold]Scenario variations:[/]")
         for entry in variations:
@@ -253,13 +261,13 @@ def render_simulation_output(simulation: dict[str, Any]) -> None:
             if guidance:
                 lines.append(f"  Guidance: {guidance}")
 
-    cautions = simulation.get("cautions") or []
+    cautions = _list_items(simulation.get("cautions"))
     if cautions:
         lines.append("\n[bold]Cautions:[/]")
         for idx, caution in enumerate(cautions, start=1):
             lines.append(f"{idx}. {caution}")
 
-    follow_up = simulation.get("recommended_follow_up") or []
+    follow_up = _list_items(simulation.get("recommended_follow_up"))
     if follow_up:
         lines.append("\n[bold]Recommended follow-up:[/]")
         for idx, action in enumerate(follow_up, start=1):

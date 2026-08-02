@@ -144,6 +144,33 @@ def test_render_selection_diagnostics_skips_nonobject_comparisons(
     assert "Clarify goals" in content
 
 
+def test_render_simulation_skips_malformed_entries(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    printed: list[Any] = []
+
+    def capture(value: Any, **_: Any) -> None:
+        printed.append(value)
+
+    monkeypatch.setattr(renderers.console, "print", capture)
+    renderers.render_simulation_output(
+        {
+            "simulation_overview": "Walkthrough",
+            "scenario_variations": [
+                {"name": "Best case", "outcome": "Success", "guidance": "Continue"},
+                "malformed variation",
+            ],
+            "cautions": "not a list",
+            "recommended_follow_up": "not a list",
+        }
+    )
+
+    content = str(printed[0].renderable)
+    assert "Best case" in content
+    assert "Cautions" not in content
+    assert "Recommended follow-up" not in content
+
+
 def test_active_preference_summary_and_category(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
