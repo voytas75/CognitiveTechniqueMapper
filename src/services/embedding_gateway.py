@@ -11,7 +11,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import math
-from typing import Any, Iterable, List, Sequence
+from typing import Any, Callable, Iterable, List, Mapping, Sequence, cast
 
 try:
     import litellm
@@ -120,7 +120,10 @@ class EmbeddingGateway:
 
         if litellm_embedding is None:
             raise RuntimeError("litellm is not installed; cannot request embeddings.")
-        params = {"model": self._config.model, "input": list(texts)}
+        params: dict[str, object] = {
+            "model": self._config.model,
+            "input": list(texts),
+        }
         provider_config: dict[str, Any] = {}
         if self._config.provider:
             provider_config = dict(self._providers.get(self._config.provider, {}))
@@ -155,17 +158,44 @@ class EmbeddingGateway:
             logger.error(message)
             raise self.EmbeddingGenerationError(message) from exc
 
-        data = response.get("data")
-        if not data:
+        raw_data = response.get("data")
+        if not isinstance(raw_data, list):
             raise self.EmbeddingGenerationError("Embedding API returned no data")
+        vectors: list[list[float]] = []
+        for item in cast(list[object], raw_data):
+            if not isinstance(item, Mapping) or not all(
+                isinstance(key, str) for key in item
+            ):
+                raise self.EmbeddingGenerationError(
+                    "Embedding API returned an invalid vector"
+                )
+            record = cast(Mapping[str, object], item)
+            raw_embedding = record.get("embedding")
+            if not isinstance(raw_embedding, list):
+                raise self.EmbeddingGenerationError(
+                    "Embedding API returned an invalid vector"
+                )
+            vectors.append(
+                [
+                    float(component)
+                    for component in cast(list[object], raw_embedding)
+                    if isinstance(component, (int, float))
+                    and not isinstance(component, bool)
+                ]
+            )
+        if not vectors or any(not vector for vector in vectors):
+            raise self.EmbeddingGenerationError(
+                "Embedding API returned an invalid vector"
+            )
         logger.debug(
             "Received %s embedding vectors from %s",
-            len(data),
+            len(vectors),
             self._config.model,
         )
-        return [item.get("embedding", []) for item in data]
+        return vectors
 
     def _execute_with_retry(self, params: dict[str, object]) -> dict[str, Any]:
+        embedding_call = cast(Callable[..., Mapping[str, Any]], litellm_embedding)
         for attempt in self._retry:
             with attempt:
                 logger.debug(
@@ -173,7 +203,7 @@ class EmbeddingGateway:
                     params.get("model"),
                     attempt.retry_state.attempt_number,
                 )
-                return litellm_embedding(**params)
+                return dict(embedding_call(**params))
         raise self.EmbeddingGenerationError(
             "Embedding invocation failed without response."
         )
@@ -191,7 +221,7 @@ class EmbeddingGateway:
 
         digest = hashlib.sha256(text.encode("utf-8")).digest()
         chunk_size = len(digest) // dimensions
-        vector = []
+        vector: list[float] = []
         for idx in range(dimensions):
             start = idx * chunk_size
             end = start + chunk_size
