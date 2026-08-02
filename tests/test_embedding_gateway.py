@@ -4,8 +4,12 @@ from pathlib import Path
 from typing import Any, Dict
 
 import pytest
-
-from tenacity import Retrying, retry_if_exception_type, stop_after_attempt, wait_exponential
+from tenacity import (
+    Retrying,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from src.services.config_service import ConfigService
 from src.services.embedding_gateway import EmbeddingGateway
@@ -70,10 +74,7 @@ def test_embedding_gateway_uses_provider_metadata(
     assert captured["api_key"] == "secret"
     assert captured["api_base"] == "https://azure.example.com"
     assert captured["api_version"] == "2024-05-01-preview"
-    assert (
-        captured["timeout"]
-        == EmbeddingGateway.DEFAULT_TIMEOUT_SECONDS
-    )
+    assert captured["timeout"] == EmbeddingGateway.DEFAULT_TIMEOUT_SECONDS
 
 
 def test_embedding_gateway_falls_back_after_retries(

@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
 
-
 DECISION_TREE_DATA: Dict[str, Any] = {
     "decision_tree": {
         "root": "task_type",
@@ -80,7 +79,10 @@ DECISION_TREE_DATA: Dict[str, Any] = {
             },
             "code_branch": {
                 "question": "Is it a small direct function generation?",
-                "branches": {"yes": "direct_code_generation", "no": "code_decomposition"},
+                "branches": {
+                    "yes": "direct_code_generation",
+                    "no": "code_decomposition",
+                },
             },
             "code_decomposition": {
                 "question": "Is the task large and requires decomposition?",
@@ -95,7 +97,10 @@ DECISION_TREE_DATA: Dict[str, Any] = {
             },
             "creative_branch": {
                 "question": "Do you need variations or alternatives?",
-                "branches": {"yes": "divergent_expansion", "no": "creative_constraints"},
+                "branches": {
+                    "yes": "divergent_expansion",
+                    "no": "creative_constraints",
+                },
             },
             "creative_constraints": {
                 "question": "Are there strict constraints?",
@@ -263,12 +268,12 @@ class DecisionTreeVisualizer:
         lines.append(f"{indent}- {humanize_identifier(node.name)}: {label}")
         for branch, target in node.branches.items():
             branch_label = humanize_identifier(branch)
-            lines.append(f"{indent}  [ {branch_label} ] -> {humanize_identifier(target)}")
+            lines.append(
+                f"{indent}  [ {branch_label} ] -> {humanize_identifier(target)}"
+            )
             if self.definition.get_node(target):
                 self._render_node(target, lines, depth + 2)
             elif self.definition.is_technique_key(target):
                 technique_label = humanize_identifier(target)
                 code = self.definition.techniques[target]
-                lines.append(
-                    f"{indent}    • Technique: {technique_label} ({code})"
-                )
+                lines.append(f"{indent}    • Technique: {technique_label} ({code})")

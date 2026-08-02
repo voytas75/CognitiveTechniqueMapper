@@ -9,8 +9,8 @@ Updates:
 from __future__ import annotations
 
 import hashlib
-import math
 import logging
+import math
 from typing import Any, Iterable, List, Sequence
 
 try:
@@ -174,7 +174,9 @@ class EmbeddingGateway:
                     attempt.retry_state.attempt_number,
                 )
                 return litellm_embedding(**params)
-        raise self.EmbeddingGenerationError("Embedding invocation failed without response.")
+        raise self.EmbeddingGenerationError(
+            "Embedding invocation failed without response."
+        )
 
     def _fallback_embedding(self, text: str, dimensions: int = 12) -> List[float]:
         """Generate a deterministic fallback embedding vector.
