@@ -25,6 +25,17 @@ class StubOrchestrator:
         return {"workflow": workflow_name, "context": context}
 
 
+class DetectTechniqueOrchestrator(StubOrchestrator):
+    """Workflow double enforcing the real detect-technique input contract."""
+
+    def execute(self, workflow_name: str, context: dict[str, Any]) -> dict[str, Any]:
+        if workflow_name == "detect_technique" and not isinstance(
+            context.get("problem_description"), str
+        ):
+            raise ValueError("Context missing 'problem_description'.")
+        return super().execute(workflow_name, context)
+
+
 class FailingOrchestrator(StubOrchestrator):
     """Orchestrator double that models an internal workflow failure."""
 
@@ -40,8 +51,7 @@ def _client(orchestrator: StubOrchestrator) -> Any:
 
 def test_local_api_exposes_registered_workflows_without_cors() -> None:
     """The HTTP surface accepts only orchestrated workflows for local callers."""
-
-    orchestrator = StubOrchestrator()
+    orchestrator = DetectTechniqueOrchestrator()
     client = _client(orchestrator)
 
     assert client.get("/health").json() == {"status": "ok"}
@@ -49,21 +59,33 @@ def test_local_api_exposes_registered_workflows_without_cors() -> None:
 
     response = client.post(
         "/workflow/detect_technique",
-        json={"problem": "Prioritize two projects."},
+        json={"problem_description": "Prioritize two projects."},
         headers={"Origin": "https://untrusted.example"},
     )
 
     assert response.status_code == 200
     assert response.json() == {
         "workflow": "detect_technique",
-        "context": {"problem": "Prioritize two projects."},
+        "context": {"problem_description": "Prioritize two projects."},
     }
     assert response.headers.get("access-control-allow-origin") is None
     assert orchestrator.calls == [
-        ("detect_technique", {"problem": "Prioritize two projects."})
+        ("detect_technique", {"problem_description": "Prioritize two projects."})
     ]
 
     assert client.post("/workflow/explain_logic", json={}).status_code == 404
+
+
+def test_local_api_rejects_invalid_workflow_context() -> None:
+    """Validation failures become client errors without leaking implementation details."""
+    client = _client(DetectTechniqueOrchestrator())
+
+    response = client.post(
+        "/workflow/detect_technique", json={"problem": "Prioritize two projects."}
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Invalid workflow context."}
 
 
 def test_local_api_rejects_non_object_json_context() -> None:

@@ -44,8 +44,9 @@ uv run --frozen uvicorn src.api:app --reload --host 127.0.0.1
 ## Local API Contract
 - The FastAPI and optional GraphQL surfaces are loopback-only development tools; do not expose them beyond `127.0.0.1` without a separate authentication, authorization, CORS, deployment, and threat-model slice.
 - `/workflows` lists the authoritative HTTP contract. Only registered orchestrator workflows may be executed through `POST /workflow/{name}`.
+- `POST /workflow/detect_technique` requires a JSON object with non-empty `problem_description`; optional `include_diagnostics` enables comparison diagnostics. For example: `{"problem_description":"Prioritize two projects.","include_diagnostics":false}`.
+- Invalid JSON or invalid workflow context returns HTTP 400; unknown workflows return HTTP 404. Internal workflow failures are logged server-side and return a generic HTTP 500 payload without raw exception text.
 - `explain` / `explain_logic` stays CLI-only and must return HTTP 404 rather than bypassing the orchestrator.
-- REST workflow failures are logged server-side and return a generic HTTP 500 payload; clients do not receive raw exception text.
 
 ## Directory Highlights
 - `src/cli/` — Typer entrypoint, runtime wiring, and command modules (keep commands thin; reuse services from `src/core/`).

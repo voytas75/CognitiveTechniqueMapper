@@ -82,6 +82,15 @@ def create_app(orchestrator: Any | None = None) -> FastAPI:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Unknown workflow '{workflow_name}'",
             ) from None
+        except ValueError as exc:
+            logger.info(
+                "workflow_context_rejected",
+                extra={"workflow": workflow_name, "error": str(exc)},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid workflow context.",
+            ) from exc
         except Exception as exc:
             logger.exception("workflow_execution_failed")
             raise HTTPException(
