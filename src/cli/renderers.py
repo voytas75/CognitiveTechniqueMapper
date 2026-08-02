@@ -186,7 +186,7 @@ def render_preference_impacts(impacts: dict[str, Any]) -> None:
 def render_explanation_output(result: ExplanationResult) -> None:
     """Render explanation workflow output."""
 
-    lines = []
+    lines: list[str] = []
     if result.overview:
         lines.append(f"[bold]Overview:[/]\n{result.overview}")
 
