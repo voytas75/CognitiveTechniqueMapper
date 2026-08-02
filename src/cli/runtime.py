@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from src.cli.service_factories import (
     create_catalog_service,
@@ -51,7 +51,7 @@ ChromaClient = _DEFAULT_CHROMA_CLIENT
 
 logger = logging.getLogger(__name__)
 
-_RUNTIME_CACHE: tuple[Orchestrator, AppState] | None = None
+_runtime_cache: tuple[Orchestrator, AppState] | None = None
 
 _DEFAULT_CONFIG_SERVICE = ConfigService
 _DEFAULT_SQLITE_CLIENT = SQLiteClient
@@ -82,8 +82,9 @@ def compose_plan_summary(recommendation: dict[str, Any]) -> str:
 
     technique = recommendation.get("suggested_technique") or ""
     why_it_fits = recommendation.get("why_it_fits") or ""
-    steps = recommendation.get("steps") or []
-    joined_steps = "; ".join(step for step in steps if step)
+    steps = recommendation.get("steps")
+    step_items = cast(list[object], steps) if isinstance(steps, list) else []
+    joined_steps = "; ".join(str(step) for step in step_items if step)
     segments = [
         f"Technique: {technique}" if technique else "",
         f"Why it fits: {why_it_fits}" if why_it_fits else "",
@@ -235,17 +236,17 @@ def initialize_runtime() -> tuple[Orchestrator, AppState]:
 def get_runtime() -> tuple[Orchestrator, AppState]:
     """Return the lazily-initialized orchestrator and CLI state."""
 
-    global _RUNTIME_CACHE
-    if _RUNTIME_CACHE is None:
-        _RUNTIME_CACHE = initialize_runtime()
-    return _RUNTIME_CACHE
+    global _runtime_cache
+    if _runtime_cache is None:
+        _runtime_cache = initialize_runtime()
+    return _runtime_cache
 
 
 def set_runtime(runtime: tuple[Orchestrator, AppState]) -> None:
     """Replace the cached runtime tuple."""
 
-    global _RUNTIME_CACHE
-    _RUNTIME_CACHE = runtime
+    global _runtime_cache
+    _runtime_cache = runtime
 
 
 def get_orchestrator() -> Orchestrator:
@@ -265,7 +266,7 @@ def get_state() -> AppState:
 def refresh_runtime() -> None:
     """Reinitialize runtime dependencies while preserving session state."""
 
-    current_orchestrator, current_state = get_runtime()
+    _, current_state = get_runtime()
     new_orchestrator, refreshed_state = initialize_runtime()
     refreshed_state.problem_description = current_state.problem_description
     refreshed_state.last_recommendation = current_state.last_recommendation
