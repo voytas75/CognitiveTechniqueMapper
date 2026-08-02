@@ -8,7 +8,6 @@ Updates:
 from __future__ import annotations
 
 import json
-import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterable, List, Protocol, Sequence, cast
 
@@ -36,9 +35,11 @@ class _ChromaEmbeddingStore(Protocol):
         ...
 
 
-logger = logging.getLogger(__name__)
-
 DEFAULT_DATASET_PATH = Path("data/techniques.json")
+
+
+class CatalogSynchronizationError(RuntimeError):
+    """Raised when optional Chroma cannot stay synchronized with SQLite."""
 
 
 class TechniqueDataInitializer:
@@ -93,31 +94,32 @@ class TechniqueDataInitializer:
         return True
 
     def refresh(self, *, rebuild_embeddings: bool = True) -> None:
-        """Reload the dataset and rebuild embeddings if requested."""
+        """Reload the dataset and synchronize optional embeddings explicitly."""
 
         dataset = self._load_dataset()
+        existing_ids: list[str] = []
+        records: List["EmbeddingRecord"] = []
+        if self._chroma and rebuild_embeddings:
+            try:
+                existing_ids = self._chroma.list_ids()
+                records = self._build_embedding_records(dataset)
+            except Exception as exc:
+                raise CatalogSynchronizationError(
+                    "Chroma synchronization preflight failed; SQLite was left unchanged."
+                ) from exc
+
         self._sqlite.replace_all(dataset)
 
         if self._chroma and rebuild_embeddings:
             try:
-                existing_ids = self._chroma.list_ids()
-            except Exception as exc:  # pragma: no cover - defensive path
-                logger.warning("Failed to enumerate existing embeddings: %s", exc)
-                existing_ids = []
-
-            if existing_ids:
-                try:
+                if existing_ids:
                     self._chroma.delete(existing_ids)
-                except Exception as exc:  # pragma: no cover - Chroma optional
-                    logger.warning("Failed to delete existing embeddings: %s", exc)
-
-            records = self._build_embedding_records(dataset)
-            if not records:
-                return
-            try:
-                self._chroma.upsert_embeddings(records)
-            except Exception as exc:  # pragma: no cover - Chroma optional
-                logger.warning("Failed to upsert embeddings: %s", exc)
+                if records:
+                    self._chroma.upsert_embeddings(records)
+            except Exception as exc:
+                raise CatalogSynchronizationError(
+                    "Chroma synchronization failed after the SQLite refresh."
+                ) from exc
 
     def _load_dataset(self) -> List[TechniqueRecord]:
         """Load the technique dataset from disk.

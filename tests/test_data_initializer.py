@@ -126,6 +126,54 @@ def test_refresh_replaces_dataset(tmp_path: Path, monkeypatch) -> None:
     assert rows[0]["name"] == "Updated Technique"
 
 
+def test_refresh_keeps_sqlite_unchanged_when_chroma_preflight_fails(
+    tmp_path: Path,
+) -> None:
+    dataset_path = tmp_path / "techniques.json"
+    dataset_path.write_text(
+        json.dumps(
+            [
+                {
+                    "name": "Replacement",
+                    "description": "New catalog record.",
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+    sqlite_client = SQLiteClient(tmp_path / "techniques.db")
+    sqlite_client.initialize_schema()
+    sqlite_client.insert_technique(
+        "Original", "Existing catalog record.", None, None, None, None
+    )
+
+    class StubEmbedder:
+        def embed_batch(self, texts: list[str]) -> list[list[float]]:
+            return [[0.1, 0.2] for _ in texts]
+
+    class FailingChroma:
+        def list_ids(self) -> list[str]:
+            raise RuntimeError("storage unavailable")
+
+        def delete(self, _: list[str]) -> None:
+            return None
+
+        def upsert_embeddings(self, _: object) -> None:
+            return None
+
+    initializer = TechniqueDataInitializer(
+        sqlite_client=sqlite_client,
+        embedder=StubEmbedder(),  # type: ignore[arg-type]
+        chroma_client=FailingChroma(),  # type: ignore[arg-type]
+        dataset_path=dataset_path,
+    )
+
+    with pytest.raises(RuntimeError, match="Chroma synchronization"):
+        initializer.refresh(rebuild_embeddings=True)
+
+    assert [row["name"] for row in sqlite_client.fetch_all()] == ["Original"]
+
+
 def test_refresh_updates_chroma_index(tmp_path: Path, monkeypatch) -> None:
     config_dir = tmp_path / "config"
     config_dir.mkdir()
