@@ -390,7 +390,6 @@ name = "cognitive-technique-mapper"
 version = "0.2.0"
 source = { editable = "." }
 dependencies = [
-    { name = "chromadb" },
     { name = "fastapi" },
     { name = "litellm" },
     { name = "pyyaml" },
@@ -401,6 +400,9 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+chroma = [
+    { name = "chromadb" },
+]
 dev = [
     { name = "hypothesis" },
     { name = "pyright" },
@@ -418,7 +420,7 @@ graphql = [
 
 [package.metadata]
 requires-dist = [
-    { name = "chromadb", specifier = ">=0.5.0" },
+    { name = "chromadb", marker = "extra == 'chroma'", specifier = ">=0.5.0" },
     { name = "fastapi", specifier = ">=0.111.0" },
     { name = "hypothesis", marker = "extra == 'dev'", specifier = ">=6.112" },
     { name = "litellm", specifier = ">=1.35.9" },
@@ -437,7 +439,7 @@ requires-dist = [
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.27.0" },
     { name = "vcrpy", marker = "extra == 'dev'", specifier = ">=5.1" },
 ]
-provides-extras = ["dev", "graphql"]
+provides-extras = ["chroma", "dev", "graphql"]
 
 [[package]]
 name = "colorama"

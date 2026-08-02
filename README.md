@@ -5,7 +5,13 @@ Cognitive Technique Mapper (CTM) pairs real-world problem descriptions with the 
 ## Installation
 
 ```bash
-# Python 3.12+; install the reproducible full development environment.
+# Python 3.12+; install the local SQLite-only CLI by default.
+uv sync --frozen
+
+# Optional: enable local Chroma embeddings for semantic retrieval.
+uv sync --extra chroma --frozen
+
+# Full development environment, including all optional integrations and test tools.
 uv sync --all-extras --frozen
 
 # Configure provider credentials (example)
