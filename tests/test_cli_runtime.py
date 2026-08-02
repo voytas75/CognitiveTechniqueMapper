@@ -7,6 +7,7 @@ import pytest
 import typer
 
 import src.cli as cli
+import src.cli.runtime as cli_runtime
 from tests.helpers.cli import StubPreferenceService
 
 
@@ -51,11 +52,15 @@ class StubOrchestrator:
 class StubWorkflow:
     dependency: Any
 
-    def run(self, context: dict[str, Any]) -> dict[str, Any]:  # pragma: no cover - unused
+    def run(
+        self, context: dict[str, Any]
+    ) -> dict[str, Any]:  # pragma: no cover - unused
         return {"context": context}
 
 
-def test_initialize_runtime_bootstraps_dependencies(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_initialize_runtime_bootstraps_dependencies(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     initializer = StubInitializer()
     sqlite_client = StubSQLiteClient(":memory:")
 
@@ -83,13 +88,25 @@ def test_initialize_runtime_bootstraps_dependencies(monkeypatch: pytest.MonkeyPa
     monkeypatch.setattr(cli, "ExplanationService", lambda **kwargs: object())
     monkeypatch.setattr(cli, "SimulationService", lambda **kwargs: object())
     monkeypatch.setattr(cli, "ComparisonService", lambda **kwargs: object())
-    monkeypatch.setattr(cli, "DetectTechniqueWorkflow", lambda **kwargs: StubWorkflow(kwargs))
-    monkeypatch.setattr(cli, "GeneratePlanWorkflow", lambda **kwargs: StubWorkflow(kwargs))
+    monkeypatch.setattr(
+        cli, "DetectTechniqueWorkflow", lambda **kwargs: StubWorkflow(kwargs)
+    )
+    monkeypatch.setattr(
+        cli, "GeneratePlanWorkflow", lambda **kwargs: StubWorkflow(kwargs)
+    )
     monkeypatch.setattr(cli, "FeedbackWorkflow", lambda **kwargs: StubWorkflow(kwargs))
-    monkeypatch.setattr(cli, "ConfigUpdateWorkflow", lambda **kwargs: StubWorkflow(kwargs))
-    monkeypatch.setattr(cli, "SimulateTechniqueWorkflow", lambda **kwargs: StubWorkflow(kwargs))
-    monkeypatch.setattr(cli, "CompareCandidatesWorkflow", lambda **kwargs: StubWorkflow(kwargs))
-    monkeypatch.setattr(cli, "Orchestrator", lambda workflows: StubOrchestrator(workflows))
+    monkeypatch.setattr(
+        cli, "ConfigUpdateWorkflow", lambda **kwargs: StubWorkflow(kwargs)
+    )
+    monkeypatch.setattr(
+        cli, "SimulateTechniqueWorkflow", lambda **kwargs: StubWorkflow(kwargs)
+    )
+    monkeypatch.setattr(
+        cli, "CompareCandidatesWorkflow", lambda **kwargs: StubWorkflow(kwargs)
+    )
+    monkeypatch.setattr(
+        cli, "Orchestrator", lambda workflows: StubOrchestrator(workflows)
+    )
     monkeypatch.setattr(cli.AppState, "load", classmethod(lambda cls: cls()))
 
     orchestrator, state = cli.initialize_runtime()
@@ -98,10 +115,14 @@ def test_initialize_runtime_bootstraps_dependencies(monkeypatch: pytest.MonkeyPa
     assert isinstance(orchestrator, StubOrchestrator)
     assert state.preference_service is not None
     assert initializer.initialized is True
-    assert captured_kwargs["dataset_path"] == cli.PROJECT_ROOT / "data" / "techniques.json"
+    assert (
+        captured_kwargs["dataset_path"] == cli.PROJECT_ROOT / "data" / "techniques.json"
+    )
 
 
-def test_settings_update_workflow_requires_argument(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_settings_update_workflow_requires_argument(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr(cli, "ConfigService", lambda: StubConfigService())
     monkeypatch.setattr(cli.console, "print", lambda *args, **kwargs: None)
 
@@ -117,7 +138,9 @@ def test_settings_update_workflow_requires_argument(monkeypatch: pytest.MonkeyPa
         )
 
 
-def test_settings_update_provider_requires_argument(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_settings_update_provider_requires_argument(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr(cli, "ConfigService", lambda: StubConfigService())
     monkeypatch.setattr(cli.console, "print", lambda *args, **kwargs: None)
 
@@ -148,3 +171,46 @@ def test_cli_explicitly_exports_config_editor() -> None:
 
     assert "ConfigEditor" in cli.__all__
     assert cli.ConfigEditor is ConfigEditor
+
+
+def test_create_search_service_uses_explicit_dependencies(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Search construction does not need CLI-global monkeypatch overrides."""
+
+    sqlite_client = StubSQLiteClient(":memory:")
+    embedder = object()
+    captured: dict[str, Any] = {}
+
+    class StubSearchService:
+        def __init__(self, **kwargs: Any) -> None:
+            captured.update(kwargs)
+
+    def unexpected_cli_override() -> None:
+        raise AssertionError("CLI-global override must not be resolved")
+
+    def sqlite_client_factory(path: str) -> StubSQLiteClient:
+        assert path == ":memory:"
+        return sqlite_client
+
+    def embedding_gateway_factory(config_service: StubConfigService) -> object:
+        assert isinstance(config_service, StubConfigService)
+        return embedder
+
+    monkeypatch.setattr(cli, "ConfigService", unexpected_cli_override)
+
+    service, returned_sqlite = cli_runtime.create_search_service(
+        config_service_cls=StubConfigService,
+        sqlite_client_cls=sqlite_client_factory,
+        embedding_gateway_cls=embedding_gateway_factory,
+        technique_search_service_cls=StubSearchService,
+        chroma_client_cls=None,
+    )
+
+    assert isinstance(service, StubSearchService)
+    assert returned_sqlite is sqlite_client
+    assert captured == {
+        "sqlite_client": sqlite_client,
+        "embedder": embedder,
+        "chroma_client": None,
+    }

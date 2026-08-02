@@ -6,7 +6,10 @@ import logging
 from typing import Any, Optional
 
 from src.cli.io import console
-from src.cli.state import AppState, PROJECT_ROOT
+from src.cli.state import PROJECT_ROOT, AppState
+from src.core.feedback_manager import FeedbackManager
+from src.core.llm_gateway import LLMGateway
+from src.core.logging_setup import set_runtime_level  # re-export via utils
 from src.core.logging_setup import configure_logging
 from src.core.orchestrator import Orchestrator
 from src.db.feedback_repository import FeedbackRepository
@@ -32,10 +35,6 @@ from src.workflows.detect_technique import DetectTechniqueWorkflow
 from src.workflows.feedback_loop import FeedbackWorkflow
 from src.workflows.generate_plan import GeneratePlanWorkflow
 from src.workflows.simulate_technique import SimulateTechniqueWorkflow
-
-from src.core.feedback_manager import FeedbackManager
-from src.core.llm_gateway import LLMGateway
-from src.core.logging_setup import set_runtime_level  # re-export via utils
 
 try:
     from src.db.chroma_client import ChromaClient as _DEFAULT_CHROMA_CLIENT
@@ -73,6 +72,7 @@ _DEFAULT_SIMULATE_WORKFLOW = SimulateTechniqueWorkflow
 _DEFAULT_COMPARE_WORKFLOW = CompareCandidatesWorkflow
 _DEFAULT_TECHNIQUE_CATALOG = TechniqueCatalogService
 _DEFAULT_TECHNIQUE_SEARCH_SERVICE = TechniqueSearchService
+_UNSET_CHROMA_CLIENT = object()
 
 
 def compose_plan_summary(recommendation: dict[str, Any]) -> str:
@@ -110,9 +110,13 @@ def initialize_runtime() -> tuple[Orchestrator, AppState]:
 
     llm_gateway_cls = _resolve_dependency("LLMGateway", _DEFAULT_LLM_GATEWAY)
     llm_gateway = llm_gateway_cls(config_service=config_service)
-    embedding_gateway_cls = _resolve_dependency("EmbeddingGateway", _DEFAULT_EMBEDDING_GATEWAY)
+    embedding_gateway_cls = _resolve_dependency(
+        "EmbeddingGateway", _DEFAULT_EMBEDDING_GATEWAY
+    )
     embedding_gateway = embedding_gateway_cls(config_service=config_service)
-    initializer_cls = _resolve_dependency("TechniqueDataInitializer", _DEFAULT_INITIALIZER)
+    initializer_cls = _resolve_dependency(
+        "TechniqueDataInitializer", _DEFAULT_INITIALIZER
+    )
     dataset_path = PROJECT_ROOT / "data" / "techniques.json"
     initializer = initializer_cls(
         sqlite_client=sqlite_client,
@@ -148,13 +152,17 @@ def initialize_runtime() -> tuple[Orchestrator, AppState]:
     )
     plan_generator_cls = _resolve_dependency("PlanGenerator", _DEFAULT_PLAN_GENERATOR)
     plan_generator = plan_generator_cls(llm_gateway=llm_gateway)
-    feedback_manager_cls = _resolve_dependency("FeedbackManager", _DEFAULT_FEEDBACK_MANAGER)
+    feedback_manager_cls = _resolve_dependency(
+        "FeedbackManager", _DEFAULT_FEEDBACK_MANAGER
+    )
     feedback_manager = feedback_manager_cls()
     feedback_repository_cls = _resolve_dependency(
         "FeedbackRepository", _DEFAULT_FEEDBACK_REPOSITORY
     )
     feedback_repository = feedback_repository_cls(sqlite_client=sqlite_client)
-    feedback_service_cls = _resolve_dependency("FeedbackService", _DEFAULT_FEEDBACK_SERVICE)
+    feedback_service_cls = _resolve_dependency(
+        "FeedbackService", _DEFAULT_FEEDBACK_SERVICE
+    )
     feedback_service = feedback_service_cls(
         feedback_manager=feedback_manager,
         llm_gateway=llm_gateway,
@@ -285,7 +293,9 @@ def create_catalog_service() -> tuple[TechniqueCatalogService, SQLiteClient]:
     embedder_cls = _resolve_dependency("EmbeddingGateway", _DEFAULT_EMBEDDING_GATEWAY)
     embedder = embedder_cls(config_service=config_service)
     dataset_path = PROJECT_ROOT / "data" / "techniques.json"
-    catalog_cls = _resolve_dependency("TechniqueCatalogService", _DEFAULT_TECHNIQUE_CATALOG)
+    catalog_cls = _resolve_dependency(
+        "TechniqueCatalogService", _DEFAULT_TECHNIQUE_CATALOG
+    )
     catalog = catalog_cls(
         sqlite_client=sqlite_client,
         embedder=embedder,
@@ -313,7 +323,9 @@ def create_initializer() -> tuple[TechniqueDataInitializer, SQLiteClient]:
 
     embedder_cls = _resolve_dependency("EmbeddingGateway", _DEFAULT_EMBEDDING_GATEWAY)
     embedder = embedder_cls(config_service=config_service)
-    initializer_cls = _resolve_dependency("TechniqueDataInitializer", _DEFAULT_INITIALIZER)
+    initializer_cls = _resolve_dependency(
+        "TechniqueDataInitializer", _DEFAULT_INITIALIZER
+    )
     dataset_path = PROJECT_ROOT / "data" / "techniques.json"
     initializer = initializer_cls(
         sqlite_client=sqlite_client,
@@ -324,29 +336,43 @@ def create_initializer() -> tuple[TechniqueDataInitializer, SQLiteClient]:
     return initializer, sqlite_client
 
 
-def create_search_service() -> tuple[TechniqueSearchService, SQLiteClient]:
-    """Instantiate a TechniqueSearchService with configured dependencies."""
+def create_search_service(
+    *,
+    config_service_cls: Any = _DEFAULT_CONFIG_SERVICE,
+    sqlite_client_cls: Any = _DEFAULT_SQLITE_CLIENT,
+    embedding_gateway_cls: Any = _DEFAULT_EMBEDDING_GATEWAY,
+    technique_search_service_cls: Any = _DEFAULT_TECHNIQUE_SEARCH_SERVICE,
+    chroma_client_cls: Any = _DEFAULT_CHROMA_CLIENT,
+) -> tuple[TechniqueSearchService, SQLiteClient]:
+    """Instantiate a search service with explicit, overrideable dependencies.
 
-    config_service_cls = _resolve_dependency("ConfigService", _DEFAULT_CONFIG_SERVICE)
+    Args:
+        config_service_cls: Factory for application configuration.
+        sqlite_client_cls: Factory for the SQLite catalog client.
+        embedding_gateway_cls: Factory for the embedding gateway.
+        technique_search_service_cls: Factory for the search service.
+        chroma_client_cls: Chroma client class, or ``None`` to disable Chroma.
+
+    Returns:
+        Configured search service and its SQLite client.
+    """
+
     config_service = config_service_cls()
     db_config = config_service.database_config
 
-    sqlite_cls = _resolve_dependency("SQLiteClient", _DEFAULT_SQLITE_CLIENT)
-    sqlite_client = sqlite_cls(db_config.get("sqlite_path", "./data/techniques.db"))
+    sqlite_client = sqlite_client_cls(
+        db_config.get("sqlite_path", "./data/techniques.db")
+    )
     sqlite_client.initialize_schema()
 
     chroma_client = _initialize_chroma_client(
         db_config.get("chromadb_path", "./embeddings"),
         db_config.get("chromadb_collection", "techniques"),
+        client_cls=chroma_client_cls,
     )
 
-    embedder_cls = _resolve_dependency("EmbeddingGateway", _DEFAULT_EMBEDDING_GATEWAY)
-    embedder = embedder_cls(config_service=config_service)
-
-    search_cls = _resolve_dependency(
-        "TechniqueSearchService", _DEFAULT_TECHNIQUE_SEARCH_SERVICE
-    )
-    service = search_cls(
+    embedder = embedding_gateway_cls(config_service=config_service)
+    service = technique_search_service_cls(
         sqlite_client=sqlite_client,
         embedder=embedder,
         chroma_client=chroma_client,
@@ -355,9 +381,13 @@ def create_search_service() -> tuple[TechniqueSearchService, SQLiteClient]:
 
 
 def _initialize_chroma_client(
-    persist_directory: str, collection_name: str
+    persist_directory: str,
+    collection_name: str,
+    *,
+    client_cls: Any = _UNSET_CHROMA_CLIENT,
 ) -> Optional[Any]:
-    client_cls = _resolve_chroma_client()
+    if client_cls is _UNSET_CHROMA_CLIENT:
+        client_cls = _resolve_chroma_client()
     if client_cls is None:
         return None
     try:

@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 - Restored the declared `src.cli.TechniqueSearchService` compatibility export and explicitly listed `ConfigEditor` in the CLI public surface.
+- Made `create_search_service` use explicit dependency factories rather than resolving its dependencies through mutable `src.cli` compatibility exports.
 
 ### Changed
 - Formally limited the FastAPI and optional GraphQL surfaces to loopback-only development use; REST exposes registered orchestrator workflows only and does not return raw workflow exceptions.
