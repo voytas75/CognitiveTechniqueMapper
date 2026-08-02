@@ -61,9 +61,7 @@ def create_app(orchestrator: Any | None = None) -> FastAPI:
     @application.post(
         "/workflow/{workflow_name}", response_class=JSONResponse, tags=["workflows"]
     )
-    async def execute_workflow(
-        workflow_name: str, request: Request
-    ) -> JSONResponse:  # noqa: D401 – FastAPI handler signature
+    async def execute_workflow(workflow_name: str, request: Request) -> JSONResponse:  # noqa: D401 – FastAPI handler signature
         """Execute a registered workflow with a JSON context body."""
 
         try:
@@ -121,7 +119,6 @@ try:
 except ImportError:  # pragma: no cover – strawberry optional
     _GRAPHQL_ROUTER = None
 else:
-
     JSONScalar = strawberry.scalars.JSON  # noqa: N816 – GraphQL scalar alias
 
     @strawberry.type

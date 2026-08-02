@@ -177,7 +177,7 @@ def techniques_export(
         dir_okay=False,
         writable=True,
         resolve_path=True,
-    )
+    ),
 ) -> None:
     """Export the current technique catalog to a JSON file."""
 

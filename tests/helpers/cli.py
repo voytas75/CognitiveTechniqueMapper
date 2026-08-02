@@ -144,9 +144,13 @@ def mute_console(
     if json_output and hasattr(cli.console, "print_json"):
         monkeypatch.setattr(cli.console, "print_json", lambda *args, **kwargs: None)
     if panel_output and hasattr(cli.console, "print_panel"):
-        monkeypatch.setattr(cli.console, "print_panel", lambda *args, **kwargs: None, raising=False)  # type: ignore[arg-type]
+        monkeypatch.setattr(
+            cli.console, "print_panel", lambda *args, **kwargs: None, raising=False
+        )  # type: ignore[arg-type]
     if log_output and hasattr(cli.console, "log"):
-        monkeypatch.setattr(cli.console, "log", lambda *args, **kwargs: None, raising=False)  # type: ignore[arg-type]
+        monkeypatch.setattr(
+            cli.console, "log", lambda *args, **kwargs: None, raising=False
+        )  # type: ignore[arg-type]
 
 
 def patch_runtime(

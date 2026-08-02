@@ -126,7 +126,7 @@ def explain(
         "--log-level",
         "-l",
         help="Override logging level for this invocation.",
-    )
+    ),
 ) -> None:
     """Explain the logic behind the last recommendation via the explain_logic workflow."""
 

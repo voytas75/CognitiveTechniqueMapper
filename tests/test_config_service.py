@@ -40,8 +40,7 @@ def test_config_service_expands_provider_env_vars(tmp_path: Path, monkeypatch) -
         "database: {sqlite_path: ':memory:'}\n", encoding="utf-8"
     )
     (config_dir / "models.yaml").write_text(
-        "workflows: {detect_technique: {model: dummy}}\n"
-        "defaults: {provider: mock}\n",
+        "workflows: {detect_technique: {model: dummy}}\ndefaults: {provider: mock}\n",
         encoding="utf-8",
     )
     (config_dir / "providers.yaml").write_text(

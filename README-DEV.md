@@ -8,7 +8,7 @@
 ## Environment & Tooling
 - Python 3.12+ with `uv`; `pyproject.toml` declares dependencies and the tracked `uv.lock` fixes their resolution.
 - Full development environment: `uv sync --all-extras --frozen`.
-- Linting/formatting: Ruff, Black (line length 88), and isort (Black profile).
+- Linting/formatting: Ruff with 88-character line length and import-order checks.
 - Type checking: Pyright in strict mode (config in `pyrightconfig.json`).
 - Tests: `uv run --all-extras --frozen pytest -n auto --cov=src --cov-fail-under=85 --disable-warnings -q`.
 
@@ -62,11 +62,10 @@ uv run --frozen uvicorn src.api:app --reload --host 127.0.0.1
 - **Logging & Error Handling:** Use structured logging (via `structlog` or stdlib JSON handlers configured in settings). Wrap external calls with timeouts and apply `tenacity` retries (`wait_exponential(multiplier=1, min=4, max=10)`, max 5 attempts).
 
 ## Quality Gates
-1. `uv run --all-extras --frozen ruff check src tests` — linting and import diagnostics.
-2. `uv run --all-extras --frozen black --check src tests` — formatting (line length 88).
-3. `uv run --all-extras --frozen isort --check-only src tests` — import ordering (Black profile).
-4. `uv run --all-extras --frozen pyright` — strict type checking.
-5. `uv run --all-extras --frozen pytest -n auto --cov=src --cov-fail-under=85 --disable-warnings -q` — coverage and regression checks.
+1. `uv run --all-extras --frozen ruff check src tests` — linting and import ordering.
+2. `uv run --all-extras --frozen ruff format --check src tests` — formatting (line length 88).
+3. `uv run --all-extras --frozen pyright` — strict type checking.
+4. `uv run --all-extras --frozen pytest -n auto --cov=src --cov-fail-under=85 --disable-warnings -q` — coverage and regression checks.
 
 ## Troubleshooting
 - **Missing embeddings:** Remove `embeddings/` and rerun `uv run --frozen python -m src.cli refresh --rebuild-embeddings`.

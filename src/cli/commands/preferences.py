@@ -50,7 +50,7 @@ def preferences_reset(
         "--force",
         "-f",
         help="Reset preferences without a confirmation prompt.",
-    )
+    ),
 ) -> None:
     """Remove all stored feedback-based preferences."""
 
@@ -73,7 +73,7 @@ def preferences_impact(
         "--limit",
         "-n",
         help="Maximum number of entries to display per section.",
-    )
+    ),
 ) -> None:
     """Show score adjustments derived from stored preferences."""
 

@@ -14,8 +14,10 @@ from src.cli.service_factories import (
 from src.cli.state import PROJECT_ROOT, AppState
 from src.core.feedback_manager import FeedbackManager
 from src.core.llm_gateway import LLMGateway
-from src.core.logging_setup import set_runtime_level  # re-export via utils
-from src.core.logging_setup import configure_logging
+from src.core.logging_setup import (
+    configure_logging,
+    set_runtime_level,  # re-export via utils
+)
 from src.core.orchestrator import Orchestrator
 from src.db.feedback_repository import FeedbackRepository
 from src.db.preference_repository import PreferenceRepository

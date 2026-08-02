@@ -71,7 +71,7 @@ def history_clear(
         "--force",
         "-f",
         help="Clear without confirmation prompt.",
-    )
+    ),
 ) -> None:
     """Erase the stored session history."""
 

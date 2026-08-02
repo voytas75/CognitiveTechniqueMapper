@@ -88,7 +88,7 @@ def test_comparison_service_parses_markdown_payload() -> None:
     prompts = StubPromptService()
     service = ComparisonService(llm_gateway=llm, prompt_service=prompts)
 
-    markdown_response = "```json\n{" '"best_alternative": "Six Thinking Hats"' "}\n```"
+    markdown_response = '```json\n{"best_alternative": "Six Thinking Hats"}\n```'
     llm.response = markdown_response
 
     recommendation = {"suggested_technique": "Decisional Balance"}
