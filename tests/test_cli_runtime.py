@@ -258,3 +258,47 @@ def test_create_catalog_service_uses_explicit_dependencies(
         "dataset_path": cli_runtime.PROJECT_ROOT / "data" / "techniques.json",
         "chroma_client": None,
     }
+
+
+def test_create_initializer_uses_explicit_dependencies(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Initializer construction does not need CLI-global monkeypatch overrides."""
+
+    sqlite_client = StubSQLiteClient(":memory:")
+    embedder = object()
+    captured: dict[str, Any] = {}
+
+    class StubDataInitializer:
+        def __init__(self, **kwargs: Any) -> None:
+            captured.update(kwargs)
+
+    def unexpected_cli_override() -> None:
+        raise AssertionError("CLI-global override must not be resolved")
+
+    def sqlite_client_factory(path: str) -> StubSQLiteClient:
+        assert path == ":memory:"
+        return sqlite_client
+
+    def embedding_gateway_factory(config_service: StubConfigService) -> object:
+        assert isinstance(config_service, StubConfigService)
+        return embedder
+
+    monkeypatch.setattr(cli, "ConfigService", unexpected_cli_override)
+
+    initializer, returned_sqlite = cli_runtime.create_initializer(
+        config_service_cls=StubConfigService,
+        sqlite_client_cls=sqlite_client_factory,
+        embedding_gateway_cls=embedding_gateway_factory,
+        initializer_cls=StubDataInitializer,
+        chroma_client_cls=None,
+    )
+
+    assert isinstance(initializer, StubDataInitializer)
+    assert returned_sqlite is sqlite_client
+    assert captured == {
+        "sqlite_client": sqlite_client,
+        "embedder": embedder,
+        "chroma_client": None,
+        "dataset_path": cli_runtime.PROJECT_ROOT / "data" / "techniques.json",
+    }
