@@ -46,13 +46,14 @@ class EmbeddingGateway:
         """Raised when embedding generation fails after retries."""
 
     def __init__(
-        self, config_service: ConfigService, *, use_fallback: bool = True
+        self, config_service: ConfigService, *, use_fallback: bool = False
     ) -> None:
         """Initialize embedding resources.
 
         Args:
             config_service (ConfigService): Configuration provider for embedding models.
-            use_fallback (bool): Enable hashed fallback vectors when providers fail.
+            use_fallback (bool): Explicitly enable non-semantic hashed fallback
+                vectors when providers fail.
         """
 
         self._config_service = config_service

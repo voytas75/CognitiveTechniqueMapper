@@ -21,6 +21,12 @@ from .technique_vector_search import ChromaSearchClient, TechniqueVectorSearch
 
 # TODO: Extract LLM prompt/response construction into a dedicated selector adapter.
 
+MINIMUM_CANDIDATE_COUNT = 6
+
+
+class RecommendationContractError(RuntimeError):
+    """Raised when retrieval or model output cannot meet the CLI contract."""
+
 
 @dataclass(slots=True)
 class TechniqueRecommendation:
@@ -93,6 +99,11 @@ class TechniqueSelector:
         cleaned_description = self._preprocessor.normalize(problem_description)
         embedding_vector = self._generate_query_embedding(cleaned_description)
         candidate_matches = self._vector_search(cleaned_description, embedding_vector)
+        if len(candidate_matches) < MINIMUM_CANDIDATE_COUNT:
+            raise RecommendationContractError(
+                "Technique catalog must provide at least six candidates. "
+                "Refresh the catalog and embeddings before analyzing a problem."
+            )
         preference_summary = (
             self._preferences.preference_summary() if self._preferences else ""
         )
@@ -163,15 +174,50 @@ class TechniqueSelector:
         )
         response = self._invoke_llm(prompt)
         recommendation = self._parse_recommendation(response)
+        if recommendation is None:
+            raise RecommendationContractError(
+                "Model returned an invalid recommendation payload."
+            )
+        self._validate_recommendation(recommendation, candidates)
         displayed_candidates = self._exclude_suggested_candidate(
             candidates, recommendation
         )
+        if len(displayed_candidates) != 5:
+            raise RecommendationContractError(
+                "Technique selection must provide exactly five alternatives."
+            )
         return {
             "workflow": "detect_technique",
-            "recommendation": recommendation.as_dict() if recommendation else None,
+            "recommendation": recommendation.as_dict(),
             "matches": displayed_candidates,
             "preference_summary": preference_summary,
         }
+
+    def _validate_recommendation(
+        self,
+        recommendation: TechniqueRecommendation,
+        candidates: List[Dict[str, Any]],
+    ) -> None:
+        """Require one justified recommendation from the retrieved catalog."""
+        suggested = recommendation.suggested_technique
+        if not suggested or not recommendation.why_it_fits or not recommendation.steps:
+            raise RecommendationContractError(
+                "Model recommendation must include a technique, justification, and steps."
+            )
+        suggested_key = suggested.strip().casefold()
+        for candidate in candidates:
+            metadata = self._object(candidate.get("metadata"))
+            candidate_name = self._coerce_string(
+                metadata.get("name")
+                or candidate.get("name")
+                or candidate.get("document")
+            )
+            if candidate_name and candidate_name.casefold() == suggested_key:
+                recommendation.suggested_technique = candidate_name
+                return
+        raise RecommendationContractError(
+            "Model recommendation must name a retrieved catalog candidate."
+        )
 
     def _exclude_suggested_candidate(
         self,

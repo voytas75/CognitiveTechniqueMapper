@@ -6,6 +6,9 @@ from typing import Any
 
 import pytest
 
+from src.services.config_service import EmbeddingModelConfig
+from src.services.embedding_gateway import EmbeddingGateway
+
 litellm_stub = types.ModuleType("litellm")
 litellm_stub.drop_params = True
 
@@ -34,7 +37,20 @@ class StubSQLite:
                 "description": "Evaluate pros and cons.",
                 "category": "Decision Making",
                 "core_principles": "Compare options",
-            }
+            },
+            *[
+                {
+                    "id": index,
+                    "name": name,
+                    "description": f"{name} description.",
+                    "category": "Decision Making",
+                    "core_principles": "Compare options",
+                }
+                for index, name in enumerate(
+                    ["SWOT", "First Principles", "OODA", "Pre-mortem", "Six Hats"],
+                    start=2,
+                )
+            ],
         ]
 
 
@@ -81,6 +97,7 @@ def test_technique_selector_returns_structured_recommendation() -> None:
         "Score pros and cons.",
         "Compare totals.",
     ]
+    assert len(result["matches"]) == 5
 
 
 class StubEmbedder:
@@ -250,6 +267,50 @@ def test_recommendation_excludes_suggested_candidate_and_keeps_scores(
         0.61,
         0.55,
     ]
+
+
+def test_embedding_fallback_requires_explicit_opt_in() -> None:
+    class Config:
+        providers: dict[str, object] = {}
+
+        def get_embedding_config(self) -> EmbeddingModelConfig:
+            return EmbeddingModelConfig(model="test-model")
+
+    assert EmbeddingGateway(Config())._use_fallback is False
+
+
+def test_recommendation_rejects_unknown_technique() -> None:
+    TechniqueSelector = import_technique_selector()
+
+    class UnknownTechniqueLLM:
+        def invoke(self, *_: Any, **__: Any) -> str:
+            return json.dumps(
+                {
+                    "suggested_technique": "Seek additional input",
+                    "why_it_fits": "The catalog is insufficient.",
+                    "steps": ["Ask an expert."],
+                }
+            )
+
+    selector = TechniqueSelector(
+        StubSQLite(), UnknownTechniqueLLM(), StubPromptService()
+    )
+
+    with pytest.raises(RuntimeError, match="catalog candidate"):
+        selector.recommend("Choose between two options.")
+
+
+def test_recommendation_rejects_shortlist_with_fewer_than_six_candidates() -> None:
+    TechniqueSelector = import_technique_selector()
+
+    class SparseSQLite:
+        def fetch_all(self) -> list[dict[str, Any]]:
+            return StubSQLite().fetch_all()[:5]
+
+    selector = TechniqueSelector(SparseSQLite(), StubLLM(), StubPromptService())
+
+    with pytest.raises(RuntimeError, match="at least six candidates"):
+        selector.recommend("Choose between two options.")
 
 
 def test_llm_reasoning_handles_empty_candidates() -> None:
