@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import Any, Dict, List, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, Sequence, cast
 
 from ..core.llm_gateway import LLMGateway
 from ..core.preprocessor import ProblemPreprocessor
@@ -17,12 +17,9 @@ from ..db.sqlite_client import SQLiteClient
 from .embedding_gateway import EmbeddingGateway
 from .preference_service import PreferenceService
 from .prompt_service import PromptService
-from .technique_utils import compose_embedding_text
+from .technique_vector_search import ChromaSearchClient, TechniqueVectorSearch
 
-try:
-    from ..db.chroma_client import ChromaClient
-except RuntimeError:
-    ChromaClient = None  # type: ignore
+# TODO: Extract LLM prompt/response construction into a dedicated selector adapter.
 
 
 @dataclass(slots=True)
@@ -55,7 +52,7 @@ class TechniqueSelector:
         prompt_service: PromptService,
         preprocessor: ProblemPreprocessor | None = None,
         embedder: EmbeddingGateway | None = None,
-        chroma_client: ChromaClient | None = None,
+        chroma_client: ChromaSearchClient | None = None,
         preference_service: PreferenceService | None = None,
     ) -> None:
         """Initialize dependencies for technique recommendation.
@@ -69,14 +66,15 @@ class TechniqueSelector:
             chroma_client (ChromaClient | None): Optional ChromaDB client for semantic search.
         """
 
-        self._sqlite = sqlite_client
-        self._chroma = chroma_client
         self._llm = llm_gateway
         self._prompts = prompt_service
         self._preprocessor = preprocessor or ProblemPreprocessor()
-        self._embedder = embedder
         self._preferences = preference_service
-        self._embedding_cache: Dict[str, Tuple[str, List[float]]] = {}
+        self._vector_searcher = TechniqueVectorSearch(
+            sqlite_client=sqlite_client,
+            embedder=embedder,
+            chroma_client=chroma_client,
+        )
 
     def recommend(
         self, problem_description: str, *, include_diagnostics: bool = False
@@ -116,105 +114,18 @@ class TechniqueSelector:
         return result
 
     def _generate_query_embedding(self, normalized_text: str) -> List[float] | None:
-        """Generate an embedding for the normalized text if an embedder is available.
-
-        Args:
-            normalized_text (str): Normalized problem description.
-
-        Returns:
-            list[float] | None: Embedding vector or `None` when embeddings are disabled.
-        """
-
-        if not self._embedder:
-            return None
-        return self._embedder.embed(normalized_text)
+        """Generate a query embedding through the vector-search adapter."""
+        return self._vector_searcher.generate_query_embedding(normalized_text)
 
     def _vector_search(
         self, normalized_text: str, query_embedding: List[float] | None
     ) -> List[Dict[str, Any]]:
-        """Search for candidate techniques using vector similarity or database fallback.
-
-        Args:
-            normalized_text (str): Normalized problem description.
-            query_embedding (list[float] | None): Embedding vector for the query.
-
-        Returns:
-            list[dict[str, Any]]: Candidate matches containing metadata and scores.
-        """
-
-        if self._chroma and query_embedding is not None:
-            results = self._chroma.query(
-                query_embeddings=[query_embedding], n_results=5
-            )
-            matches: List[Dict[str, Any]] = []
-            ids = results.get("ids", [[]])[0]
-            metadatas = results.get("metadatas", [[]])[0]
-            documents = results.get("documents", [[]])[0]
-            distances = results.get("distances") or results.get("scores") or [[]]
-            distance_row = distances[0] if distances else []
-            for idx, metadata, document, distance in zip(
-                ids, metadatas, documents, distance_row
-            ):
-                similarity = None
-                if distance is not None:
-                    try:
-                        similarity = 1 / (1 + float(distance))
-                    except (TypeError, ValueError):
-                        similarity = None
-                match = {
-                    "id": idx,
-                    "metadata": metadata,
-                    "document": document,
-                    "distance": distance,
-                    "score": similarity,
-                }
-                matches.append(match)
-            return matches
-
-        stored = [dict(row) for row in self._sqlite.fetch_all()]
-        if not stored:
-            return []
-
-        if query_embedding is None or not self._embedder:
-            return stored[:5]
-
-        scored_matches = []
-        for item in stored:
-            technique_text = compose_embedding_text(item)
-            technique_embedding = self._get_cached_embedding(item, technique_text)
-            score = self._cosine_similarity(query_embedding, technique_embedding)
-            scored_matches.append(
-                {
-                    "id": item.get("id"),
-                    "metadata": item,
-                    "document": item.get("description", ""),
-                    "score": score,
-                }
-            )
-
-        scored_matches.sort(key=lambda entry: entry["score"], reverse=True)
-        return scored_matches[:5]
+        """Search candidates through the vector-search adapter."""
+        return self._vector_searcher.search(normalized_text, query_embedding)
 
     def _cosine_similarity(self, vec_a: List[float], vec_b: List[float]) -> float:
-        """Compute cosine similarity between two vectors with safe guards.
-
-        Args:
-            vec_a (list[float]): First embedding vector.
-            vec_b (list[float]): Second embedding vector.
-
-        Returns:
-            float: Cosine similarity score between 0.0 and 1.0.
-        """
-
-        if not vec_a or not vec_b:
-            return 0.0
-        length = min(len(vec_a), len(vec_b))
-        dot = sum(vec_a[i] * vec_b[i] for i in range(length))
-        norm_a = sum(component * component for component in vec_a[:length]) ** 0.5
-        norm_b = sum(component * component for component in vec_b[:length]) ** 0.5
-        if norm_a == 0 or norm_b == 0:
-            return 0.0
-        return dot / (norm_a * norm_b)
+        """Delegate cosine similarity for backwards-compatible test seams."""
+        return self._vector_searcher.cosine_similarity(vec_a, vec_b)
 
     def _llm_reason_about_candidates(
         self,
@@ -309,9 +220,9 @@ class TechniqueSelector:
         instructions = self._prompts.get_prompt("detect_technique").strip()
         buffer = [instructions, "", "Problem:", normalized_text, "", "Candidates:"]
         for candidate in candidates:
-            metadata = candidate.get("metadata", {}) or {}
-            if not metadata and isinstance(candidate, dict):
-                metadata = {key: candidate.get(key) for key in candidate.keys()}
+            metadata = self._object(candidate.get("metadata"))
+            if not metadata:
+                metadata = dict(candidate)
 
             name = (
                 metadata.get("name")
@@ -360,22 +271,7 @@ class TechniqueSelector:
         payload = {
             "problem": normalized_text,
             "recommendation": recommendation,
-            "candidates": [
-                {
-                    "name": (entry.get("metadata") or {}).get("name")
-                    or entry.get("id")
-                    or entry.get("document"),
-                    "score": self._coerce_float(entry.get("score")),
-                    "base_score": self._coerce_float(entry.get("base_score")),
-                    "preference_adjustment": self._coerce_float(
-                        entry.get("preference_adjustment")
-                    ),
-                    "category": (entry.get("metadata") or {}).get("category"),
-                    "description": (entry.get("metadata") or {}).get("description")
-                    or entry.get("document"),
-                }
-                for entry in candidates
-            ],
+            "candidates": [self._diagnostics_candidate(entry) for entry in candidates],
             "preference_summary": preference_summary,
         }
         serialized = json.dumps(payload, ensure_ascii=False, indent=2)
@@ -392,7 +288,7 @@ class TechniqueSelector:
         adjusted: List[Dict[str, Any]] = []
         for entry in candidates:
             candidate = dict(entry)
-            metadata = candidate.get("metadata") or {}
+            metadata = self._object(candidate.get("metadata"))
             adjustment = self._preferences.score_adjustment(metadata)
             base_score = self._coerce_float(candidate.get("score"))
             if base_score is not None:
@@ -452,6 +348,25 @@ class TechniqueSelector:
             return None
 
     @staticmethod
+    def _object(value: object) -> dict[str, object]:
+        if isinstance(value, Mapping) and all(isinstance(key, str) for key in value):
+            return cast(dict[str, object], value)
+        return {}
+
+    def _diagnostics_candidate(self, entry: Dict[str, Any]) -> dict[str, object]:
+        metadata = self._object(entry.get("metadata"))
+        return {
+            "name": metadata.get("name") or entry.get("id") or entry.get("document"),
+            "score": self._coerce_float(entry.get("score")),
+            "base_score": self._coerce_float(entry.get("base_score")),
+            "preference_adjustment": self._coerce_float(
+                entry.get("preference_adjustment")
+            ),
+            "category": metadata.get("category"),
+            "description": metadata.get("description") or entry.get("document"),
+        }
+
+    @staticmethod
     def _coerce_string(value: Any) -> str | None:
         """Convert value to string when possible."""
 
@@ -467,7 +382,7 @@ class TechniqueSelector:
 
         if isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
             steps: List[str] = []
-            for entry in value:
+            for entry in cast(Sequence[object], value):
                 if entry is None:
                     continue
                 steps.append(str(entry).strip())
@@ -486,35 +401,6 @@ class TechniqueSelector:
         except (TypeError, ValueError):
             return None
 
-    def _get_cached_embedding(
-        self, item: Dict[str, Any], technique_text: str
-    ) -> List[float]:
-        """Return a cached embedding for a technique, computing it when necessary."""
-
-        if self._embedder is None:
-            raise RuntimeError("Embedding gateway is unavailable for technique cache.")
-
-        key = self._cache_key(item)
-        fingerprint = technique_text
-        cached = self._embedding_cache.get(key)
-        if cached and cached[0] == fingerprint:
-            return cached[1]
-
-        vector = self._embedder.embed(technique_text)
-        self._embedding_cache[key] = (fingerprint, vector)
-        return vector
-
-    @staticmethod
-    def _cache_key(item: Dict[str, Any]) -> str:
-        identifier = item.get("id")
-        if identifier is not None:
-            return f"id:{identifier}"
-        name = item.get("name")
-        if isinstance(name, str) and name.strip():
-            return f"name:{name.strip().lower()}"
-        return f"anon:{hash(json.dumps(item, sort_keys=True, default=str))}"
-
     def clear_embedding_cache(self) -> None:
-        """Clear cached embeddings. Useful after dataset refresh operations."""
-
-        self._embedding_cache.clear()
+        """Clear cached embeddings after dataset refresh operations."""
+        self._vector_searcher.clear_embedding_cache()
