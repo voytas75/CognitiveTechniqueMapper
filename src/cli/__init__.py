@@ -96,6 +96,7 @@ from src.services.preference_service import PreferenceService
 from src.services.prompt_service import PromptService
 from src.services.simulation_service import SimulationService
 from src.services.technique_catalog import TechniqueCatalogService
+from src.services.technique_search import TechniqueSearchService
 from src.services.technique_selector import TechniqueSelector
 from src.workflows.compare_candidates import CompareCandidatesWorkflow
 from src.workflows.config_update import ConfigUpdateWorkflow
@@ -337,6 +338,7 @@ __all__: list[str] = [
     "prompt_int",
     "prompt_value",
     # External classes re-exported for tests/compatibility
+    "ConfigEditor",
     "ConfigService",
     "configure_logging",
     "SQLiteClient",

@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Security
 - Replaced the stale locked dependency set with a tracked `uv.lock` and updated all currently fixable `pip-audit` findings. `chromadb` remains at `1.5.9` with CVE-2026-45829 / GHSA-f4j7-r4q5-qw2c pending an upstream fixed release; CTM uses only its local `PersistentClient` path.
 
+### Fixed
+- Restored the declared `src.cli.TechniqueSearchService` compatibility export and explicitly listed `ConfigEditor` in the CLI public surface.
+
 ### Changed
 - Formally limited the FastAPI and optional GraphQL surfaces to loopback-only development use; REST exposes registered orchestrator workflows only and does not return raw workflow exceptions.
 - Made `pyproject.toml` plus `uv.lock` the reproducible dependency source of truth; full development setup now uses `uv sync --all-extras --frozen`.

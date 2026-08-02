@@ -130,3 +130,21 @@ def test_settings_update_provider_requires_argument(monkeypatch: pytest.MonkeyPa
             clear_api_version=False,
             interactive=False,
         )
+
+
+def test_cli_reexports_technique_search_service() -> None:
+    """The documented CLI compatibility export resolves to its concrete class."""
+
+    from src.services.technique_search import TechniqueSearchService
+
+    assert "TechniqueSearchService" in cli.__all__
+    assert cli.TechniqueSearchService is TechniqueSearchService
+
+
+def test_cli_explicitly_exports_config_editor() -> None:
+    """The CLI compatibility surface declares the imported config editor."""
+
+    from src.services.config_editor import ConfigEditor
+
+    assert "ConfigEditor" in cli.__all__
+    assert cli.ConfigEditor is ConfigEditor
