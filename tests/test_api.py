@@ -58,10 +58,14 @@ class FailingOrchestrator(StubOrchestrator):
         raise RuntimeError("provider secret must not be exposed")
 
 
-def _client(orchestrator: StubOrchestrator) -> Any:
+def _client(
+    orchestrator: StubOrchestrator,
+    *,
+    client_address: tuple[str, int] = ("127.0.0.1", 50000),
+) -> Any:
     """Return an untyped HTTP client until FastAPI's TestClient ships stubs."""
 
-    return TestClient(create_app(orchestrator=orchestrator))
+    return TestClient(create_app(orchestrator=orchestrator), client=client_address)
 
 
 def test_local_api_exposes_registered_workflows_without_cors() -> None:
@@ -89,6 +93,17 @@ def test_local_api_exposes_registered_workflows_without_cors() -> None:
     ]
 
     assert client.post("/workflow/explain_logic", json={}).status_code == 404
+
+
+def test_local_api_rejects_non_loopback_clients_for_rest_and_graphql() -> None:
+    """Remote peer addresses must not reach any HTTP or GraphQL API route."""
+
+    client = _client(StubOrchestrator(), client_address=("203.0.113.5", 50000))
+
+    for path in ("/health", "/graphql"):
+        response = client.get(path)
+        assert response.status_code == 403
+        assert response.json() == {"detail": "Loopback clients only."}
 
 
 def test_local_api_rejects_invalid_workflow_context() -> None:

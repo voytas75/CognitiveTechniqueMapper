@@ -47,7 +47,7 @@ uv run --frozen uvicorn src.api:app --reload --host 127.0.0.1
 
 ## Local API boundary
 
-The HTTP surface is a **local loopback development utility**, not a production deployment interface. Bind it only to `127.0.0.1`; it has no authentication or cross-origin contract. `/workflows` is authoritative for HTTP-capable flows, so CLI-only `explain` / `explain_logic` is intentionally unavailable through `/workflow/{name}`.
+The HTTP surface is a **local loopback development utility**, not a production deployment interface. Bind it only to `127.0.0.1`; requests from non-loopback peers are rejected with HTTP 403. It has no authentication or cross-origin contract. `/workflows` is authoritative for HTTP-capable flows, so CLI-only `explain` / `explain_logic` is intentionally unavailable through `/workflow/{name}`.
 
 ## Developer
 

@@ -19,10 +19,13 @@ workflows. Optional GraphQL follows the same local-only restriction.
 from __future__ import annotations
 
 import logging
+from ipaddress import ip_address
 from typing import Any, Dict, List, cast
 
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.responses import JSONResponse
+from starlette.middleware.base import RequestResponseEndpoint
+from starlette.responses import Response
 
 from src.cli.runtime import initialize_runtime
 
@@ -31,6 +34,18 @@ from src.cli.runtime import initialize_runtime
 _orchestrator, _state = initialize_runtime()
 
 logger = logging.getLogger(__name__)
+
+
+def _is_loopback_client(request: Request) -> bool:
+    """Return whether an ASGI request originated from a numeric loopback peer."""
+
+    client = request.client
+    if client is None:
+        return False
+    try:
+        return ip_address(client.host).is_loopback
+    except ValueError:
+        return False
 
 
 def create_app(orchestrator: Any | None = None) -> FastAPI:
@@ -45,6 +60,20 @@ def create_app(orchestrator: Any | None = None) -> FastAPI:
 
     active_orchestrator = _orchestrator if orchestrator is None else orchestrator
     application = FastAPI(title="Cognitive Technique Mapper API", version="0.2.0")
+
+    async def require_loopback_client(
+        request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
+        """Reject REST and GraphQL requests from non-loopback peers."""
+
+        if not _is_loopback_client(request):
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={"detail": "Loopback clients only."},
+            )
+        return await call_next(request)
+
+    application.middleware("http")(require_loopback_client)
 
     async def health() -> Dict[str, str]:
         """Return local liveness state."""
