@@ -142,10 +142,10 @@ class ConfigService:
         provider = data.get("provider", defaults.get("provider"))
         model = data.get("model")
         if not isinstance(model, str) or not model.strip():
-            raise ValueError("Embedding configuration requires a non-empty 'model' value.")
-        return EmbeddingModelConfig(
-            model=model.strip(), provider=provider
-        )
+            raise ValueError(
+                "Embedding configuration requires a non-empty 'model' value."
+            )
+        return EmbeddingModelConfig(model=model.strip(), provider=provider)
 
     @staticmethod
     def clear_cache() -> None:

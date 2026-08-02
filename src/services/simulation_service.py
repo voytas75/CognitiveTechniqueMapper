@@ -35,9 +35,7 @@ class SimulationResult:
 class SimulationService:
     """Creates scenario-based simulations for recommended techniques."""
 
-    def __init__(
-        self, llm_gateway: LLMGateway, prompt_service: PromptService
-    ) -> None:
+    def __init__(self, llm_gateway: LLMGateway, prompt_service: PromptService) -> None:
         self._llm = llm_gateway
         self._prompts = prompt_service
 
@@ -61,9 +59,13 @@ class SimulationService:
         parsed = self._parse_response(response)
         return SimulationResult(
             simulation_overview=self._coerce_string(parsed.get("simulation_overview")),
-            scenario_variations=self._coerce_variations(parsed.get("scenario_variations")),
+            scenario_variations=self._coerce_variations(
+                parsed.get("scenario_variations")
+            ),
             cautions=self._coerce_list(parsed.get("cautions")),
-            recommended_follow_up=self._coerce_list(parsed.get("recommended_follow_up")),
+            recommended_follow_up=self._coerce_list(
+                parsed.get("recommended_follow_up")
+            ),
             raw_response=response,
         )
 

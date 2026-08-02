@@ -66,7 +66,9 @@ class InteractiveQuestionFlow:
                 raise DecisionTreeTraversalError(f"Unknown node: {current_node_id}")
 
             if node.action and not node.branches:
-                self.console.print(Panel(node.action, title=humanize_identifier(node.name)))
+                self.console.print(
+                    Panel(node.action, title=humanize_identifier(node.name))
+                )
                 return None, None
 
             answer = self._prompt_node(node.name, node.question, node.branches)
@@ -204,4 +206,3 @@ __all__ = [
     "create_interactive_flow",
     "normalize_response",
 ]
-
