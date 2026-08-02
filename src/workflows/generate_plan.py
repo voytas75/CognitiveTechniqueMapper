@@ -7,6 +7,7 @@ Updates:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any, Mapping
 
 from ..services.plan_generator import PlanGenerator
 
@@ -16,7 +17,7 @@ class GeneratePlanWorkflow:
     plan_generator: PlanGenerator
     name: str = "summarize_result"
 
-    def run(self, context: dict) -> dict:
+    def run(self, context: Mapping[str, object]) -> dict[str, Any]:
         """Run the summarize_result workflow.
 
         Args:
@@ -30,6 +31,6 @@ class GeneratePlanWorkflow:
         """
 
         technique_summary = context.get("technique_summary")
-        if not technique_summary:
+        if not isinstance(technique_summary, str) or not technique_summary.strip():
             raise ValueError("Context missing 'technique_summary'.")
         return self.plan_generator.generate(technique_summary)

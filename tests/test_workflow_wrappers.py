@@ -158,6 +158,8 @@ def test_generate_plan_workflow_requires_summary() -> None:
     workflow = GeneratePlanWorkflow(plan_generator=StubPlanGenerator())
     with pytest.raises(ValueError):
         workflow.run({})
+    with pytest.raises(ValueError):
+        workflow.run({"technique_summary": 42})
 
 
 def test_simulate_technique_workflow_converts_result() -> None:
