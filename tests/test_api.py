@@ -3,10 +3,25 @@
 from __future__ import annotations
 
 from typing import Any
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
-from src.api.app import create_app
+from src.cli import runtime as runtime_module
+
+
+class _ImportOrchestrator:
+    """Minimal default used while importing the module-level ASGI app in tests."""
+
+    workflows: dict[str, object] = {}
+
+
+with patch.object(
+    runtime_module,
+    "initialize_runtime",
+    return_value=(_ImportOrchestrator(), object()),
+):
+    from src.api.app import create_app
 
 
 class StubOrchestrator:
