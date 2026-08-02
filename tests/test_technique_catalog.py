@@ -114,6 +114,25 @@ def test_export_writes_dataset(
     assert exported[0]["name"] == "Exported"
 
 
+def test_dataset_write_preserves_existing_file_on_replace_failure(
+    catalog: TechniqueCatalogService, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    previous = [{"name": "Original", "description": "Existing catalog entry."}]
+    catalog.dataset_path.write_text(json.dumps(previous), encoding="utf-8")
+
+    def fail_replace(_: Path, __: Path) -> None:
+        raise OSError("simulated replacement failure")
+
+    monkeypatch.setattr(Path, "replace", fail_replace)
+
+    write_dataset = getattr(catalog, "_write_dataset")
+    with pytest.raises(OSError, match="replacement failure"):
+        write_dataset([{"name": "Replacement"}])
+
+    assert _read_dataset(catalog.dataset_path) == previous
+    assert list(catalog.dataset_path.parent.glob(".techniques.json.*.tmp")) == []
+
+
 def test_import_replace_overwrites_catalog(
     catalog: TechniqueCatalogService, tmp_path: Path
 ) -> None:
@@ -140,6 +159,36 @@ def test_import_replace_overwrites_catalog(
     assert summary["total"] == 1
     names = [item["name"] for item in catalog.list()]
     assert names == ["New Technique"]
+
+
+def test_import_keeps_json_and_sqlite_when_chroma_preflight_fails(
+    catalog: TechniqueCatalogService, tmp_path: Path
+) -> None:
+    catalog.add({"name": "Original", "description": "Existing catalog entry."})
+    previous_dataset = _read_dataset(catalog.dataset_path)
+    import_file = tmp_path / "replace.json"
+    import_file.write_text(
+        json.dumps([{"name": "Replacement", "description": "New catalog entry."}]),
+        encoding="utf-8",
+    )
+
+    class FailingChroma:
+        def list_ids(self) -> list[str]:
+            raise RuntimeError("storage unavailable")
+
+        def delete(self, _: list[str]) -> None:
+            return None
+
+        def upsert_embeddings(self, _: object) -> None:
+            return None
+
+    catalog.chroma_client = FailingChroma()  # type: ignore[assignment]
+
+    with pytest.raises(RuntimeError, match="Chroma synchronization"):
+        catalog.import_from_file(import_file, mode="replace")
+
+    assert [entry["name"] for entry in catalog.list()] == ["Original"]
+    assert _read_dataset(catalog.dataset_path) == previous_dataset
 
 
 def test_import_append_merges_catalog(

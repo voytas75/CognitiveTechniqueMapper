@@ -93,10 +93,15 @@ class TechniqueDataInitializer:
             self._sqlite.bulk_insert(dataset)
         return True
 
-    def refresh(self, *, rebuild_embeddings: bool = True) -> None:
-        """Reload the dataset and synchronize optional embeddings explicitly."""
+    def refresh(
+        self,
+        *,
+        rebuild_embeddings: bool = True,
+        dataset: List[TechniqueRecord] | None = None,
+    ) -> None:
+        """Refresh persisted data from the provided or on-disk dataset."""
 
-        dataset = self._load_dataset()
+        dataset = self._load_dataset() if dataset is None else dataset
         existing_ids: list[str] = []
         records: List["EmbeddingRecord"] = []
         if self._chroma and rebuild_embeddings:

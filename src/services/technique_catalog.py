@@ -8,11 +8,13 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Optional, Protocol, cast
 
-from ..db.sqlite_client import SQLiteClient
+from ..db.sqlite_client import SQLiteClient, TechniqueRecord
 from .data_initializer import DEFAULT_DATASET_PATH, TechniqueDataInitializer
 from .embedding_gateway import EmbeddingGateway
 from .technique_utils import compose_embedding_text
@@ -221,15 +223,17 @@ class TechniqueCatalogService:
                     stats["added"] += 1
             combined_dataset = [lookup[key] for key in order]
 
-        self._write_dataset(combined_dataset)
-
         initializer = TechniqueDataInitializer(
             sqlite_client=self.sqlite_client,
             embedder=self.embedder,
             chroma_client=self.chroma_client,
             dataset_path=self.dataset_path,
         )
-        initializer.refresh(rebuild_embeddings=rebuild_embeddings)
+        initializer.refresh(
+            rebuild_embeddings=rebuild_embeddings,
+            dataset=cast(list[TechniqueRecord], combined_dataset),
+        )
+        self._write_dataset(combined_dataset)
 
         logger.info(
             "technique_import_completed",
@@ -323,8 +327,24 @@ class TechniqueCatalogService:
 
     def _write_dataset(self, entries: Iterable[dict[str, Any]]) -> None:
         self.dataset_path.parent.mkdir(parents=True, exist_ok=True)
-        with self.dataset_path.open("w", encoding="utf-8") as handle:
-            json.dump(list(entries), handle, ensure_ascii=False, indent=2)
+        temporary_path: Path | None = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                encoding="utf-8",
+                dir=self.dataset_path.parent,
+                prefix=f".{self.dataset_path.name}.",
+                suffix=".tmp",
+                delete=False,
+            ) as temporary_file:
+                temporary_path = Path(temporary_file.name)
+                json.dump(list(entries), temporary_file, ensure_ascii=False, indent=2)
+                temporary_file.flush()
+                os.fsync(temporary_file.fileno())
+            temporary_path.replace(self.dataset_path)
+        finally:
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
 
     def _normalize_record(self, entry: object) -> dict[str, Any]:
         if not isinstance(entry, Mapping) or not all(
