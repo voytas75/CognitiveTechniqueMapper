@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Mapping, Optional, cast
 
 from ..core.llm_gateway import LLMGateway
 from .prompt_service import PromptService
@@ -126,7 +126,11 @@ class SimulationService:
     @staticmethod
     def _coerce_list(value: Any) -> List[str]:
         if isinstance(value, list):
-            return [str(item).strip() for item in value if str(item).strip()]
+            return [
+                str(item).strip()
+                for item in cast(list[object], value)
+                if str(item).strip()
+            ]
         if isinstance(value, str):
             return [segment.strip() for segment in value.split("\n") if segment.strip()]
         return []
@@ -135,17 +139,24 @@ class SimulationService:
     def _coerce_variations(value: Any) -> List[Dict[str, Any]]:
         variations: List[Dict[str, Any]] = []
         if isinstance(value, list):
-            for entry in value:
-                if isinstance(entry, dict):
+            for entry in cast(list[object], value):
+                if isinstance(entry, Mapping) and all(
+                    isinstance(key, str) for key in entry
+                ):
+                    variation = cast(Mapping[str, object], entry)
                     variations.append(
                         {
-                            "name": entry.get("name"),
-                            "outcome": entry.get("outcome"),
-                            "guidance": entry.get("guidance"),
+                            "name": variation.get("name"),
+                            "outcome": variation.get("outcome"),
+                            "guidance": variation.get("guidance"),
                         }
                     )
                 else:
                     variations.append(
-                        {"name": None, "outcome": str(entry), "guidance": None}
+                        {
+                            "name": None,
+                            "outcome": str(cast(object, entry)),
+                            "guidance": None,
+                        }
                     )
         return variations
