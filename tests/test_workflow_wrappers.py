@@ -179,6 +179,26 @@ def test_simulate_technique_requires_recommendation() -> None:
     workflow = SimulateTechniqueWorkflow(simulation_service=StubSimulationService())
     with pytest.raises(ValueError):
         workflow.run({})
+    with pytest.raises(ValueError):
+        workflow.run({"recommendation": "not a mapping"})
+
+
+def test_simulate_technique_normalizes_nontext_optional_context() -> None:
+    service = StubSimulationService()
+    workflow = SimulateTechniqueWorkflow(simulation_service=service)
+
+    workflow.run(
+        {
+            "recommendation": {"suggested_technique": "Decisional Balance"},
+            "problem_description": 42,
+            "scenario": ["Negotiation"],
+            "preference_summary": {"style": "structured"},
+        }
+    )
+
+    assert service.calls[0]["problem_description"] is None
+    assert service.calls[0]["scenario"] is None
+    assert service.calls[0]["preference_summary"] is None
 
 
 def test_compare_candidates_workflow_returns_dict() -> None:
