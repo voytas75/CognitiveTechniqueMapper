@@ -206,9 +206,27 @@ def _settings_callback(ctx: typer.Context) -> None:
         settings_show()
 
 
+def _history_callback(ctx: typer.Context) -> None:
+    if ctx.invoked_subcommand is None:
+        history_show(limit=10, raw=False)
+
+
+def _preferences_callback(ctx: typer.Context) -> None:
+    if ctx.invoked_subcommand is None:
+        preferences_summary()
+
+
+def _techniques_callback(ctx: typer.Context) -> None:
+    if ctx.invoked_subcommand is None:
+        techniques_list()
+
+
 # Command registration -------------------------------------------------------
 
 settings_app.callback(invoke_without_command=True)(_settings_callback)
+history_app.callback(invoke_without_command=True)(_history_callback)
+preferences_app.callback(invoke_without_command=True)(_preferences_callback)
+techniques_app.callback(invoke_without_command=True)(_techniques_callback)
 
 app.command()(describe)
 app.command()(analyze)

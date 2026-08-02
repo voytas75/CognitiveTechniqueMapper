@@ -22,6 +22,33 @@ def cli_session(
     return runner, state, orchestrator, tmp_path
 
 
+def test_group_commands_run_default_views(
+    cli_session: tuple[CliRunner, cli.AppState, Any, Path],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Command groups invoke their read-only default view without a subcommand."""
+    runner, state, _, _ = cli_session
+    state.context_history.append(
+        {"problem_description": "Need a default history view."}
+    )
+
+    class Catalog:
+        def list(self) -> list[dict[str, str]]:
+            return []
+
+    class SQLiteClient:
+        def close(self) -> None:
+            pass
+
+    monkeypatch.setattr(
+        cli, "_create_catalog_service", lambda: (Catalog(), SQLiteClient())
+    )
+
+    assert runner.invoke(cli.app, ["history"]).exit_code == 0
+    assert runner.invoke(cli.app, ["preferences"]).exit_code == 0
+    assert runner.invoke(cli.app, ["techniques"]).exit_code == 0
+
+
 def test_end_to_end_cli_flow(
     cli_session: tuple[CliRunner, cli.AppState, Any, Path],
 ) -> None:
