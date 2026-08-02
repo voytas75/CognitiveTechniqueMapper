@@ -15,7 +15,11 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping, Optional, Protocol, cast
 
 from ..db.sqlite_client import SQLiteClient, TechniqueRecord
-from .data_initializer import DEFAULT_DATASET_PATH, TechniqueDataInitializer
+from .data_initializer import (
+    DEFAULT_DATASET_PATH,
+    CatalogSynchronizationError,
+    TechniqueDataInitializer,
+)
 from .embedding_gateway import EmbeddingGateway
 from .technique_utils import compose_embedding_text
 
@@ -289,32 +293,27 @@ class TechniqueCatalogService:
         if previous_name and previous_name != record.identifier:
             try:
                 chroma.delete([previous_name])
-            except Exception as exc:  # pragma: no cover - defensive logging
-                logger.warning(
-                    "embedding_delete_failed",
-                    extra={
-                        "tool": "technique_catalog",
-                        "technique": previous_name,
-                        "error": str(exc),
-                    },
-                )
+            except Exception as exc:
+                raise CatalogSynchronizationError(
+                    "Chroma synchronization failed while removing a renamed technique."
+                ) from exc
 
-        chroma.upsert_embeddings([record])
+        try:
+            chroma.upsert_embeddings([record])
+        except Exception as exc:
+            raise CatalogSynchronizationError(
+                "Chroma synchronization failed while upserting a technique."
+            ) from exc
 
     def _delete_embedding(self, name: str) -> None:
         if not self.chroma_client:
             return
         try:
             self.chroma_client.delete([name])
-        except Exception as exc:  # pragma: no cover - best effort removal
-            logger.warning(
-                "embedding_delete_failed",
-                extra={
-                    "tool": "technique_catalog",
-                    "technique": name,
-                    "error": str(exc),
-                },
-            )
+        except Exception as exc:
+            raise CatalogSynchronizationError(
+                "Chroma synchronization failed while removing a technique."
+            ) from exc
 
     def _load_dataset(self) -> list[dict[str, Any]]:
         if not self.dataset_path.exists():

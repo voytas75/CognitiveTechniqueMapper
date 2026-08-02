@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from src.db.sqlite_client import SQLiteClient
+from src.services.data_initializer import CatalogSynchronizationError
 from src.services.technique_catalog import TechniqueCatalogService
 
 
@@ -98,6 +99,50 @@ def test_remove_deletes_from_all_sources(catalog: TechniqueCatalogService) -> No
 
     assert catalog.sqlite_client.fetch_all() == []
     assert _read_dataset(catalog.dataset_path) == []
+
+
+def test_remove_reports_chroma_delete_failure(catalog: TechniqueCatalogService) -> None:
+    catalog.add({"name": "Temporary", "description": "To delete"})
+
+    class FailingChroma:
+        def delete(self, _: list[str]) -> None:
+            raise RuntimeError("storage unavailable")
+
+    catalog.chroma_client = FailingChroma()  # type: ignore[assignment]
+
+    with pytest.raises(CatalogSynchronizationError, match="removing a technique"):
+        catalog.remove("Temporary")
+
+
+def test_update_reports_chroma_rename_delete_failure(
+    catalog: TechniqueCatalogService,
+) -> None:
+    catalog.add({"name": "Original", "description": "Existing catalog entry."})
+
+    class FailingChroma:
+        def delete(self, _: list[str]) -> None:
+            raise RuntimeError("storage unavailable")
+
+        def upsert_embeddings(self, _: object) -> None:
+            return None
+
+    catalog.chroma_client = FailingChroma()  # type: ignore[assignment]
+
+    with pytest.raises(CatalogSynchronizationError, match="renamed technique"):
+        catalog.update("Original", {"name": "Renamed"})
+
+
+def test_update_reports_chroma_upsert_failure(catalog: TechniqueCatalogService) -> None:
+    catalog.add({"name": "Original", "description": "Existing catalog entry."})
+
+    class FailingChroma:
+        def upsert_embeddings(self, _: object) -> None:
+            raise RuntimeError("storage unavailable")
+
+    catalog.chroma_client = FailingChroma()  # type: ignore[assignment]
+
+    with pytest.raises(CatalogSynchronizationError, match="upserting a technique"):
+        catalog.update("Original", {"description": "Updated catalog entry."})
 
 
 def test_export_writes_dataset(
