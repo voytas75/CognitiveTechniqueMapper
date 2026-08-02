@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import sys
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Mapping, Optional, cast
 
 import typer
 from rich.panel import Panel
@@ -30,6 +30,13 @@ logger = logging.getLogger(__name__)
 
 def _cli() -> Any:
     return sys.modules["src.cli"]
+
+
+# TODO: Split command groups into separate modules by workflow responsibility.
+def _object(value: object) -> dict[str, Any]:
+    if isinstance(value, Mapping) and all(isinstance(key, str) for key in value):
+        return cast(dict[str, Any], value)
+    return {}
 
 
 def describe(
@@ -91,7 +98,7 @@ def analyze(
         console.print(f"[red]Analyze failed: {exc}[/]")
         raise typer.Exit(code=1) from exc
 
-    recommendation = result.get("recommendation") or {}
+    recommendation = _object(result.get("recommendation"))
     plan_output: dict[str, Any] | None = result.get("plan")
 
     if not plan_output and recommendation:
@@ -176,7 +183,7 @@ def simulate(
     if not state.last_recommendation:
         raise typer.BadParameter("No recommendation available. Run `analyze` first.")
 
-    recommendation = state.last_recommendation.get("recommendation") or {}
+    recommendation = _object(state.last_recommendation.get("recommendation"))
     if not recommendation:
         raise typer.BadParameter("Current recommendation payload is empty.")
 
@@ -195,7 +202,7 @@ def simulate(
         console.print(f"[red]Simulation failed: {exc}[/]")
         raise typer.Exit(code=1) from exc
 
-    simulation = result.get("simulation") or {}
+    simulation = _object(result.get("simulation"))
     state.last_simulation = simulation
     state.context_history.append({"simulation": simulation})
     state.save()
@@ -230,7 +237,7 @@ def compare(
     if not state.last_recommendation:
         raise typer.BadParameter("No recommendation available. Run `analyze` first.")
 
-    recommendation = state.last_recommendation.get("recommendation") or {}
+    recommendation = _object(state.last_recommendation.get("recommendation"))
     matches = state.last_recommendation.get("matches") or []
     if not recommendation or not matches:
         raise typer.BadParameter(
@@ -253,7 +260,7 @@ def compare(
         console.print(f"[red]Comparison failed: {exc}[/]")
         raise typer.Exit(code=1) from exc
 
-    comparison = result.get("comparison") or {}
+    comparison = _object(result.get("comparison"))
     state.last_comparison = comparison
     state.context_history.append({"comparison": comparison})
     state.save()
@@ -326,9 +333,10 @@ def feedback(
         raise typer.BadParameter("Rating must be between 1 and 5.")
 
     if technique is None and state.last_recommendation:
-        technique = (state.last_recommendation.get("recommendation") or {}).get(
-            "suggested_technique"
-        )
+        recommendation = _object(state.last_recommendation.get("recommendation"))
+        suggested_technique = recommendation.get("suggested_technique")
+        if isinstance(suggested_technique, str):
+            technique = suggested_technique
     if category is None and technique:
         category = infer_category_from_matches(
             (
