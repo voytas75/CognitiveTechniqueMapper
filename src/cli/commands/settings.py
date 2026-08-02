@@ -12,13 +12,6 @@ import typer
 from src.cli.io import console
 from src.cli.renderers import render_prompt_sample
 
-from src.cli.utils import (
-    prompt_float,
-    prompt_int,
-    prompt_value,
-    refresh_runtime_and_preserve_state,
-)
-
 
 def _cli():
     return sys.modules["src.cli"]
@@ -141,8 +134,12 @@ def settings_update_provider(
     current = providers.get(provider, {})
 
     if interactive:
-        api_base = api_base or cli_module._prompt_value("API base", current.get("api_base"))
-        api_version = cli_module._prompt_value("API version", current.get("api_version"))
+        api_base = api_base or cli_module._prompt_value(
+            "API base", current.get("api_base")
+        )
+        api_version = cli_module._prompt_value(
+            "API version", current.get("api_version")
+        )
         api_key_env = api_key_env or cli_module._prompt_value(
             "API key env", current.get("api_key_env")
         )
@@ -169,7 +166,9 @@ def settings_update_provider(
 
 
 def settings_show_prompt(
-    prompt: str = typer.Argument(..., help="Prompt name registered in prompts/registry.yaml."),
+    prompt: str = typer.Argument(
+        ..., help="Prompt name registered in prompts/registry.yaml."
+    ),
     include_example: bool = typer.Option(
         True,
         "--include-example/--skip-example",

@@ -17,13 +17,12 @@ from src.cli.renderers import (
     render_explanation_output,
     render_simulation_output,
 )
+from src.cli.reporting import build_report_payload, render_report_markdown
 from src.cli.utils import (
     active_preference_summary,
     apply_log_override,
     infer_category_from_matches,
 )
-from src.cli.reporting import build_report_payload, render_report_markdown
-from src.services.interactive_question_flow import create_interactive_flow
 from src.services.interactive_question_flow import create_interactive_flow
 
 logger = logging.getLogger(__name__)
@@ -289,7 +288,9 @@ def refresh(
         sqlite_client.close()
 
     _cli()._refresh_runtime()
-    console.print(Panel("Dataset refreshed with latest configuration.", title="Refresh"))
+    console.print(
+        Panel("Dataset refreshed with latest configuration.", title="Refresh")
+    )
 
 
 def feedback(
@@ -325,14 +326,16 @@ def feedback(
         raise typer.BadParameter("Rating must be between 1 and 5.")
 
     if technique is None and state.last_recommendation:
-        technique = (
-            (state.last_recommendation.get("recommendation") or {}).get(
-                "suggested_technique"
-            )
+        technique = (state.last_recommendation.get("recommendation") or {}).get(
+            "suggested_technique"
         )
     if category is None and technique:
         category = infer_category_from_matches(
-            state.last_recommendation.get("matches") if state.last_recommendation else [],
+            (
+                state.last_recommendation.get("matches")
+                if state.last_recommendation
+                else []
+            ),
             technique,
         )
 

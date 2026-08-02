@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any, Dict, Iterable, List, Mapping, Sequence
+from typing import Any, Iterable, Mapping, Sequence
 
 from src.core.preprocessor import ProblemPreprocessor
 from src.db.sqlite_client import SQLiteClient
@@ -114,7 +114,9 @@ class TechniqueSearchService:
             return self._fuzzy_rank(normalized, limit)
         return self._hybrid_rank(normalized, limit)
 
-    def _semantic_rank(self, normalized_text: str, limit: int) -> list[TechniqueSearchResult]:
+    def _semantic_rank(
+        self, normalized_text: str, limit: int
+    ) -> list[TechniqueSearchResult]:
         entries = self._fetch_entries()
         if not entries or not self._embedder:
             return self._keyword_rank(normalized_text, limit)
@@ -187,7 +189,9 @@ class TechniqueSearchService:
         scored.sort(key=lambda item: item.score, reverse=True)
         return scored[:limit]
 
-    def _keyword_rank(self, normalized_text: str, limit: int) -> list[TechniqueSearchResult]:
+    def _keyword_rank(
+        self, normalized_text: str, limit: int
+    ) -> list[TechniqueSearchResult]:
         terms = [term for term in normalized_text.split(" ") if term]
         if not terms:
             return []
@@ -232,7 +236,9 @@ class TechniqueSearchService:
         matches.sort(key=lambda item: item.score, reverse=True)
         return matches[:limit]
 
-    def _fuzzy_rank(self, normalized_text: str, limit: int) -> list[TechniqueSearchResult]:
+    def _fuzzy_rank(
+        self, normalized_text: str, limit: int
+    ) -> list[TechniqueSearchResult]:
         from difflib import SequenceMatcher
 
         entries = self._fetch_entries()
@@ -264,7 +270,9 @@ class TechniqueSearchService:
         scored.sort(key=lambda item: item.score, reverse=True)
         return scored[:limit]
 
-    def _hybrid_rank(self, normalized_text: str, limit: int) -> list[TechniqueSearchResult]:
+    def _hybrid_rank(
+        self, normalized_text: str, limit: int
+    ) -> list[TechniqueSearchResult]:
         if not self._embedder and not self._chroma:
             return self._keyword_rank(normalized_text, limit)
         semantic = self._semantic_rank(normalized_text, limit)
