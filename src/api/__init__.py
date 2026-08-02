@@ -19,4 +19,6 @@ Updates:
 
 from __future__ import annotations
 
-from .app import app  # noqa: F401  re‑export for ``uvicorn src.api:app``
+from .app import app
+
+__all__ = ["app"]
