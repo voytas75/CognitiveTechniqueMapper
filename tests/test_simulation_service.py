@@ -4,7 +4,6 @@ import sys
 import types
 from typing import Any
 
-
 litellm_stub = types.ModuleType("litellm")
 litellm_stub.drop_params = True
 
@@ -84,7 +83,7 @@ def test_simulation_service_returns_structured_payload() -> None:
 def test_simulation_service_parses_markdown() -> None:
     SimulationService = import_simulation_service()
     llm = StubLLM()
-    llm.response = "```json\n{\"simulation_overview\": \"OK\"}\n```"
+    llm.response = '```json\n{"simulation_overview": "OK"}\n```'
     service = SimulationService(llm_gateway=llm, prompt_service=StubPromptService())
 
     result = service.simulate({"steps": []}, problem_description=None, scenario=None)

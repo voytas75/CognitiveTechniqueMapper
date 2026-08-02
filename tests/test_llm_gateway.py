@@ -4,8 +4,12 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import pytest
-
-from tenacity import Retrying, retry_if_exception_type, stop_after_attempt, wait_exponential
+from tenacity import (
+    Retrying,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from src.core.llm_gateway import LLMGateway
 from src.services.config_service import ConfigService
@@ -55,7 +59,9 @@ def test_llm_gateway_invokes_with_timeout(
 ) -> None:
     captured: Dict[str, Any] = {}
 
-    def fake_completion(*, messages: List[Dict[str, str]], **kwargs: Any) -> Dict[str, Any]:
+    def fake_completion(
+        *, messages: List[Dict[str, str]], **kwargs: Any
+    ) -> Dict[str, Any]:
         captured["messages"] = messages
         captured["kwargs"] = kwargs
         return {"choices": [{"message": {"content": "ok"}}]}
@@ -82,7 +88,9 @@ def test_llm_gateway_retries_on_failure(
 ) -> None:
     attempts = {"count": 0}
 
-    def flaky_completion(*, messages: List[Dict[str, str]], **kwargs: Any) -> Dict[str, Any]:
+    def flaky_completion(
+        *, messages: List[Dict[str, str]], **kwargs: Any
+    ) -> Dict[str, Any]:
         attempts["count"] += 1
         if attempts["count"] < 3:
             raise RuntimeError("transient")
@@ -109,7 +117,9 @@ def test_llm_gateway_raises_after_retry_exhaustion(
 ) -> None:
     attempts = {"count": 0}
 
-    def failing_completion(*, messages: List[Dict[str, str]], **kwargs: Any) -> Dict[str, Any]:
+    def failing_completion(
+        *, messages: List[Dict[str, str]], **kwargs: Any
+    ) -> Dict[str, Any]:
         attempts["count"] += 1
         raise RuntimeError("persistent failure")
 

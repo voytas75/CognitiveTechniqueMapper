@@ -4,7 +4,6 @@ import sys
 import types
 from typing import Any
 
-
 litellm_stub = types.ModuleType("litellm")
 litellm_stub.drop_params = True
 
