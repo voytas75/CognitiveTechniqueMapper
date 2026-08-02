@@ -44,7 +44,7 @@ def create_app(orchestrator: Any | None = None) -> FastAPI:
     """
 
     active_orchestrator = _orchestrator if orchestrator is None else orchestrator
-    application = FastAPI(title="Cognitive Technique Mapper API", version="0.1.0")
+    application = FastAPI(title="Cognitive Technique Mapper API", version="0.2.0")
 
     async def health() -> Dict[str, str]:
         """Return local liveness state."""
