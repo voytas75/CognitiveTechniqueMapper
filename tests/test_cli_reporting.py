@@ -68,3 +68,29 @@ def test_render_report_markdown_contains_sections() -> None:
     assert "## Explanation" in markdown
     assert "## Simulation" in markdown
     assert "## Comparison" in markdown
+
+
+def test_render_report_markdown_skips_malformed_collection_values() -> None:
+    markdown = render_report_markdown(
+        {
+            "simulation": {
+                "scenario_variations": [
+                    {"name": "Best", "outcome": "Success"},
+                    "malformed variation",
+                ],
+                "cautions": "not a list",
+            },
+            "comparison": {
+                "comparison_points": [
+                    {"technique": "Candidate", "strengths": "Clear"},
+                    "malformed point",
+                ],
+                "decision_guidance": "not a list",
+            },
+        }
+    )
+
+    assert "Best: Success" in markdown
+    assert "Candidate" in markdown
+    assert "- Scenario:" not in markdown
+    assert "Decision Guidance" not in markdown

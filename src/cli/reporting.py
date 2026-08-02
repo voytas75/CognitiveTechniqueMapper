@@ -3,9 +3,23 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Mapping, Optional, cast
 
 from src.cli.state import AppState
+
+
+def _object(value: object) -> dict[str, object]:
+    if not isinstance(value, dict) or not all(isinstance(key, str) for key in value):
+        return {}
+    return cast(dict[str, object], value)
+
+
+def _list_items(value: object) -> list[object]:
+    return cast(list[object], value) if isinstance(value, list) else []
+
+
+def _object_records(value: object) -> list[dict[str, object]]:
+    return [record for item in _list_items(value) if (record := _object(item))]
 
 
 def build_report_payload(state: AppState) -> Dict[str, Any]:
@@ -15,7 +29,7 @@ def build_report_payload(state: AppState) -> Dict[str, Any]:
     if state.last_recommendation:
         recommendation = dict(state.last_recommendation.get("recommendation") or {})
         plan = state.last_recommendation.get("plan")
-        if recommendation is not None and plan is not None:
+        if plan is not None:
             recommendation.setdefault("plan", plan)
 
     return {
@@ -27,7 +41,7 @@ def build_report_payload(state: AppState) -> Dict[str, Any]:
     }
 
 
-def render_report_markdown(payload: Dict[str, Any]) -> str:
+def render_report_markdown(payload: Mapping[str, object]) -> str:
     """Render a markdown report from report payload."""
 
     sections: list[str] = []
@@ -36,22 +50,22 @@ def render_report_markdown(payload: Dict[str, Any]) -> str:
         f"# Cognitive Technique Report\n\n## Problem Statement\n\n{problem}\n"
     )
 
-    recommendation = payload.get("recommendation") or {}
+    recommendation = _object(payload.get("recommendation"))
     rec_body = _render_recommendation(recommendation)
     if rec_body:
         sections.append(rec_body)
 
-    explanation = payload.get("explanation") or {}
+    explanation = _object(payload.get("explanation"))
     exp_body = _render_explanation(explanation)
     if exp_body:
         sections.append(exp_body)
 
-    simulation = payload.get("simulation") or {}
+    simulation = _object(payload.get("simulation"))
     sim_body = _render_simulation(simulation)
     if sim_body:
         sections.append(sim_body)
 
-    comparison = payload.get("comparison") or {}
+    comparison = _object(payload.get("comparison"))
     cmp_body = _render_comparison(comparison)
     if cmp_body:
         sections.append(cmp_body)
@@ -62,12 +76,12 @@ def render_report_markdown(payload: Dict[str, Any]) -> str:
     return "\n\n".join(sections)
 
 
-def _render_recommendation(recommendation: Dict[str, Any]) -> Optional[str]:
+def _render_recommendation(recommendation: Mapping[str, object]) -> Optional[str]:
     if not recommendation:
         return None
     suggested = recommendation.get("suggested_technique") or "Unknown"
     why = recommendation.get("why_it_fits") or "No rationale provided."
-    steps = recommendation.get("steps") or []
+    steps = _list_items(recommendation.get("steps"))
     md = ["## Recommendation", f"**Technique:** {suggested}", f"**Why it fits:** {why}"]
     if steps:
         md.append("**Suggested Steps:**")
@@ -83,14 +97,14 @@ def _render_recommendation(recommendation: Dict[str, Any]) -> Optional[str]:
     return "\n\n".join(md)
 
 
-def _render_explanation(explanation: Dict[str, Any]) -> Optional[str]:
+def _render_explanation(explanation: Mapping[str, object]) -> Optional[str]:
     if not explanation:
         return None
     md = ["## Explanation"]
     if explanation.get("overview"):
-        md.append(explanation["overview"])
+        md.append(str(explanation["overview"]))
     for key in ("key_factors", "risks", "next_steps"):
-        values = explanation.get(key) or []
+        values = _list_items(explanation.get(key))
         if values:
             header = key.replace("_", " ").title()
             md.append(f"**{header}:**")
@@ -99,14 +113,14 @@ def _render_explanation(explanation: Dict[str, Any]) -> Optional[str]:
     return "\n\n".join(md)
 
 
-def _render_simulation(simulation: Dict[str, Any]) -> Optional[str]:
+def _render_simulation(simulation: Mapping[str, object]) -> Optional[str]:
     if not simulation:
         return None
     md = ["## Simulation"]
     overview = simulation.get("simulation_overview")
     if overview:
-        md.append(overview)
-    variations = simulation.get("scenario_variations") or []
+        md.append(str(overview))
+    variations = _object_records(simulation.get("scenario_variations"))
     if variations:
         md.append("**Scenario Variations:**")
         for entry in variations:
@@ -117,12 +131,12 @@ def _render_simulation(simulation: Dict[str, Any]) -> Optional[str]:
             if guidance:
                 line += f" (Guidance: {guidance})"
             md.append(line)
-    cautions = simulation.get("cautions") or []
+    cautions = _list_items(simulation.get("cautions"))
     if cautions:
         md.append("**Cautions:**")
         for idx, caution in enumerate(cautions, start=1):
             md.append(f"{idx}. {caution}")
-    follow_up = simulation.get("recommended_follow_up") or []
+    follow_up = _list_items(simulation.get("recommended_follow_up"))
     if follow_up:
         md.append("**Recommended Follow-up:**")
         for idx, action in enumerate(follow_up, start=1):
@@ -130,7 +144,7 @@ def _render_simulation(simulation: Dict[str, Any]) -> Optional[str]:
     return "\n\n".join(md)
 
 
-def _render_comparison(comparison: Dict[str, Any]) -> Optional[str]:
+def _render_comparison(comparison: Mapping[str, object]) -> Optional[str]:
     if not comparison:
         return None
     md = ["## Comparison"]
@@ -139,7 +153,7 @@ def _render_comparison(comparison: Dict[str, Any]) -> Optional[str]:
     alternative = comparison.get("best_alternative")
     if alternative:
         md.append(f"**Top Alternative:** {alternative}")
-    points = comparison.get("comparison_points") or []
+    points = _object_records(comparison.get("comparison_points"))
     if points:
         md.append("**Comparison Points:**")
         for point in points:
@@ -154,7 +168,7 @@ def _render_comparison(comparison: Dict[str, Any]) -> Optional[str]:
                 md.append(f"  - Risks: {risks}")
             if best_for:
                 md.append(f"  - Best for: {best_for}")
-    guidance = comparison.get("decision_guidance") or []
+    guidance = _list_items(comparison.get("decision_guidance"))
     if guidance:
         md.append("**Decision Guidance:**")
         for idx, tip in enumerate(guidance, start=1):
