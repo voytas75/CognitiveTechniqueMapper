@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import sys
 from textwrap import shorten
-from typing import Any, Sequence
+from typing import Any, Sequence, cast
 
 import typer
 from rich.panel import Panel
@@ -101,19 +101,19 @@ def _summarize_history_entry(entry: dict[str, Any]) -> tuple[str, str]:
 
     recommendation = entry.get("recommendation")
     if isinstance(recommendation, dict) and recommendation:
-        return _summarize_analysis_entry(entry, recommendation)
+        return _summarize_analysis_entry(entry, cast(dict[str, Any], recommendation))
 
     explanation = entry.get("explanation")
     if isinstance(explanation, dict) and explanation:
-        return _summarize_explanation_entry(explanation)
+        return _summarize_explanation_entry(cast(dict[str, Any], explanation))
 
     simulation = entry.get("simulation")
     if isinstance(simulation, dict) and simulation:
-        return _summarize_simulation_entry(simulation)
+        return _summarize_simulation_entry(cast(dict[str, Any], simulation))
 
     comparison = entry.get("comparison")
     if isinstance(comparison, dict) and comparison:
-        return _summarize_comparison_entry(comparison)
+        return _summarize_comparison_entry(cast(dict[str, Any], comparison))
 
     return "Context", json.dumps(entry, ensure_ascii=False, indent=2)
 
@@ -131,10 +131,11 @@ def _summarize_analysis_entry(
     reason = _shorten_text(_coerce_string(recommendation.get("why_it_fits")))
     plan = entry.get("plan") if isinstance(entry.get("plan"), dict) else None
     plan_steps = _string_list(plan.get("milestones")) if plan else []
-    matches = entry.get("matches") if isinstance(entry.get("matches"), list) else []
+    raw_matches = entry.get("matches")
+    matches = cast(list[object], raw_matches) if isinstance(raw_matches, list) else []
     preference_summary = _shorten_text(_coerce_string(entry.get("preference_summary")))
 
-    lines = []
+    lines: list[str] = []
     if technique:
         lines.append(f"[bold]Technique:[/] {technique}")
     if reason:
@@ -145,9 +146,9 @@ def _summarize_analysis_entry(
         top_match = matches[0]
         top_name = None
         if isinstance(top_match, dict):
-            metadata = top_match.get("metadata")
+            metadata = cast(dict[str, Any], top_match).get("metadata")
             if isinstance(metadata, dict):
-                top_name = _coerce_string(metadata.get("name"))
+                top_name = _coerce_string(cast(dict[str, Any], metadata).get("name"))
         shortlist_line = f"[bold]Shortlist:[/] {len(matches)} candidate(s)"
         if top_name:
             shortlist_line += f" (top: {top_name})"
@@ -215,7 +216,7 @@ def _summarize_comparison_entry(comparison: dict[str, Any]) -> tuple[str, str]:
     guidance = _summarize_list(_string_list(comparison.get("decision_guidance")))
     confidence = _shorten_text(_coerce_string(comparison.get("confidence_notes")))
     points = comparison.get("comparison_points")
-    point_count = len(points) if isinstance(points, list) else 0
+    point_count = len(cast(list[object], points)) if isinstance(points, list) else 0
 
     lines: list[str] = []
     if current:
@@ -246,11 +247,12 @@ def _string_list(value: Any) -> list[str]:
 
     if isinstance(value, list):
         cleaned: list[str] = []
-        for item in value:
+        for raw_item in cast(list[object], value):
             text = None
-            if isinstance(item, str):
-                text = item.strip()
-            elif isinstance(item, dict):
+            if isinstance(raw_item, str):
+                text = raw_item.strip()
+            elif isinstance(raw_item, dict):
+                item = cast(dict[str, Any], raw_item)
                 text = _coerce_string(
                     item.get("name")
                     or item.get("title")
@@ -258,7 +260,7 @@ def _string_list(value: Any) -> list[str]:
                     or item.get("technique")
                 )
             else:
-                text = str(item).strip()
+                text = str(raw_item).strip()
             if text:
                 cleaned.append(text)
         return cleaned
@@ -285,8 +287,9 @@ def _format_variations(value: Any) -> list[str]:
     if not isinstance(value, list):
         return []
     variations: list[str] = []
-    for item in value:
-        if isinstance(item, dict):
+    for raw_item in cast(list[object], value):
+        if isinstance(raw_item, dict):
+            item = cast(dict[str, Any], raw_item)
             name = _coerce_string(item.get("name")) or "Scenario"
             outcome = _coerce_string(item.get("outcome"))
             guidance = _coerce_string(item.get("guidance"))
@@ -296,7 +299,7 @@ def _format_variations(value: Any) -> list[str]:
             else:
                 variations.append(name)
         else:
-            text = _coerce_string(item)
+            text = _coerce_string(raw_item)
             if text:
                 variations.append(text)
     return variations
