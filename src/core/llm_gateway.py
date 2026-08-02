@@ -9,7 +9,17 @@ Updates:
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, TYPE_CHECKING, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    cast,
+)
 
 from tenacity import (
     RetryError,
@@ -23,7 +33,9 @@ from ..services.config_service import ConfigService, WorkflowModelConfig
 
 try:
     import litellm
-    from litellm import completion as _litellm_completion  # pyright: ignore[reportUnknownVariableType]
+    from litellm import (
+        completion as _litellm_completion,  # pyright: ignore[reportUnknownVariableType]
+    )
 except ImportError as exc:  # pragma: no cover - guidance for missing dependency
     raise RuntimeError(
         "litellm is required for LLMGateway. Install via `pip install litellm`."
@@ -40,8 +52,8 @@ if TYPE_CHECKING:
             *,
             messages: List[Dict[str, str]],
             **kwargs: Any,
-        ) -> Dict[str, Any]:
-            ...
+        ) -> Dict[str, Any]: ...
+
 else:
     CompletionCallable = Callable[..., Any]
 
@@ -106,9 +118,7 @@ class LLMGateway:
             response = self._execute_with_retry(workflow, messages, params)
         except RetryError as retry_error:  # pragma: no cover - relied on tests
             last_exc = retry_error.last_attempt.exception()
-            message = (
-                f"LLM invocation failed for workflow '{workflow}' after retries: {last_exc}"
-            )
+            message = f"LLM invocation failed for workflow '{workflow}' after retries: {last_exc}"
             logger.error(message)
             raise self.LLMInvocationError(message) from last_exc
         except Exception as exc:  # pragma: no cover - network/credential issues
@@ -184,7 +194,9 @@ class LLMGateway:
 
         provider_name = config.provider
         if provider_name:
-            provider_config = dict(self._config_service.providers.get(provider_name, {}))
+            provider_config = dict(
+                self._config_service.providers.get(provider_name, {})
+            )
             api_key_env = provider_config.pop("api_key_env", None)
             litellm_provider = provider_config.pop("litellm_provider", None)
             params.update(
@@ -203,9 +215,7 @@ class LLMGateway:
                     logger.error(message)
                     raise RuntimeError(message)
                 params.setdefault("api_key", api_key)
-            params.setdefault(
-                "custom_llm_provider", litellm_provider or provider_name
-            )
+            params.setdefault("custom_llm_provider", litellm_provider or provider_name)
 
         params.update(overrides)
         return params
@@ -213,9 +223,7 @@ class LLMGateway:
     def _extract_text_content(self, response: Mapping[str, Any]) -> str:
         choices = response.get("choices")
         if not isinstance(choices, Sequence) or not choices:
-            raise self.LLMInvocationError(
-                "LLM response did not include any choices."
-            )
+            raise self.LLMInvocationError("LLM response did not include any choices.")
         mapping_choices = cast(Sequence[Mapping[str, object]], choices)
         first_choice = mapping_choices[0]
         message_value: object | None = first_choice.get("message")

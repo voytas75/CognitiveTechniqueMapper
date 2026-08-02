@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
-import sys
 from typing import Any, Dict, Optional
 
 import typer
@@ -13,8 +13,8 @@ from rich.panel import Panel
 from src.cli.io import console
 from src.cli.renderers import (
     render_coverage_summary,
-    render_technique_table,
     render_technique_search_results,
+    render_technique_table,
 )
 from src.cli.utils import apply_log_override
 from src.services.technique_search import TechniqueSearchMode
@@ -448,7 +448,9 @@ def _aggregate_categories(entries: list[dict[str, Any]]) -> dict[str, dict[str, 
     buckets: dict[str, dict[str, Any]] = {}
     for entry in entries:
         raw = entry.get("category")
-        display = raw.strip() if isinstance(raw, str) and raw.strip() else "Uncategorized"
+        display = (
+            raw.strip() if isinstance(raw, str) and raw.strip() else "Uncategorized"
+        )
         key = display.casefold()
         bucket = buckets.setdefault(key, {"category": display, "count": 0})
         if bucket["category"] == "Uncategorized" and display != "Uncategorized":

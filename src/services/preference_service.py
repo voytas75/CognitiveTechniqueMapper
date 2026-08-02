@@ -7,7 +7,6 @@ from typing import Dict, List, Optional
 
 from ..db.preference_repository import PreferenceRepository
 
-
 PreferenceBucket = Dict[str, float | int]
 
 
@@ -85,24 +84,18 @@ class PreferenceService:
         if top_tech:
             name, bucket = top_tech
             avg = self._bucket_average(bucket)
-            lines.append(
-                f"Positive response to {name} (avg rating {avg:.1f})."
-            )
+            lines.append(f"Positive response to {name} (avg rating {avg:.1f}).")
 
         top_category = self._top_bucket(profile.categories)
         if top_category:
             name, bucket = top_category
             avg = self._bucket_average(bucket)
-            lines.append(
-                f"Favors {name} category techniques (avg rating {avg:.1f})."
-            )
+            lines.append(f"Favors {name} category techniques (avg rating {avg:.1f}).")
 
         negative = self._bottom_bucket(profile.techniques)
         if negative:
             name, bucket = negative
-            lines.append(
-                f"Watch for {name}; feedback trends negative."
-            )
+            lines.append(f"Watch for {name}; feedback trends negative.")
         return " ".join(lines)
 
     def export_profile(self) -> PreferenceProfile:
@@ -157,14 +150,10 @@ class PreferenceService:
             self._accumulate(profile.totals, sentiment, rating)
 
             if technique:
-                bucket = profile.techniques.setdefault(
-                    technique, self._empty_bucket()
-                )
+                bucket = profile.techniques.setdefault(technique, self._empty_bucket())
                 self._accumulate(bucket, sentiment, rating)
             if category:
-                bucket = profile.categories.setdefault(
-                    category, self._empty_bucket()
-                )
+                bucket = profile.categories.setdefault(category, self._empty_bucket())
                 self._accumulate(bucket, sentiment, rating)
         return profile
 
@@ -208,9 +197,13 @@ class PreferenceService:
         }
 
     @staticmethod
-    def _accumulate(bucket: PreferenceBucket, sentiment: str, rating: Optional[int]) -> None:
+    def _accumulate(
+        bucket: PreferenceBucket, sentiment: str, rating: Optional[int]
+    ) -> None:
         bucket["count"] = int(bucket.get("count", 0)) + 1
-        sentiment_key = f"{sentiment}s" if sentiment in {"positive", "negative"} else "neutral"
+        sentiment_key = (
+            f"{sentiment}s" if sentiment in {"positive", "negative"} else "neutral"
+        )
         if sentiment_key not in bucket:
             # fall back to neutral if schema mismatch
             sentiment_key = "neutral"
@@ -244,7 +237,9 @@ class PreferenceService:
         return weight * combined
 
     @staticmethod
-    def _top_bucket(buckets: Dict[str, PreferenceBucket]) -> tuple[str, PreferenceBucket] | None:
+    def _top_bucket(
+        buckets: Dict[str, PreferenceBucket],
+    ) -> tuple[str, PreferenceBucket] | None:
         best: tuple[str, PreferenceBucket] | None = None
         best_score = float("-inf")
         for name, bucket in buckets.items():
@@ -257,7 +252,9 @@ class PreferenceService:
         return best
 
     @staticmethod
-    def _bottom_bucket(buckets: Dict[str, PreferenceBucket]) -> tuple[str, PreferenceBucket] | None:
+    def _bottom_bucket(
+        buckets: Dict[str, PreferenceBucket],
+    ) -> tuple[str, PreferenceBucket] | None:
         worst: tuple[str, PreferenceBucket] | None = None
         worst_score = float("inf")
         for name, bucket in buckets.items():
@@ -297,7 +294,10 @@ class PreferenceService:
             )
 
         summaries.sort(
-            key=lambda entry: (abs(float(entry["adjustment"])), float(entry["adjustment"])),
+            key=lambda entry: (
+                abs(float(entry["adjustment"])),
+                float(entry["adjustment"]),
+            ),
             reverse=True,
         )
         if limit and len(summaries) > limit:
