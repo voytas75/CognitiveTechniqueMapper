@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +25,38 @@ def test_app_state_save_and_load(tmp_path: Path) -> None:
 
     assert loaded.problem_description == "Decision needed"
     assert loaded.last_recommendation["technique"] == "Decisional Balance"
+
+
+def test_app_state_save_preserves_existing_state_on_replace_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "state.json"
+    previous = '{"problem_description": "Existing state"}'
+    path.write_text(previous, encoding="utf-8")
+
+    def fail_replace(_: Path, __: Path) -> None:
+        raise OSError("simulated replacement failure")
+
+    monkeypatch.setattr(Path, "replace", fail_replace)
+
+    with pytest.raises(OSError, match="replacement failure"):
+        cli.AppState(problem_description="New state").save(path)
+
+    assert path.read_text(encoding="utf-8") == previous
+    assert list(tmp_path.glob(".state.json.*.tmp")) == []
+
+
+def test_app_state_load_warns_when_state_file_is_corrupted(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    path = tmp_path / "state.json"
+    path.write_text("{not valid JSON", encoding="utf-8")
+
+    with caplog.at_level(logging.WARNING, logger="src.cli.state"):
+        loaded = cli.AppState.load(path)
+
+    assert loaded == cli.AppState()
+    assert "Failed to load session state" in caplog.text
 
 
 def test_apply_log_override_handles_invalid_level(

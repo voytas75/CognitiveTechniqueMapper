@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
+import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, Optional, cast
@@ -17,6 +19,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 STATE_PATH = Path(
     os.environ.get("CTM_STATE_PATH", PROJECT_ROOT / "data" / "state.json")
 )
+logger = logging.getLogger(__name__)
 
 
 def _object(value: object) -> dict[str, Any]:
@@ -61,7 +64,12 @@ class AppState:
         if path.exists():
             try:
                 payload = _object(json.loads(path.read_text(encoding="utf-8")))
-            except Exception:
+            except (OSError, TypeError, ValueError) as exc:
+                logger.warning(
+                    "Failed to load session state from %s; starting empty: %s",
+                    path,
+                    exc,
+                )
                 payload = {}
         else:
             payload = {}
@@ -99,7 +107,24 @@ class AppState:
             "context_history": self.context_history,
         }
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        temporary_path: Path | None = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                encoding="utf-8",
+                dir=path.parent,
+                prefix=f".{path.name}.",
+                suffix=".tmp",
+                delete=False,
+            ) as temporary_file:
+                temporary_path = Path(temporary_file.name)
+                temporary_file.write(json.dumps(payload, indent=2))
+                temporary_file.flush()
+                os.fsync(temporary_file.fileno())
+            temporary_path.replace(path)
+        finally:
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
 
 
 __all__ = ["AppState", "PROJECT_ROOT", "STATE_PATH"]
