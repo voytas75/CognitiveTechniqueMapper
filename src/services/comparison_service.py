@@ -64,7 +64,9 @@ class ComparisonService:
         response = self._invoke_llm(prompt)
         parsed = self._parse_response(response)
         return ComparisonResult(
-            current_recommendation=self._coerce_string(parsed.get("current_recommendation")),
+            current_recommendation=self._coerce_string(
+                parsed.get("current_recommendation")
+            ),
             best_alternative=self._coerce_string(parsed.get("best_alternative")),
             comparison_points=self._coerce_points(parsed.get("comparison_points")),
             decision_guidance=self._coerce_list(parsed.get("decision_guidance")),
@@ -87,7 +89,9 @@ class ComparisonService:
         serialized_recommendation = json.dumps(
             recommendation, indent=2, ensure_ascii=False
         )
-        sections.extend(["", "Current recommendation payload:", serialized_recommendation])
+        sections.extend(
+            ["", "Current recommendation payload:", serialized_recommendation]
+        )
         formatted_matches = json.dumps(matches, indent=2, ensure_ascii=False)
         sections.extend(["", "Candidate shortlist:", formatted_matches])
         if preference_summary:

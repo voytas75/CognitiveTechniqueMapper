@@ -54,13 +54,11 @@ class PreferenceRepository:
         """Return all stored preferences."""
 
         with self._sqlite.connection as conn:
-            cursor = conn.execute(
-                """
+            cursor = conn.execute("""
                 SELECT technique, category, rating, sentiment, notes, created_at
                 FROM preferences
                 ORDER BY datetime(created_at) DESC
-                """
-            )
+                """)
             return [dict(row) for row in cursor.fetchall()]
 
     def delete_all(self) -> None:
