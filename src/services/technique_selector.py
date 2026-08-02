@@ -11,13 +11,13 @@ import json
 from dataclasses import dataclass
 from typing import Any, Dict, List, Sequence, Tuple
 
-from ..core.preprocessor import ProblemPreprocessor
 from ..core.llm_gateway import LLMGateway
+from ..core.preprocessor import ProblemPreprocessor
 from ..db.sqlite_client import SQLiteClient
 from .embedding_gateway import EmbeddingGateway
 from .preference_service import PreferenceService
-from .technique_utils import compose_embedding_text
 from .prompt_service import PromptService
+from .technique_utils import compose_embedding_text
 
 try:
     from ..db.chroma_client import ChromaClient

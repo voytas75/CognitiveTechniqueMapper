@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
 import sys
+from dataclasses import asdict
 
 import typer
 from rich.panel import Panel
@@ -65,6 +65,7 @@ def preferences_reset(
 
     state.preference_service.clear()
     console.print("[green]Preferences cleared.[/]")
+
 
 def preferences_impact(
     limit: int = typer.Option(

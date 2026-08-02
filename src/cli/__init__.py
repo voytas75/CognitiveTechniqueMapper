@@ -14,8 +14,8 @@ from src.cli.commands.core import (
     explain,
     feedback,
     interactive_flow,
-    report,
     refresh,
+    report,
     simulate,
 )
 from src.cli.commands.history import history_clear, history_show
@@ -33,14 +33,14 @@ from src.cli.commands.settings import (
 )
 from src.cli.commands.techniques import (
     techniques_add,
-    techniques_search,
     techniques_export,
     techniques_gaps,
     techniques_import,
     techniques_list,
-    techniques_status,
     techniques_refresh,
     techniques_remove,
+    techniques_search,
+    techniques_status,
     techniques_update,
 )
 from src.cli.io import console
@@ -59,8 +59,8 @@ from src.cli.runtime import (
     ConfigService,
     compose_plan_summary,
     create_catalog_service,
-    create_search_service,
     create_initializer,
+    create_search_service,
     get_orchestrator,
     get_runtime,
     get_state,
@@ -69,7 +69,7 @@ from src.cli.runtime import (
     set_runtime,
     set_runtime_level,
 )
-from src.cli.state import AppState, PROJECT_ROOT, STATE_PATH
+from src.cli.state import PROJECT_ROOT, STATE_PATH, AppState
 from src.cli.utils import (
     active_preference_summary,
     apply_log_override,
@@ -149,7 +149,9 @@ def _active_preference_summary() -> str | None:
     return active_preference_summary()
 
 
-def _infer_category_from_matches(matches: Any, technique: Optional[str]) -> Optional[str]:
+def _infer_category_from_matches(
+    matches: Any, technique: Optional[str]
+) -> Optional[str]:
     return infer_category_from_matches(matches, technique)
 
 
