@@ -10,18 +10,22 @@ import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable, Optional
+from typing import Any, Iterable, Mapping, Optional, Protocol, cast
 
 from ..db.sqlite_client import SQLiteClient
 from .data_initializer import DEFAULT_DATASET_PATH, TechniqueDataInitializer
 from .embedding_gateway import EmbeddingGateway
 from .technique_utils import compose_embedding_text
 
-try:
-    from ..db.chroma_client import ChromaClient, EmbeddingRecord
-except RuntimeError:  # pragma: no cover - optional dependency not available
-    ChromaClient = None  # type: ignore
-    EmbeddingRecord = None  # type: ignore
+
+class _ChromaCatalogStore(Protocol):
+    """Minimal embedding-store contract required by catalog mutations."""
+
+    def list_ids(self) -> list[str]: ...
+
+    def upsert_embeddings(self, embeddings: Iterable[object]) -> None: ...
+
+    def delete(self, ids: Iterable[str]) -> None: ...
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +38,7 @@ class TechniqueCatalogService:
     sqlite_client: SQLiteClient
     embedder: EmbeddingGateway
     dataset_path: Path = DEFAULT_DATASET_PATH
-    chroma_client: Optional[ChromaClient] = None
+    chroma_client: Optional[_ChromaCatalogStore] = None
 
     def list(self) -> list[dict[str, Any]]:
         """Return all techniques sorted by name."""
@@ -188,7 +192,9 @@ class TechniqueCatalogService:
                 "Import file must contain a JSON list of technique objects."
             )
 
-        normalized_records = [self._normalize_record(item) for item in payload]
+        normalized_records = [
+            self._normalize_record(item) for item in cast(list[object], payload)
+        ]
 
         existing_dataset = self._load_dataset()
         stats = {"added": 0, "updated": 0}
@@ -257,8 +263,10 @@ class TechniqueCatalogService:
     def _sync_embedding(
         self, entry: dict[str, Any], *, previous_name: str | None = None
     ) -> None:
-        if not self.chroma_client or EmbeddingRecord is None:
+        chroma = self.chroma_client
+        if chroma is None:
             return
+        from ..db.chroma_client import EmbeddingRecord
 
         text = compose_embedding_text(entry)
         embedding_vector = self.embedder.embed(text)
@@ -276,7 +284,7 @@ class TechniqueCatalogService:
 
         if previous_name and previous_name != record.identifier:
             try:
-                self.chroma_client.delete([previous_name])
+                chroma.delete([previous_name])
             except Exception as exc:  # pragma: no cover - defensive logging
                 logger.warning(
                     "embedding_delete_failed",
@@ -287,7 +295,7 @@ class TechniqueCatalogService:
                     },
                 )
 
-        self.chroma_client.upsert_embeddings([record])
+        chroma.upsert_embeddings([record])
 
     def _delete_embedding(self, name: str) -> None:
         if not self.chroma_client:
@@ -318,12 +326,15 @@ class TechniqueCatalogService:
         with self.dataset_path.open("w", encoding="utf-8") as handle:
             json.dump(list(entries), handle, ensure_ascii=False, indent=2)
 
-    def _normalize_record(self, entry: dict[str, Any]) -> dict[str, Any]:
-        if not isinstance(entry, dict):
+    def _normalize_record(self, entry: object) -> dict[str, Any]:
+        if not isinstance(entry, Mapping) or not all(
+            isinstance(key, str) for key in entry
+        ):
             raise ValueError("Each technique entry must be a JSON object.")
+        record = cast(Mapping[str, object], entry)
 
-        name = entry.get("name")
-        description = entry.get("description")
+        name = record.get("name")
+        description = record.get("description")
         if not isinstance(name, str) or not name.strip():
             raise ValueError("Technique entries require a non-empty 'name'.")
         if not isinstance(description, str) or not description.strip():
@@ -332,10 +343,10 @@ class TechniqueCatalogService:
         normalized = {
             "name": name.strip(),
             "description": description.strip(),
-            "origin_year": self._coerce_int(entry.get("origin_year")),
-            "creator": self._normalize_optional(entry.get("creator")),
-            "category": self._normalize_optional(entry.get("category")),
-            "core_principles": self._normalize_optional(entry.get("core_principles")),
+            "origin_year": self._coerce_int(record.get("origin_year")),
+            "creator": self._normalize_optional(record.get("creator")),
+            "category": self._normalize_optional(record.get("category")),
+            "core_principles": self._normalize_optional(record.get("core_principles")),
         }
         return normalized
 
