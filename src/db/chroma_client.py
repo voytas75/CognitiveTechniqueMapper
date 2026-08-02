@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Any, Iterable, Mapping, Sequence, cast
 
 try:
     import chromadb  # type: ignore
@@ -73,7 +73,10 @@ class ChromaClient:
             embeddings (Iterable[EmbeddingRecord]): Records to insert or update.
         """
 
-        ids, vectors, metadatas, documents = [], [], [], []
+        ids: list[str] = []
+        vectors: list[list[float]] = []
+        metadatas: list[dict[str, str]] = []
+        documents: list[str | None] = []
         for record in embeddings:
             ids.append(record.identifier)
             vectors.append(list(record.embedding))
@@ -82,7 +85,10 @@ class ChromaClient:
 
         try:
             self.collection.upsert(
-                ids=ids, embeddings=vectors, metadatas=metadatas, documents=documents
+                ids=ids,
+                embeddings=cast(Any, vectors),
+                metadatas=cast(Any, metadatas),
+                documents=cast(Any, documents),
             )
         except Exception as exc:  # pragma: no cover - recoverable path
             if "dimension" in str(exc).lower():
@@ -94,9 +100,9 @@ class ChromaClient:
                 self._reset_collection()
                 self.collection.upsert(
                     ids=ids,
-                    embeddings=vectors,
-                    metadatas=metadatas,
-                    documents=documents,
+                    embeddings=cast(Any, vectors),
+                    metadatas=cast(Any, metadatas),
+                    documents=cast(Any, documents),
                 )
             else:
                 raise
@@ -105,8 +111,8 @@ class ChromaClient:
         self,
         query_embeddings: Sequence[Sequence[float]],
         n_results: int = 5,
-        where: dict | None = None,
-    ) -> dict:
+        where: Mapping[str, object] | None = None,
+    ) -> Mapping[str, Sequence[Sequence[object]]]:
         """Query similar embeddings from the collection.
 
         Args:
@@ -118,10 +124,13 @@ class ChromaClient:
             dict: Query response including IDs, documents, and metadata.
         """
 
-        return self.collection.query(
-            query_embeddings=list(query_embeddings),
-            n_results=n_results,
-            where=where,
+        return cast(
+            Mapping[str, Sequence[Sequence[object]]],
+            self.collection.query(
+                query_embeddings=list(query_embeddings),
+                n_results=n_results,
+                where=cast(Any, where),
+            ),
         )
 
     def delete(self, ids: Sequence[str]) -> None:
@@ -137,8 +146,8 @@ class ChromaClient:
         """Return all identifiers currently stored in the collection."""
 
         snapshot = self.collection.get()
-        ids = snapshot.get("ids", []) if isinstance(snapshot, dict) else []
-        return list(ids)
+        identifiers = cast(Sequence[object], snapshot.get("ids", []))
+        return [identifier for identifier in identifiers if isinstance(identifier, str)]
 
     def _reset_collection(self) -> None:
         try:
