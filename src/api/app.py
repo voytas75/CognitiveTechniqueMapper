@@ -19,7 +19,7 @@ workflows. Optional GraphQL follows the same local-only restriction.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, cast
 
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.responses import JSONResponse
@@ -46,21 +46,16 @@ def create_app(orchestrator: Any | None = None) -> FastAPI:
     active_orchestrator = _orchestrator if orchestrator is None else orchestrator
     application = FastAPI(title="Cognitive Technique Mapper API", version="0.1.0")
 
-    @application.get("/health", tags=["system"])
     async def health() -> Dict[str, str]:
         """Return local liveness state."""
 
         return {"status": "ok"}
 
-    @application.get("/workflows", tags=["workflows"])
     async def list_workflows() -> List[str]:
         """Return registered HTTP workflow names."""
 
         return list(active_orchestrator.workflows.keys())
 
-    @application.post(
-        "/workflow/{workflow_name}", response_class=JSONResponse, tags=["workflows"]
-    )
     async def execute_workflow(workflow_name: str, request: Request) -> JSONResponse:  # noqa: D401 – FastAPI handler signature
         """Execute a registered workflow with a JSON context body."""
 
@@ -96,9 +91,21 @@ def create_app(orchestrator: Any | None = None) -> FastAPI:
 
         return JSONResponse(content=result)
 
+    application.add_api_route("/health", health, methods=["GET"], tags=["system"])
+    application.add_api_route(
+        "/workflows", list_workflows, methods=["GET"], tags=["workflows"]
+    )
+    application.add_api_route(
+        "/workflow/{workflow_name}",
+        execute_workflow,
+        methods=["POST"],
+        response_class=JSONResponse,
+        tags=["workflows"],
+    )
+
     # Optional GraphQL overlay ------------------------------------------------
-    if _GRAPHQL_ROUTER is not None:  # noqa: WPS505 – explicit guard
-        application.include_router(_GRAPHQL_ROUTER, prefix="/graphql")
+    if _graphql_router is not None:  # noqa: WPS505 – explicit guard
+        application.include_router(_graphql_router, prefix="/graphql")
 
     return application
 
@@ -117,7 +124,7 @@ try:
     from strawberry.fastapi import GraphQLRouter
 
 except ImportError:  # pragma: no cover – strawberry optional
-    _GRAPHQL_ROUTER = None
+    _graphql_router = None
 else:
     JSONScalar = strawberry.scalars.JSON  # noqa: N816 – GraphQL scalar alias
 
@@ -132,16 +139,27 @@ else:
             return list(_orchestrator.workflows.keys())
 
         @strawberry.field
-        def run_workflow(self, name: str, context: JSONScalar) -> JSONScalar:  # type: ignore  # noqa: E501
+        def run_workflow(
+            self, name: str, context: strawberry.scalars.JSON
+        ) -> strawberry.scalars.JSON:
             """Execute *name* workflow and return its JSON result."""
 
+            raw_context = cast(object, context)
+            if not isinstance(raw_context, dict) or not all(
+                isinstance(key, str) for key in raw_context
+            ):
+                raise ValueError("Workflow context must be a JSON object.")
+            workflow_context = cast(Dict[str, Any], raw_context)
             try:
-                return _orchestrator.execute(name, context)
+                return cast(
+                    strawberry.scalars.JSON,
+                    _orchestrator.execute(name, workflow_context),
+                )
             except KeyError as exc:  # pragma: no cover – mapping error
                 raise ValueError(str(exc)) from exc
 
     _schema = strawberry.Schema(query=Query)
-    _GRAPHQL_ROUTER = GraphQLRouter(_schema)
+    _graphql_router = GraphQLRouter(_schema)
 
 
 # Build the FastAPI app after the optional GraphQL router is ready.
