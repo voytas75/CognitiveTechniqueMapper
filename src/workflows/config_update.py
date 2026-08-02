@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Any, Mapping
 
 from ..services.config_service import ConfigService
 
@@ -19,7 +20,7 @@ class ConfigUpdateWorkflow:
     name: str = "config_update"
     config_path: Path | None = None
 
-    def run(self, context: dict) -> dict:
+    def run(self, context: Mapping[str, object]) -> dict[str, Any]:
         """Return configuration details suitable for CLI rendering.
 
         Args:
