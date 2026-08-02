@@ -32,5 +32,9 @@ Cognitive Technique Mapper is a local CLI for the primary user and, indirectly, 
 - **HTTP surface:** Optional FastAPI/GraphQL loopback-only development utility; no public bind without a separate approved security/deployment slice.
 - **Dependencies:** Approval-only for every new dependency.
 
+## Accepted temporary security risk
+- `chromadb` remains enabled only through the local `PersistentClient` integration. Version `1.5.9` is subject to critical advisory `GHSA-f4j7-r4q5-qw2c`; no patched version is currently available.
+- This risk is accepted only for local use. Do not run or expose a Chroma server, and re-evaluate immediately when upstream publishes a patch or before any non-local deployment decision.
+
 ## Open decisions
 - No open first-release scope decisions. A future public API requires a new security and deployment decision record.

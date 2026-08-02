@@ -12,6 +12,7 @@ This file and `PLAN.md` govern the Cognitive Technique Mapper scope. Conflicts r
 ## Technical constraints
 - Allowed stack: Python 3.12+, `uv`, Typer, SQLite, optional local Chroma, and LiteLLM.
 - HTTP/GraphQL stays bound to loopback as a development utility. Any public deployment requires a dedicated authentication, authorization, CORS, threat-model, and deployment slice.
+- Until `GHSA-f4j7-r4q5-qw2c` has an upstream patch, Chroma is permitted only as a local `PersistentClient`; do not run or expose a Chroma server.
 - New dependencies are approval-only.
 - Configuration secrets remain in environment variables or untracked local configuration; never commit credentials.
 
