@@ -196,6 +196,59 @@ def test_apply_preference_adjustments_reorders_matches() -> None:
     assert adjusted[0]["preference_adjustment"] == pytest.approx(0.2)
 
 
+def test_recommendation_prioritizes_suggested_candidate_and_keeps_scores(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    TechniqueSelector = import_technique_selector()
+
+    class ThirdRankedSuggestionLLM:
+        def invoke(self, *_: Any, **__: Any) -> str:
+            return json.dumps(
+                {
+                    "suggested_technique": "Decision Matrix",
+                    "why_it_fits": "It makes the trade-offs explicit.",
+                    "steps": ["Define criteria."],
+                }
+            )
+
+    selector = TechniqueSelector(
+        sqlite_client=StubSQLite(),
+        llm_gateway=ThirdRankedSuggestionLLM(),
+        prompt_service=StubPromptService(),
+    )
+    candidates = [
+        {"metadata": {"name": "Six Thinking Hats"}, "score": 0.91},
+        {"metadata": {"name": "SWOT Analysis"}, "score": 0.84},
+        {"metadata": {"name": "Decision Matrix"}, "score": 0.73},
+        {"metadata": {"name": "First Principles"}, "score": 0.69},
+        {"metadata": {"name": "Pre-mortem"}, "score": 0.61},
+    ]
+
+    def vector_search_stub(
+        _normalized_text: str, _query_embedding: list[float] | None
+    ) -> list[dict[str, Any]]:
+        return candidates
+
+    monkeypatch.setattr(selector, "_vector_search", vector_search_stub)
+
+    result = selector.recommend("Choose between two options.")
+
+    assert [entry["metadata"]["name"] for entry in result["matches"]] == [
+        "Decision Matrix",
+        "Six Thinking Hats",
+        "SWOT Analysis",
+        "First Principles",
+        "Pre-mortem",
+    ]
+    assert [entry["score"] for entry in result["matches"]] == [
+        0.73,
+        0.91,
+        0.84,
+        0.69,
+        0.61,
+    ]
+
+
 def test_llm_reasoning_handles_empty_candidates() -> None:
     TechniqueSelector = import_technique_selector()
     selector = TechniqueSelector(
