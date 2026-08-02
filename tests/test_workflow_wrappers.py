@@ -140,6 +140,8 @@ def test_detect_technique_workflow_requires_problem_description() -> None:
     workflow = DetectTechniqueWorkflow(selector=StubSelector())
     with pytest.raises(ValueError):
         workflow.run({})
+    with pytest.raises(ValueError):
+        workflow.run({"problem_description": 42})
 
 
 def test_generate_plan_workflow_invokes_generator() -> None:

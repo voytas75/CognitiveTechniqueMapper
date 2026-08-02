@@ -7,6 +7,7 @@ Updates:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any, Mapping
 
 from ..services.technique_selector import TechniqueSelector
 
@@ -16,7 +17,7 @@ class DetectTechniqueWorkflow:
     selector: TechniqueSelector
     name: str = "detect_technique"
 
-    def run(self, context: dict) -> dict:
+    def run(self, context: Mapping[str, object]) -> dict[str, Any]:
         """Run the detect technique workflow.
 
         Args:
@@ -30,7 +31,7 @@ class DetectTechniqueWorkflow:
         """
 
         problem_description = context.get("problem_description")
-        if not problem_description:
+        if not isinstance(problem_description, str) or not problem_description.strip():
             raise ValueError("Context missing 'problem_description'.")
         include_diagnostics = bool(context.get("include_diagnostics"))
         return self.selector.recommend(
