@@ -274,29 +274,46 @@ def refresh_runtime() -> None:
     set_runtime((new_orchestrator, refreshed_state))
 
 
-def create_catalog_service() -> tuple[TechniqueCatalogService, SQLiteClient]:
-    """Return an initialized TechniqueCatalogService and its SQLite client."""
+# TODO: Split runtime factory construction into a dedicated module as explicit
+# dependency injection replaces legacy CLI compatibility overrides.
+def create_catalog_service(
+    *,
+    config_service_cls: Any = _DEFAULT_CONFIG_SERVICE,
+    sqlite_client_cls: Any = _DEFAULT_SQLITE_CLIENT,
+    embedding_gateway_cls: Any = _DEFAULT_EMBEDDING_GATEWAY,
+    technique_catalog_service_cls: Any = _DEFAULT_TECHNIQUE_CATALOG,
+    chroma_client_cls: Any = _DEFAULT_CHROMA_CLIENT,
+) -> tuple[TechniqueCatalogService, SQLiteClient]:
+    """Instantiate a catalog service with explicit, overrideable dependencies.
 
-    config_service_cls = _resolve_dependency("ConfigService", _DEFAULT_CONFIG_SERVICE)
+    Args:
+        config_service_cls: Factory for application configuration.
+        sqlite_client_cls: Factory for the SQLite catalog client.
+        embedding_gateway_cls: Factory for the embedding gateway.
+        technique_catalog_service_cls: Factory for the catalog service.
+        chroma_client_cls: Chroma client class, or ``None`` to disable Chroma.
+
+    Returns:
+        Configured catalog service and its SQLite client.
+    """
+
     config_service = config_service_cls()
     db_config = config_service.database_config
 
-    sqlite_cls = _resolve_dependency("SQLiteClient", _DEFAULT_SQLITE_CLIENT)
-    sqlite_client = sqlite_cls(db_config.get("sqlite_path", "./data/techniques.db"))
+    sqlite_client = sqlite_client_cls(
+        db_config.get("sqlite_path", "./data/techniques.db")
+    )
     sqlite_client.initialize_schema()
 
     chroma_client = _initialize_chroma_client(
         db_config.get("chromadb_path", "./embeddings"),
         db_config.get("chromadb_collection", "techniques"),
+        client_cls=chroma_client_cls,
     )
 
-    embedder_cls = _resolve_dependency("EmbeddingGateway", _DEFAULT_EMBEDDING_GATEWAY)
-    embedder = embedder_cls(config_service=config_service)
+    embedder = embedding_gateway_cls(config_service=config_service)
     dataset_path = PROJECT_ROOT / "data" / "techniques.json"
-    catalog_cls = _resolve_dependency(
-        "TechniqueCatalogService", _DEFAULT_TECHNIQUE_CATALOG
-    )
-    catalog = catalog_cls(
+    catalog = technique_catalog_service_cls(
         sqlite_client=sqlite_client,
         embedder=embedder,
         dataset_path=dataset_path,
