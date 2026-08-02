@@ -2,9 +2,20 @@
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import List, Optional, TypedDict, cast
 
 from .sqlite_client import SQLiteClient
+
+
+class PreferenceRecord(TypedDict):
+    """Persisted preference signal read from SQLite."""
+
+    technique: str | None
+    category: str | None
+    rating: int | None
+    sentiment: str
+    notes: str | None
+    created_at: str
 
 
 class PreferenceRepository:
@@ -33,9 +44,14 @@ class PreferenceRepository:
                 """,
                 (technique, category, rating, sentiment, notes, created_at),
             )
-            return cursor.lastrowid
+            row_id = cursor.lastrowid
+            if row_id is None:
+                raise RuntimeError(
+                    "SQLite did not return an identifier for the preference entry"
+                )
+            return row_id
 
-    def fetch_recent(self, limit: int = 20) -> List[dict]:
+    def fetch_recent(self, limit: int = 20) -> List[PreferenceRecord]:
         """Return the most recent preference entries."""
 
         with self._sqlite.connection as conn:
@@ -48,9 +64,9 @@ class PreferenceRepository:
                 """,
                 (limit,),
             )
-            return [dict(row) for row in cursor.fetchall()]
+            return [cast(PreferenceRecord, dict(row)) for row in cursor.fetchall()]
 
-    def fetch_all(self) -> List[dict]:
+    def fetch_all(self) -> List[PreferenceRecord]:
         """Return all stored preferences."""
 
         with self._sqlite.connection as conn:
@@ -59,7 +75,7 @@ class PreferenceRepository:
                 FROM preferences
                 ORDER BY datetime(created_at) DESC
                 """)
-            return [dict(row) for row in cursor.fetchall()]
+            return [cast(PreferenceRecord, dict(row)) for row in cursor.fetchall()]
 
     def delete_all(self) -> None:
         """Remove all stored preference records."""

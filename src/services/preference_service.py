@@ -3,11 +3,23 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Dict, List, Mapping, Optional, TypedDict
 
 from ..db.preference_repository import PreferenceRepository
 
 PreferenceBucket = Dict[str, float | int]
+
+
+class PreferenceImpact(TypedDict):
+    """Score-adjustment summary emitted for one preference dimension."""
+
+    name: str
+    adjustment: float
+    raw_score: float
+    count: int
+    positives: int
+    negatives: int
+    average_rating: float | None
 
 
 @dataclass
@@ -58,7 +70,7 @@ class PreferenceService:
         )
         self._profile = None
 
-    def score_adjustment(self, metadata: dict) -> float:
+    def score_adjustment(self, metadata: Mapping[str, object]) -> float:
         """Return a score delta to apply for the provided technique metadata."""
 
         profile = self._ensure_profile()
@@ -105,7 +117,7 @@ class PreferenceService:
 
     def preference_impacts(
         self, *, limit: int = 5
-    ) -> dict[str, List[dict[str, float | int | None | str]]]:
+    ) -> dict[str, List[PreferenceImpact]]:
         """Return score adjustments derived from stored preferences.
 
         Args:
@@ -179,8 +191,8 @@ class PreferenceService:
         )
 
     @staticmethod
-    def _normalize(value: Optional[str]) -> Optional[str]:
-        if value is None:
+    def _normalize(value: object) -> Optional[str]:
+        if not isinstance(value, str):
             return None
         stripped = value.strip()
         return stripped or None
@@ -272,8 +284,8 @@ class PreferenceService:
         *,
         weight: float,
         limit: int,
-    ) -> List[dict[str, float | int | None | str]]:
-        summaries: List[dict[str, float | int | None | str]] = []
+    ) -> List[PreferenceImpact]:
+        summaries: List[PreferenceImpact] = []
         for name, bucket in buckets.items():
             adjustment = PreferenceService._bucket_score(bucket, weight=weight)
             raw_score = PreferenceService._bucket_score(bucket, weight=1.0)

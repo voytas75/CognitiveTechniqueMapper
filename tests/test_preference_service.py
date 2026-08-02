@@ -39,6 +39,7 @@ def test_preference_service_records_and_scores(tmp_path: Path) -> None:
 
     assert positive_adjustment > 0
     assert negative_adjustment < 0
+    assert service.score_adjustment({"name": 42, "category": []}) == 0
     summary = service.preference_summary()
     assert "Decisional Balance" in summary
 
