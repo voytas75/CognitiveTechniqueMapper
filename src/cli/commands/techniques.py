@@ -10,6 +10,11 @@ from typing import Any, Dict, Optional
 import typer
 from rich.panel import Panel
 
+from src.cli.commands.technique_gap_analysis import (
+    aggregate_categories,
+    build_gap_records,
+    preference_category_stats,
+)
 from src.cli.io import console
 from src.cli.renderers import (
     render_coverage_summary,
@@ -18,6 +23,8 @@ from src.cli.renderers import (
 )
 from src.cli.utils import apply_log_override
 from src.services.technique_search import TechniqueSearchMode
+
+# TODO: Extract catalog CRUD commands into a dedicated command module.
 
 
 def _cli():
@@ -275,16 +282,16 @@ def techniques_gaps(
         sqlite_client.close()
 
     effective_threshold = max(threshold, 0)
-    category_summary = _aggregate_categories(entries)
+    category_summary = aggregate_categories(entries)
 
     preference_data: Dict[str, Any] = {}
     if include_preferences and category_summary:
         state = _cli().get_state()
         preference_service = getattr(state, "preference_service", None)
         if preference_service is not None:
-            preference_data = _preference_category_stats(preference_service)
+            preference_data = preference_category_stats(preference_service)
 
-    records = _build_gap_records(
+    records = build_gap_records(
         category_summary,
         effective_threshold,
         preference_data,
@@ -442,100 +449,3 @@ def techniques_status(
             "embeddings": embedding_info,
         }
     )
-
-
-def _aggregate_categories(entries: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
-    buckets: dict[str, dict[str, Any]] = {}
-    for entry in entries:
-        raw = entry.get("category")
-        display = (
-            raw.strip() if isinstance(raw, str) and raw.strip() else "Uncategorized"
-        )
-        key = display.casefold()
-        bucket = buckets.setdefault(key, {"category": display, "count": 0})
-        if bucket["category"] == "Uncategorized" and display != "Uncategorized":
-            bucket["category"] = display
-        bucket["count"] += 1
-    return buckets
-
-
-def _preference_category_stats(preference_service: Any) -> dict[str, dict[str, Any]]:
-    try:
-        profile = preference_service.export_profile()
-    except Exception:  # pragma: no cover - defensive against custom services
-        return {}
-
-    categories = getattr(profile, "categories", {})
-    if not isinstance(categories, dict):
-        return {}
-
-    stats: dict[str, dict[str, Any]] = {}
-    for name, bucket in categories.items():
-        if not isinstance(name, str) or not isinstance(bucket, dict):
-            continue
-        key = name.strip().casefold()
-        if not key:
-            key = "uncategorized"
-        stats[key] = {
-            "avg_rating": _safe_average(bucket),
-            "negative_ratio": _safe_negative_ratio(bucket),
-        }
-    return stats
-
-
-def _safe_average(bucket: dict[str, Any]) -> Optional[float]:
-    rating_count = bucket.get("rating_count")
-    rating_sum = bucket.get("rating_sum")
-    try:
-        if rating_count and float(rating_count):
-            return float(rating_sum or 0.0) / float(rating_count)
-    except (TypeError, ZeroDivisionError):  # pragma: no cover - guard rails
-        return None
-    return None
-
-
-def _safe_negative_ratio(bucket: dict[str, Any]) -> Optional[float]:
-    count = bucket.get("count")
-    negatives = bucket.get("negatives")
-    try:
-        if count and float(count):
-            return float(negatives or 0.0) / float(count)
-    except (TypeError, ZeroDivisionError):  # pragma: no cover - guard rails
-        return None
-    return None
-
-
-def _build_gap_records(
-    categories: dict[str, dict[str, Any]],
-    threshold: int,
-    preference_data: dict[str, dict[str, Any]],
-) -> list[dict[str, Any]]:
-    if not categories:
-        return []
-
-    records: list[dict[str, Any]] = []
-    for key, bucket in categories.items():
-        count = bucket.get("count", 0)
-        pref_stats = preference_data.get(key)
-        avg_rating = pref_stats.get("avg_rating") if pref_stats else None
-        negative_ratio = pref_stats.get("negative_ratio") if pref_stats else None
-
-        flags: list[str] = []
-        if threshold and count < threshold:
-            flags.append("⚠ Below target")
-        if negative_ratio is not None and negative_ratio >= 0.5:
-            flags.append("⚠ Negative trend")
-        status = "OK" if not flags else " / ".join(dict.fromkeys(flags))
-
-        records.append(
-            {
-                "category": bucket.get("category", "Uncategorized"),
-                "count": int(count),
-                "status": status,
-                "avg_rating": avg_rating,
-                "negative_ratio": negative_ratio,
-            }
-        )
-
-    records.sort(key=lambda item: (item["count"], str(item["category"]).casefold()))
-    return records
