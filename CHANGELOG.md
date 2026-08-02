@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Replaced the stale locked dependency set with a tracked `uv.lock` and updated all currently fixable `pip-audit` findings. `chromadb` remains at `1.5.9` with CVE-2026-45829 / GHSA-f4j7-r4q5-qw2c pending an upstream fixed release; CTM uses only its local `PersistentClient` path.
 
 ### Changed
+- Formally limited the FastAPI and optional GraphQL surfaces to loopback-only development use; REST exposes registered orchestrator workflows only and does not return raw workflow exceptions.
 - Made `pyproject.toml` plus `uv.lock` the reproducible dependency source of truth; full development setup now uses `uv sync --all-extras --frozen`.
 - Added Black and isort to the development extra to match the documented quality gates.
 

@@ -27,8 +27,8 @@ uv run --frozen python -m src.cli describe "I'm torn between two job offers."
 uv run --frozen python -m src.cli analyze --show-candidates
 uv run --frozen python -m src.cli explain
 
-# Optional: run the FastAPI service
-uv run --frozen uvicorn src.api:app --reload
+# Optional local-only FastAPI surface
+uv run --frozen uvicorn src.api:app --reload --host 127.0.0.1
 ```
 
 ## Features
@@ -37,7 +37,11 @@ uv run --frozen uvicorn src.api:app --reload
 - Shareable Markdown reports plus preference-aware recommendations backed by feedback loops and history inspection commands.
 - YAML-driven configuration (`config/settings.yaml`, `config/models.yaml`, `config/providers.yaml`) for providers, models, and storage paths.
 - Technique catalog lifecycle commands (`techniques list|add|update|import|export|refresh`) that keep SQLite and optional Chroma embeddings synchronized.
-- Lightweight FastAPI server mirroring the CLI, enabling programmatic workflow invocation, health checks, and optional GraphQL access.
+- Lightweight local-only FastAPI surface for registered orchestrator workflows, health checks, and optional GraphQL access; CLI-only flows such as `explain` remain outside the HTTP contract.
+
+## Local API boundary
+
+The HTTP surface is a **local loopback development utility**, not a production deployment interface. Bind it only to `127.0.0.1`; it has no authentication or cross-origin contract. `/workflows` is authoritative for HTTP-capable flows, so CLI-only `explain` / `explain_logic` is intentionally unavailable through `/workflow/{name}`.
 
 ## Developer
 

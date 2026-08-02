@@ -1,7 +1,7 @@
 # Cognitive Technique Mapper — Developer Guide
 
 ## Current Status
-- Mature Typer-based CLI with FastAPI mirror for workflow automation.
+- Mature Typer-based CLI with a local-only FastAPI wrapper for registered workflow automation.
 - SQLite catalog seeded from `data/techniques.json` and optional Chroma embeddings for semantic retrieval.
 - Preference tracking, history, feedback loops, and Markdown reporting already implemented; new work typically adds workflows, prompts, or catalog management tooling.
 
@@ -37,9 +37,15 @@ uv run --frozen python -m src.cli describe "Need a framework for prioritizing co
 uv run --frozen python -m src.cli analyze --show-candidates
 uv run --frozen python -m src.cli explain
 
-# Optional API surface
-uv run --frozen uvicorn src.api:app --reload
+# Optional local-only API surface
+uv run --frozen uvicorn src.api:app --reload --host 127.0.0.1
 ```
+
+## Local API Contract
+- The FastAPI and optional GraphQL surfaces are loopback-only development tools; do not expose them beyond `127.0.0.1` without a separate authentication, authorization, CORS, deployment, and threat-model slice.
+- `/workflows` lists the authoritative HTTP contract. Only registered orchestrator workflows may be executed through `POST /workflow/{name}`.
+- `explain` / `explain_logic` stays CLI-only and must return HTTP 404 rather than bypassing the orchestrator.
+- REST workflow failures are logged server-side and return a generic HTTP 500 payload; clients do not receive raw exception text.
 
 ## Directory Highlights
 - `src/cli/` — Typer entrypoint, runtime wiring, and command modules (keep commands thin; reuse services from `src/core/`).

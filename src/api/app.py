@@ -1,20 +1,19 @@
-"""FastAPI surface for Cognitive Technique Mapper.
+"""Local-only FastAPI surface for Cognitive Technique Mapper.
 
-The design intentionally keeps the HTTP layer very thin: request handlers simply
-translate incoming JSON payloads into calls to the existing *Orchestrator*
-instance returned by ``initialize_runtime``.
+This module is a loopback development convenience, not a deployment boundary:
+request handlers translate JSON into calls to the registered *Orchestrator*
+workflows. It has no authentication or cross-origin contract and must be bound
+to ``127.0.0.1``.
 
-Only two routes are required for an MVP that unblocks external automation:
+The HTTP surface contains only:
 
-1. ``GET /health`` – lightweight liveness endpoint.
-2. ``POST /workflow/{name}`` – execute a registered workflow with the JSON
-   request body as *context* and return the workflow response.
+1. ``GET /health`` – local liveness endpoint.
+2. ``GET /workflows`` – registered orchestrator workflow names.
+3. ``POST /workflow/{name}`` – execute one registered workflow with JSON
+   context.
 
-An additional ``GET /workflows`` route lists available workflow names.
-
-GraphQL support powered by *strawberry* is enabled if the library is
-importable.  This is entirely optional and incurs zero runtime overhead when
-the dependency is absent.
+CLI-only flows, including ``explain_logic``, are intentionally not HTTP
+workflows. Optional GraphQL follows the same local-only restriction.
 """
 
 from __future__ import annotations
@@ -24,58 +23,67 @@ from typing import Any, Dict, List
 
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
 
 from src.cli.runtime import initialize_runtime
 
-# Lazily initialise runtime on first import. This is inexpensive after the
-# heavy lifting (SQLite schema checks, Chroma init) is done once.
+# Initialize the module-level uvicorn application once. Runtime setup performs
+# SQLite schema checks and optional Chroma initialization.
 _orchestrator, _state = initialize_runtime()
 
 logger = logging.getLogger(__name__)
 
 
-def _create_app() -> FastAPI:  # pragma: no cover – simple factory
-    """Factory assembling the FastAPI application."""
+def create_app(orchestrator: Any | None = None) -> FastAPI:
+    """Create the local-only API around an orchestrator instance.
 
+    Args:
+        orchestrator: Optional workflow orchestrator override for HTTP tests.
+
+    Returns:
+        FastAPI application exposing registered workflows only.
+    """
+
+    active_orchestrator = _orchestrator if orchestrator is None else orchestrator
     application = FastAPI(title="Cognitive Technique Mapper API", version="0.1.0")
-
-    # Allow typical local dev tools and browser playgrounds.
-    application.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
 
     @application.get("/health", tags=["system"])
     async def health() -> Dict[str, str]:
-        """Liveness probe used by orchestrators and load balancers."""
+        """Return local liveness state."""
 
         return {"status": "ok"}
 
     @application.get("/workflows", tags=["workflows"])
     async def list_workflows() -> List[str]:
-        """Return the names of registered workflows."""
+        """Return registered HTTP workflow names."""
 
-        return list(_orchestrator.workflows.keys())
+        return list(active_orchestrator.workflows.keys())
 
-    @application.post("/workflow/{workflow_name}", response_class=JSONResponse, tags=["workflows"])
+    @application.post(
+        "/workflow/{workflow_name}", response_class=JSONResponse, tags=["workflows"]
+    )
     async def execute_workflow(
         workflow_name: str, request: Request
     ) -> JSONResponse:  # noqa: D401 – FastAPI handler signature
-        """Execute *workflow_name* with JSON body forwarded as *context*."""
+        """Execute a registered workflow with a JSON context body."""
 
         try:
-            context: Dict[str, Any] = await request.json()
-        except Exception as exc:  # pragma: no cover – FastAPI already validates JSON
-            raise HTTPException(status_code=400, detail=str(exc)) from exc
+            payload = await request.json()
+        except Exception as exc:  # pragma: no cover - framework parsing path
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Request body must be valid JSON.",
+            ) from exc
+        if not isinstance(payload, dict):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Request body must be a JSON object.",
+            )
+        context: Dict[str, Any] = payload
 
         logger.info("api_execute_workflow", extra={"workflow": workflow_name})
 
         try:
-            result = _orchestrator.execute(workflow_name, context)
+            result = active_orchestrator.execute(workflow_name, context)
         except KeyError:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -84,7 +92,8 @@ def _create_app() -> FastAPI:  # pragma: no cover – simple factory
         except Exception as exc:
             logger.exception("workflow_execution_failed")
             raise HTTPException(
-                status_code=500, detail=f"Workflow error: {exc}"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Workflow execution failed.",
             ) from exc
 
         return JSONResponse(content=result)
@@ -138,5 +147,5 @@ else:
     _GRAPHQL_ROUTER = GraphQLRouter(_schema)
 
 
-# Build the FastAPI app *after* GraphQL router is ready.
-app: FastAPI = _create_app()
+# Build the FastAPI app after the optional GraphQL router is ready.
+app: FastAPI = create_app()

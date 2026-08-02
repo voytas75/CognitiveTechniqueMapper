@@ -1,8 +1,8 @@
 """FastAPI application exposing Cognitive Technique Mapper workflows.
 
-This package wires the existing orchestrator and workflows into a small REST and
-GraphQL service so that other tools can trigger the same reasoning pipelines
-without invoking the CLI directly.
+This package wraps registered orchestrator workflows in a local loopback REST and
+GraphQL service for development use. It is not a production deployment
+interface and must remain bound to ``127.0.0.1``.
 
 All public modules are re‑exported via ``src.api`` for convenience::
 
@@ -10,7 +10,7 @@ All public modules are re‑exported via ``src.api`` for convenience::
 
 Run locally with::
 
-    uvicorn src.api:app --reload
+    uv run --frozen uvicorn src.api:app --reload --host 127.0.0.1
 
 Updates:
     v0.1.0 - 2025-11-16 - Initial public API exposing ``/health`` and
@@ -20,4 +20,3 @@ Updates:
 from __future__ import annotations
 
 from .app import app  # noqa: F401  re‑export for ``uvicorn src.api:app``
-
