@@ -11,9 +11,33 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping, cast
 
 from ..core.config_loader import ConfigLoader
+
+
+def _object(value: object) -> dict[str, object]:
+    """Return a string-keyed mapping or an empty mapping for dynamic YAML values."""
+
+    if not isinstance(value, Mapping) or not all(isinstance(key, str) for key in value):
+        return {}
+    return cast(dict[str, object], value)
+
+
+def _optional_text(value: object) -> str | None:
+    return value if isinstance(value, str) else None
+
+
+def _optional_float(value: object) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return float(value)
+
+
+def _optional_int(value: object) -> int | None:
+    if isinstance(value, bool) or not isinstance(value, int):
+        return None
+    return value
 
 
 @dataclass(slots=True, frozen=True)
@@ -54,27 +78,22 @@ class ConfigService:
     @property
     def app_metadata(self) -> dict[str, Any]:
         """Return general application metadata."""
-        app_section = self._settings.get("app", {})
-        return dict(app_section) if isinstance(app_section, dict) else {}
+        return _object(self._settings.get("app"))
 
     @property
     def logging_config(self) -> dict[str, Any]:
         """Return logging configuration settings."""
-        logging_section = self._settings.get("logging", {})
-        return dict(logging_section) if isinstance(logging_section, dict) else {}
+        return _object(self._settings.get("logging"))
 
     @property
     def database_config(self) -> dict[str, Any]:
         """Return database configuration values."""
-        database_section = self._database.get("database", {})
-        return dict(database_section) if isinstance(database_section, dict) else {}
+        return _object(self._database.get("database"))
 
     @property
     def providers(self) -> dict[str, Any]:
         """Return provider configuration registry."""
-        provider_section = self._providers.get("providers", {})
-        if not isinstance(provider_section, dict):
-            return {}
+        provider_section = _object(self._providers.get("providers"))
         return {
             name: self._expand_env_values(config)
             for name, config in provider_section.items()
@@ -93,12 +112,14 @@ class ConfigService:
             KeyError: If the workflow configuration is missing.
         """
 
-        workflows = self._models.get("workflows", {})
-        defaults = self._models.get("defaults", {})
-        data = workflows.get(workflow)
-
-        if not isinstance(data, dict):
+        workflows = _object(self._models.get("workflows"))
+        defaults = _object(self._models.get("defaults"))
+        raw_data = workflows.get(workflow)
+        if not isinstance(raw_data, Mapping) or not all(
+            isinstance(key, str) for key in raw_data
+        ):
             raise KeyError(f"Workflow config not found for '{workflow}'")
+        data = cast(dict[str, object], raw_data)
 
         model = data.get("model")
         if not isinstance(model, str) or not model.strip():
@@ -110,9 +131,11 @@ class ConfigService:
         return WorkflowModelConfig(
             workflow=workflow,
             model=normalized_model,
-            temperature=data.get("temperature", defaults.get("temperature")),
-            provider=data.get("provider", defaults.get("provider")),
-            max_tokens=data.get("max_tokens"),
+            temperature=_optional_float(
+                data.get("temperature", defaults.get("temperature"))
+            ),
+            provider=_optional_text(data.get("provider", defaults.get("provider"))),
+            max_tokens=_optional_int(data.get("max_tokens")),
         )
 
     def iter_workflow_configs(self) -> dict[str, WorkflowModelConfig]:
@@ -122,7 +145,7 @@ class ConfigService:
             dict[str, WorkflowModelConfig]: Workflow configurations keyed by name.
         """
 
-        workflows = self._models.get("workflows", {})
+        workflows = _object(self._models.get("workflows"))
         return {name: self.get_workflow_model_config(name) for name in workflows}
 
     def get_embedding_config(self) -> EmbeddingModelConfig:
@@ -135,11 +158,14 @@ class ConfigService:
             KeyError: If the embedding configuration is missing.
         """
 
-        data = self._models.get("embeddings")
-        if not isinstance(data, dict):
+        raw_data = self._models.get("embeddings")
+        if not isinstance(raw_data, Mapping) or not all(
+            isinstance(key, str) for key in raw_data
+        ):
             raise KeyError("Embedding configuration missing in config/models.yaml")
-        defaults = self._models.get("defaults", {})
-        provider = data.get("provider", defaults.get("provider"))
+        data = cast(dict[str, object], raw_data)
+        defaults = _object(self._models.get("defaults"))
+        provider = _optional_text(data.get("provider", defaults.get("provider")))
         model = data.get("model")
         if not isinstance(model, str) or not model.strip():
             raise ValueError(
@@ -155,10 +181,11 @@ class ConfigService:
 
     @staticmethod
     def _expand_env_values(value: Any, *, current_key: str | None = None) -> Any:
-        if isinstance(value, dict):
+        if isinstance(value, Mapping) and all(isinstance(key, str) for key in value):
+            mapping = cast(Mapping[str, object], value)
             return {
                 key: ConfigService._expand_env_values(entry, current_key=key)
-                for key, entry in value.items()
+                for key, entry in mapping.items()
             }
         if isinstance(value, list):
             return [
