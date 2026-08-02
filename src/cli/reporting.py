@@ -32,7 +32,9 @@ def render_report_markdown(payload: Dict[str, Any]) -> str:
 
     sections: list[str] = []
     problem = payload.get("problem_description") or "N/A"
-    sections.append(f"# Cognitive Technique Report\n\n## Problem Statement\n\n{problem}\n")
+    sections.append(
+        f"# Cognitive Technique Report\n\n## Problem Statement\n\n{problem}\n"
+    )
 
     recommendation = payload.get("recommendation") or {}
     rec_body = _render_recommendation(recommendation)
@@ -54,7 +56,9 @@ def render_report_markdown(payload: Dict[str, Any]) -> str:
     if cmp_body:
         sections.append(cmp_body)
 
-    sections.append("## Appendix\n\n```json\n" + json.dumps(payload, indent=2) + "\n```")
+    sections.append(
+        "## Appendix\n\n```json\n" + json.dumps(payload, indent=2) + "\n```"
+    )
     return "\n\n".join(sections)
 
 

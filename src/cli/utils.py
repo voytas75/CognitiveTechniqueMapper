@@ -37,7 +37,9 @@ def active_preference_summary() -> Optional[str]:
     return summary or None
 
 
-def infer_category_from_matches(matches: Any, technique: Optional[str]) -> Optional[str]:
+def infer_category_from_matches(
+    matches: Any, technique: Optional[str]
+) -> Optional[str]:
     """Inspect candidate matches to infer the category for a technique."""
 
     if not technique or not isinstance(matches, list):
@@ -93,6 +95,7 @@ def refresh_runtime_and_preserve_state() -> None:
     """Refresh runtime dependencies while maintaining session state."""
 
     _cli().refresh_runtime()
+
 
 __all__ = [
     "active_preference_summary",

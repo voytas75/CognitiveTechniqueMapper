@@ -147,6 +147,7 @@ def render_prompt_sample(
     for title, body in sections:
         console.print(Panel(body, title=title))
 
+
 def render_preference_impacts(impacts: dict[str, Any]) -> None:
     """Display preference-derived score adjustments."""
 
@@ -305,8 +306,7 @@ def render_coverage_summary(records: list[dict[str, Any]], *, threshold: int) ->
     table.add_column("Status")
 
     show_preferences = any(
-        record.get("avg_rating") is not None
-        or record.get("negative_ratio") is not None
+        record.get("avg_rating") is not None or record.get("negative_ratio") is not None
         for record in records
     )
     if show_preferences:
@@ -355,7 +355,9 @@ def render_technique_table(entries: list[dict[str, Any]]) -> None:
 
     for entry in entries:
         description = entry.get("description") or ""
-        truncated = description if len(description) <= 120 else description[:117] + "..."
+        truncated = (
+            description if len(description) <= 120 else description[:117] + "..."
+        )
         table.add_row(
             entry.get("name") or "",
             entry.get("category") or "-",
@@ -373,7 +375,9 @@ def render_technique_search_results(
     """Render ranked technique search results."""
 
     if not results:
-        console.print(Panel("No techniques matched your search.", title="Technique Search"))
+        console.print(
+            Panel("No techniques matched your search.", title="Technique Search")
+        )
         return
 
     table = Table(title=f"Technique Search ({mode})", show_lines=False)
