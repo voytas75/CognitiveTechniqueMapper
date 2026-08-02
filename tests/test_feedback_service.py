@@ -2,9 +2,9 @@ from pathlib import Path
 from typing import Any
 
 from src.core.feedback_manager import FeedbackManager
-from src.services.feedback_service import FeedbackService
 from src.db.feedback_repository import FeedbackRepository
 from src.db.sqlite_client import SQLiteClient
+from src.services.feedback_service import FeedbackService
 
 
 class StubLLM:

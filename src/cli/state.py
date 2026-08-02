@@ -6,7 +6,7 @@ import json
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from src.core.llm_gateway import LLMGateway
@@ -14,7 +14,9 @@ if TYPE_CHECKING:
     from src.services.preference_service import PreferenceService
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-STATE_PATH = Path(os.environ.get("CTM_STATE_PATH", PROJECT_ROOT / "data" / "state.json"))
+STATE_PATH = Path(
+    os.environ.get("CTM_STATE_PATH", PROJECT_ROOT / "data" / "state.json")
+)
 
 
 @dataclass
