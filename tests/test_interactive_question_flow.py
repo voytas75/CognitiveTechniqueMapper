@@ -7,7 +7,6 @@ from typing import Iterator, List
 from rich.console import Console
 
 from src.services.interactive_question_flow import (
-    InteractiveQuestionFlow,
     create_interactive_flow,
     normalize_response,
 )
@@ -34,10 +33,12 @@ def test_normalize_response_aliases() -> None:
 
 
 def test_interactive_flow_reaches_leaf(monkeypatch: None) -> None:
-    console = StubConsole([
-        "reasoning",
-        "yes",
-    ])
+    console = StubConsole(
+        [
+            "reasoning",
+            "yes",
+        ]
+    )
     flow = create_interactive_flow(console, show_visualization=False)
     technique_id, technique_label = flow.run()
     assert technique_id == "chain_of_thought"

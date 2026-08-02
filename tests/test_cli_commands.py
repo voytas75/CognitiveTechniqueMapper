@@ -6,23 +6,35 @@ import pytest
 from rich.panel import Panel
 
 import src.cli as cli
-from tests.helpers.cli import RecordingOrchestrator, make_cli_runtime, mute_console, patch_runtime
+from tests.helpers.cli import (
+    RecordingOrchestrator,
+    StubPreferenceService,
+    make_cli_runtime,
+    mute_console,
+    patch_runtime,
+)
 
 
 @pytest.fixture()
-def patched_runtime(monkeypatch: pytest.MonkeyPatch) -> tuple[StubOrchestrator, cli.AppState, StubPreferenceService]:
+def patched_runtime(
+    monkeypatch: pytest.MonkeyPatch,
+) -> tuple[RecordingOrchestrator, cli.AppState, StubPreferenceService]:
     orchestrator, state = make_cli_runtime()
     patch_runtime(monkeypatch, orchestrator, state)
     mute_console(monkeypatch)
     return orchestrator, state, state.preference_service  # type: ignore[return-value]
 
 
-def test_cli_happy_path_flow(patched_runtime: tuple[RecordingOrchestrator, cli.AppState, StubPreferenceService]) -> None:
+def test_cli_happy_path_flow(
+    patched_runtime: tuple[RecordingOrchestrator, cli.AppState, StubPreferenceService],
+) -> None:
     orchestrator, state, preference_service = patched_runtime
 
     cli.describe("Need a decision framework", log_level=None)
     assert state.problem_description == "Need a decision framework"
-    assert state.context_history[-1]["problem_description"] == "Need a decision framework"
+    assert (
+        state.context_history[-1]["problem_description"] == "Need a decision framework"
+    )
 
     cli.analyze(show_candidates=True, log_level=None)
     assert state.last_recommendation is not None
@@ -62,7 +74,9 @@ def test_cli_happy_path_flow(patched_runtime: tuple[RecordingOrchestrator, cli.A
     assert preference_service.cleared
 
 
-def test_history_show_renders_human_readable_summary(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_history_show_renders_human_readable_summary(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     state = cli.AppState()
     state.context_history.append({"problem_description": "Need a creative path"})
 

@@ -7,11 +7,13 @@ import pytest
 from typer.testing import CliRunner
 
 import src.cli as cli
-from tests.helpers.cli import make_cli_runtime, mute_console, patch_runtime
+from tests.helpers.cli import make_cli_runtime, patch_runtime
 
 
 @pytest.fixture()
-def cli_session(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> tuple[CliRunner, cli.AppState, Any, Path]:
+def cli_session(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> tuple[CliRunner, cli.AppState, Any, Path]:
     runner = CliRunner()
     orchestrator, state = make_cli_runtime()
     state.save = lambda path=cli.STATE_PATH: None  # type: ignore[assignment]
@@ -20,7 +22,9 @@ def cli_session(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> tuple[CliRun
     return runner, state, orchestrator, tmp_path
 
 
-def test_end_to_end_cli_flow(cli_session: tuple[CliRunner, cli.AppState, Any, Path]) -> None:
+def test_end_to_end_cli_flow(
+    cli_session: tuple[CliRunner, cli.AppState, Any, Path],
+) -> None:
     runner, state, orchestrator, tmp_path = cli_session
 
     result = runner.invoke(cli.app, ["describe", "Need a decision framework"])
