@@ -47,4 +47,5 @@ Cognitive Technique Mapper is a local CLI for the primary user and, indirectly, 
 - Do not add a transaction coordinator, outbox, or background recovery mechanism without a separate explicit approval.
 
 ## Open decisions
-- No open first-release scope decisions. A future public API requires a new security and deployment decision record.
+- Configuration-file lifecycle: decide whether missing configuration must fail fast, bootstrap from tracked templates, or use an explicit initialization command. No behavior change is approved until this decision is made.
+- A future public API requires a new security and deployment decision record.
