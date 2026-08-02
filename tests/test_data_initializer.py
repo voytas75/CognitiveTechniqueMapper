@@ -6,8 +6,8 @@ import pytest
 
 from src.db.sqlite_client import SQLiteClient
 from src.services.config_service import ConfigService
-from src.services.embedding_gateway import EmbeddingGateway
 from src.services.data_initializer import TechniqueDataInitializer
+from src.services.embedding_gateway import EmbeddingGateway
 
 
 def _write_config(dir_path: Path) -> None:
@@ -169,7 +169,9 @@ def test_refresh_updates_chroma_index(tmp_path: Path, monkeypatch) -> None:
         def delete(self, ids: Any) -> None:
             id_list = list(ids)
             self.deleted.append(id_list)
-            self._ids = [identifier for identifier in self._ids if identifier not in id_list]
+            self._ids = [
+                identifier for identifier in self._ids if identifier not in id_list
+            ]
 
         def list_ids(self) -> list[str]:
             return list(self._ids)
@@ -193,7 +195,9 @@ def test_refresh_updates_chroma_index(tmp_path: Path, monkeypatch) -> None:
     assert chroma.deleted and chroma.deleted[-1] == ["Technique"]
 
 
-def test_initialize_skips_reembedding_when_dataset_already_seeded(tmp_path: Path) -> None:
+def test_initialize_skips_reembedding_when_dataset_already_seeded(
+    tmp_path: Path,
+) -> None:
     dataset = [
         {
             "name": "Technique",
@@ -227,7 +231,9 @@ def test_initialize_skips_reembedding_when_dataset_already_seeded(tmp_path: Path
         def delete(self, ids: Any) -> None:
             id_list = list(ids)
             self.deleted.append(id_list)
-            self._ids = [identifier for identifier in self._ids if identifier not in id_list]
+            self._ids = [
+                identifier for identifier in self._ids if identifier not in id_list
+            ]
 
         def list_ids(self) -> list[str]:
             return list(self._ids)
@@ -283,7 +289,9 @@ def test_refresh_clears_chroma_when_dataset_empty(tmp_path: Path) -> None:
         def delete(self, ids: Any) -> None:
             id_list = list(ids)
             self.deleted.append(id_list)
-            self._ids = [identifier for identifier in self._ids if identifier not in id_list]
+            self._ids = [
+                identifier for identifier in self._ids if identifier not in id_list
+            ]
 
         def list_ids(self) -> list[str]:
             return list(self._ids)

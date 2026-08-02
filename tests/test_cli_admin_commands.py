@@ -1,17 +1,17 @@
 from __future__ import annotations
 
+import types
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional
-import types
 
 import pytest
 
 import src.cli as cli
 from src.cli.commands import techniques as techniques_module
 from src.services.config_service import WorkflowModelConfig
-from tests.helpers.cli import RecordingOrchestrator, mute_console
 from src.services.technique_search import TechniqueSearchMode
+from tests.helpers.cli import RecordingOrchestrator, mute_console
 
 
 class StubConfigEditor:
@@ -87,7 +87,9 @@ class StubCatalog:
     def export_to_file(self, file: Path) -> tuple[Path, int]:
         return file, len(self.entries)
 
-    def import_from_file(self, file: Path, *, mode: str, rebuild_embeddings: bool) -> dict[str, Any]:
+    def import_from_file(
+        self, file: Path, *, mode: str, rebuild_embeddings: bool
+    ) -> dict[str, Any]:
         return {"file": str(file), "mode": mode, "rebuilt": rebuild_embeddings}
 
 
@@ -104,9 +106,7 @@ class StubSearchService:
         self.requests: list[dict[str, Any]] = []
         self.results: list[list[Any]] = []
 
-    def search(
-        self, text: str, *, mode: TechniqueSearchMode, limit: int
-    ) -> list[Any]:
+    def search(self, text: str, *, mode: TechniqueSearchMode, limit: int) -> list[Any]:
         self.requests.append({"text": text, "mode": mode, "limit": limit})
         return self.results.pop(0) if self.results else []
 
@@ -116,7 +116,9 @@ def patched_console(monkeypatch: pytest.MonkeyPatch) -> None:
     mute_console(monkeypatch)
 
 
-def test_settings_update_workflow_interactive(monkeypatch: pytest.MonkeyPatch, patched_console: None) -> None:
+def test_settings_update_workflow_interactive(
+    monkeypatch: pytest.MonkeyPatch, patched_console: None
+) -> None:
     StubConfigService.workflows = {
         "detect_technique": WorkflowModelConfig(
             workflow="detect_technique",
@@ -127,7 +129,10 @@ def test_settings_update_workflow_interactive(monkeypatch: pytest.MonkeyPatch, p
         )
     }
     StubConfigService.providers_data = {
-        "openai": {"api_base": "https://api.example.com", "api_key_env": "OPENAI_API_KEY"}
+        "openai": {
+            "api_base": "https://api.example.com",
+            "api_key_env": "OPENAI_API_KEY",
+        }
     }
     monkeypatch.setattr(cli, "ConfigService", StubConfigService)
     editor = StubConfigEditor()
@@ -135,7 +140,9 @@ def test_settings_update_workflow_interactive(monkeypatch: pytest.MonkeyPatch, p
     orchestrator = RecordingOrchestrator()
     monkeypatch.setattr(cli, "get_orchestrator", lambda: orchestrator)
     monkeypatch.setattr(cli, "_refresh_runtime", lambda: None)
-    monkeypatch.setattr(cli, "_prompt_value", lambda label, current: current or "detect_technique")
+    monkeypatch.setattr(
+        cli, "_prompt_value", lambda label, current: current or "detect_technique"
+    )
     monkeypatch.setattr(cli, "_prompt_float", lambda label, current: 0.6)
     monkeypatch.setattr(cli, "_prompt_int", lambda label, current: 2048)
 
@@ -154,7 +161,9 @@ def test_settings_update_workflow_interactive(monkeypatch: pytest.MonkeyPatch, p
     assert StubConfigService.clear_cache_called
 
 
-def test_settings_update_provider(monkeypatch: pytest.MonkeyPatch, patched_console: None) -> None:
+def test_settings_update_provider(
+    monkeypatch: pytest.MonkeyPatch, patched_console: None
+) -> None:
     StubConfigService.workflows = {}
     StubConfigService.providers_data = {
         "openai": {
@@ -169,7 +178,9 @@ def test_settings_update_provider(monkeypatch: pytest.MonkeyPatch, patched_conso
     monkeypatch.setattr(cli, "ConfigEditor", lambda: editor)
     monkeypatch.setattr(cli, "get_orchestrator", lambda: RecordingOrchestrator())
     monkeypatch.setattr(cli, "_refresh_runtime", lambda: None)
-    monkeypatch.setattr(cli, "_prompt_value", lambda label, current: current or "openai")
+    monkeypatch.setattr(
+        cli, "_prompt_value", lambda label, current: current or "openai"
+    )
 
     cli.settings_update_provider(
         provider=None,
@@ -184,12 +195,20 @@ def test_settings_update_provider(monkeypatch: pytest.MonkeyPatch, patched_conso
     assert StubConfigService.clear_cache_called
 
 
-def test_refresh_reinitializes_runtime(monkeypatch: pytest.MonkeyPatch, patched_console: None, tmp_path: Path) -> None:
+def test_refresh_reinitializes_runtime(
+    monkeypatch: pytest.MonkeyPatch, patched_console: None, tmp_path: Path
+) -> None:
     initializer = StubInitializer()
     sqlite_client = StubSQLiteClient()
-    monkeypatch.setattr(cli, "_create_initializer", lambda: (initializer, sqlite_client))
+    monkeypatch.setattr(
+        cli, "_create_initializer", lambda: (initializer, sqlite_client)
+    )
     refresh_called = {"count": 0}
-    monkeypatch.setattr(cli, "_refresh_runtime", lambda: refresh_called.__setitem__("count", refresh_called["count"] + 1))
+    monkeypatch.setattr(
+        cli,
+        "_refresh_runtime",
+        lambda: refresh_called.__setitem__("count", refresh_called["count"] + 1),
+    )
 
     cli.refresh(rebuild_embeddings=True, log_level=None)
 
@@ -197,10 +216,14 @@ def test_refresh_reinitializes_runtime(monkeypatch: pytest.MonkeyPatch, patched_
     assert refresh_called["count"] == 1
 
 
-def test_techniques_commands(monkeypatch: pytest.MonkeyPatch, patched_console: None, tmp_path: Path) -> None:
+def test_techniques_commands(
+    monkeypatch: pytest.MonkeyPatch, patched_console: None, tmp_path: Path
+) -> None:
     catalog = StubCatalog()
     sqlite_client = StubSQLiteClient()
-    monkeypatch.setattr(cli, "_create_catalog_service", lambda: (catalog, sqlite_client))
+    monkeypatch.setattr(
+        cli, "_create_catalog_service", lambda: (catalog, sqlite_client)
+    )
     monkeypatch.setattr(cli, "_refresh_runtime", lambda: None)
 
     cli.techniques_list()
@@ -220,10 +243,14 @@ def test_techniques_commands(monkeypatch: pytest.MonkeyPatch, patched_console: N
     cli.techniques_remove(name="Balanced Decision")
 
 
-def test_techniques_refresh(monkeypatch: pytest.MonkeyPatch, patched_console: None) -> None:
+def test_techniques_refresh(
+    monkeypatch: pytest.MonkeyPatch, patched_console: None
+) -> None:
     initializer = StubInitializer()
     sqlite_client = StubSQLiteClient()
-    monkeypatch.setattr(cli, "_create_initializer", lambda: (initializer, sqlite_client))
+    monkeypatch.setattr(
+        cli, "_create_initializer", lambda: (initializer, sqlite_client)
+    )
     refresh_calls = {"count": 0}
     monkeypatch.setattr(
         cli,
@@ -237,7 +264,9 @@ def test_techniques_refresh(monkeypatch: pytest.MonkeyPatch, patched_console: No
     assert refresh_calls["count"] == 1
 
 
-def test_techniques_status(monkeypatch: pytest.MonkeyPatch, patched_console: None) -> None:
+def test_techniques_status(
+    monkeypatch: pytest.MonkeyPatch, patched_console: None
+) -> None:
     catalog = StubCatalog()
 
     class StubChroma:
@@ -247,7 +276,9 @@ def test_techniques_status(monkeypatch: pytest.MonkeyPatch, patched_console: Non
     catalog.chroma_client = StubChroma()
     sqlite_client = StubSQLiteClient()
 
-    monkeypatch.setattr(cli, "_create_catalog_service", lambda: (catalog, sqlite_client))
+    monkeypatch.setattr(
+        cli, "_create_catalog_service", lambda: (catalog, sqlite_client)
+    )
 
     captured: dict[str, Any] = {}
 
@@ -263,7 +294,9 @@ def test_techniques_status(monkeypatch: pytest.MonkeyPatch, patched_console: Non
     assert captured["embeddings"]["count"] == 2
 
 
-def test_techniques_gaps(monkeypatch: pytest.MonkeyPatch, patched_console: None) -> None:
+def test_techniques_gaps(
+    monkeypatch: pytest.MonkeyPatch, patched_console: None
+) -> None:
     catalog = StubCatalog()
     catalog.entries = [
         {
@@ -296,7 +329,9 @@ def test_techniques_gaps(monkeypatch: pytest.MonkeyPatch, patched_console: None)
         },
     ]
     sqlite_client = StubSQLiteClient()
-    monkeypatch.setattr(cli, "_create_catalog_service", lambda: (catalog, sqlite_client))
+    monkeypatch.setattr(
+        cli, "_create_catalog_service", lambda: (catalog, sqlite_client)
+    )
 
     class PreferenceProfileStub:
         def __init__(self) -> None:
@@ -336,27 +371,35 @@ def test_techniques_gaps(monkeypatch: pytest.MonkeyPatch, patched_console: None)
     records = captured["records"]
     assert len(records) == 3
 
-    creativity = next(record for record in records if record["category"] == "Creativity")
+    creativity = next(
+        record for record in records if record["category"] == "Creativity"
+    )
     assert creativity["count"] == 2
     assert creativity["status"].startswith("⚠ Below target")
     assert "Negative trend" in creativity["status"]
     assert creativity["avg_rating"] == pytest.approx(10 / 3, rel=1e-3)
     assert creativity["negative_ratio"] == pytest.approx(0.6, rel=1e-3)
 
-    decision = next(record for record in records if record["category"] == "Decision Making")
+    decision = next(
+        record for record in records if record["category"] == "Decision Making"
+    )
     assert decision["count"] == 1
     assert decision["status"] == "⚠ Below target"
     assert decision["avg_rating"] == pytest.approx(4.0)
     assert decision["negative_ratio"] == pytest.approx(0.0)
 
-    uncategorized = next(record for record in records if record["category"] == "Uncategorized")
+    uncategorized = next(
+        record for record in records if record["category"] == "Uncategorized"
+    )
     assert uncategorized["count"] == 1
     assert uncategorized["status"] == "⚠ Below target"
     assert uncategorized["avg_rating"] is None
     assert uncategorized["negative_ratio"] is None
 
 
-def test_techniques_search(monkeypatch: pytest.MonkeyPatch, patched_console: None) -> None:
+def test_techniques_search(
+    monkeypatch: pytest.MonkeyPatch, patched_console: None
+) -> None:
     search_service = StubSearchService()
     result_entry = types.SimpleNamespace(
         name="Decisional Balance",

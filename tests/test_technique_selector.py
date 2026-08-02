@@ -6,7 +6,6 @@ from typing import Any
 
 import pytest
 
-
 litellm_stub = types.ModuleType("litellm")
 litellm_stub.drop_params = True
 
@@ -94,7 +93,9 @@ class StubEmbedder:
 
 
 class StubChroma:
-    def query(self, *, query_embeddings: list[list[float]], n_results: int) -> dict[str, Any]:
+    def query(
+        self, *, query_embeddings: list[list[float]], n_results: int
+    ) -> dict[str, Any]:
         return {
             "ids": [["technique-1"]],
             "metadatas": [[{"name": "Decisional Balance", "category": "Decision"}]],
@@ -125,7 +126,9 @@ def test_vector_search_uses_chroma(monkeypatch: pytest.MonkeyPatch) -> None:
     assert matches[0]["score"] == pytest.approx(1 / (1 + 0.5))
 
 
-def test_vector_search_with_embeddings_scores_results(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_vector_search_with_embeddings_scores_results(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     TechniqueSelector = import_technique_selector()
 
     class DeterministicEmbedder(StubEmbedder):
@@ -213,7 +216,7 @@ def test_parse_json_response_handles_markdown() -> None:
         prompt_service=StubPromptService(),
     )
 
-    response = "```json\n{\"suggested_technique\": \"Technique\"}\n```"
+    response = '```json\n{"suggested_technique": "Technique"}\n```'
     parsed = selector._parse_json_response(response)
     assert parsed["suggested_technique"] == "Technique"
     assert selector._parse_json_response("not json") is None
