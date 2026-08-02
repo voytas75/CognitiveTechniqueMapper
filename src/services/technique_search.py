@@ -8,17 +8,23 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Iterable, Mapping, Protocol, Sequence
 
 from src.core.preprocessor import ProblemPreprocessor
 from src.db.sqlite_client import SQLiteClient
 from src.services.embedding_gateway import EmbeddingGateway
 from src.services.technique_utils import compose_embedding_text
 
-try:  # pragma: no cover - optional dependency path
-    from src.db.chroma_client import ChromaClient
-except RuntimeError:  # pragma: no cover - optional dependency path
-    ChromaClient = None  # type: ignore
+
+class _ChromaSearchStore(Protocol):
+    """Minimal vector-search contract used by technique retrieval."""
+
+    def query(
+        self,
+        *,
+        query_embeddings: Sequence[Sequence[float]],
+        n_results: int,
+    ) -> Mapping[str, Sequence[Sequence[object]]]: ...
 
 
 class TechniqueSearchMode(StrEnum):
@@ -65,7 +71,7 @@ class TechniqueSearchService:
         *,
         sqlite_client: SQLiteClient,
         embedder: EmbeddingGateway | None = None,
-        chroma_client: ChromaClient | None = None,
+        chroma_client: _ChromaSearchStore | None = None,
         preprocessor: ProblemPreprocessor | None = None,
     ) -> None:
         """Initialize the service with storage and optional vector search dependencies.
@@ -125,31 +131,47 @@ class TechniqueSearchService:
             return self._keyword_rank(normalized_text, limit)
 
         query_embedding = self._embedder.embed(normalized_text)
-        if not isinstance(query_embedding, Sequence):
+        if not query_embedding:
             return []
 
-        if self._chroma and query_embedding:
-            return self._semantic_rank_chroma(query_embedding, limit)
+        chroma = self._chroma
+        if chroma:
+            return self._semantic_rank_chroma(chroma, query_embedding, limit)
         return self._semantic_rank_local(entries, query_embedding, limit)
 
     def _semantic_rank_chroma(
-        self, query_embedding: Sequence[float], limit: int
+        self,
+        chroma: _ChromaSearchStore,
+        query_embedding: Sequence[float],
+        limit: int,
     ) -> list[TechniqueSearchResult]:
-        results = self._chroma.query(
+        results = chroma.query(
             query_embeddings=[query_embedding],
             n_results=limit,
         )
+
+        def first_row(key: str) -> Sequence[object]:
+            rows = results.get(key)
+            return rows[0] if rows else ()
+
         matches: list[TechniqueSearchResult] = []
-        ids = results.get("ids", [[]])[0]
-        metadatas = results.get("metadatas", [[]])[0]
-        documents = results.get("documents", [[]])[0]
-        distances = results.get("distances") or results.get("scores") or [[]]
-        distance_row = distances[0] if distances else []
-        for identifier, metadata, document, distance in zip(
+        ids = first_row("ids")
+        metadatas = first_row("metadatas")
+        documents = first_row("documents")
+        distance_row = first_row("distances") or first_row("scores")
+        for identifier, raw_metadata, document, distance in zip(
             ids, metadatas, documents, distance_row
         ):
-            metadata = metadata or {"name": identifier}
-            if document and not metadata.get("description"):
+            metadata: dict[str, Any] = {"name": str(identifier)}
+            if isinstance(raw_metadata, Mapping):
+                metadata.update(
+                    {
+                        key: value
+                        for key, value in raw_metadata.items()
+                        if isinstance(key, str)
+                    }
+                )
+            if isinstance(document, str) and not metadata.get("description"):
                 metadata["description"] = document
             score = self._distance_to_similarity(distance)
             matches.append(
@@ -343,7 +365,7 @@ class TechniqueSearchService:
         return dot / (norm_a * norm_b)
 
     def _blend_scores(self, values: Iterable[float]) -> float:
-        scores = [value for value in values if isinstance(value, (int, float))]
+        scores = list(values)
         if not scores:
             return 0.0
         return sum(scores) / len(scores)
