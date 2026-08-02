@@ -96,6 +96,7 @@ class StubChroma:
     def query(
         self, *, query_embeddings: list[list[float]], n_results: int
     ) -> dict[str, Any]:
+        assert n_results == 6
         return {
             "ids": [["technique-1"]],
             "metadatas": [[{"name": "Decisional Balance", "category": "Decision"}]],
@@ -196,7 +197,7 @@ def test_apply_preference_adjustments_reorders_matches() -> None:
     assert adjusted[0]["preference_adjustment"] == pytest.approx(0.2)
 
 
-def test_recommendation_prioritizes_suggested_candidate_and_keeps_scores(
+def test_recommendation_excludes_suggested_candidate_and_keeps_scores(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     TechniqueSelector = import_technique_selector()
@@ -222,6 +223,7 @@ def test_recommendation_prioritizes_suggested_candidate_and_keeps_scores(
         {"metadata": {"name": "Decision Matrix"}, "score": 0.73},
         {"metadata": {"name": "First Principles"}, "score": 0.69},
         {"metadata": {"name": "Pre-mortem"}, "score": 0.61},
+        {"metadata": {"name": "OODA Loop"}, "score": 0.55},
     ]
 
     def vector_search_stub(
@@ -233,19 +235,20 @@ def test_recommendation_prioritizes_suggested_candidate_and_keeps_scores(
 
     result = selector.recommend("Choose between two options.")
 
+    assert result["recommendation"]["suggested_technique"] == "Decision Matrix"
     assert [entry["metadata"]["name"] for entry in result["matches"]] == [
-        "Decision Matrix",
         "Six Thinking Hats",
         "SWOT Analysis",
         "First Principles",
         "Pre-mortem",
+        "OODA Loop",
     ]
     assert [entry["score"] for entry in result["matches"]] == [
-        0.73,
         0.91,
         0.84,
         0.69,
         0.61,
+        0.55,
     ]
 
 

@@ -163,27 +163,24 @@ class TechniqueSelector:
         )
         response = self._invoke_llm(prompt)
         recommendation = self._parse_recommendation(response)
-        ordered_candidates = self._prioritize_suggested_candidate(
+        displayed_candidates = self._exclude_suggested_candidate(
             candidates, recommendation
         )
         return {
             "workflow": "detect_technique",
             "recommendation": recommendation.as_dict() if recommendation else None,
-            "matches": ordered_candidates,
+            "matches": displayed_candidates,
             "preference_summary": preference_summary,
         }
 
-    def _prioritize_suggested_candidate(
+    def _exclude_suggested_candidate(
         self,
         candidates: List[Dict[str, Any]],
         recommendation: TechniqueRecommendation | None,
     ) -> List[Dict[str, Any]]:
-        """Move the suggested technique to the first display position.
-
-        Candidate scores retain their retrieval values; only presentation order changes.
-        """
+        """Return five alternatives without duplicating the suggested technique."""
         if recommendation is None or not recommendation.suggested_technique:
-            return candidates
+            return candidates[:5]
 
         suggested_name = recommendation.suggested_technique.strip().casefold()
         for index, candidate in enumerate(candidates):
@@ -195,8 +192,8 @@ class TechniqueSelector:
             )
             if candidate_name and candidate_name.casefold() == suggested_name:
                 recommendation.suggested_technique = candidate_name
-                return [candidate, *candidates[:index], *candidates[index + 1 :]]
-        return candidates
+                return [*candidates[:index], *candidates[index + 1 :]][:5]
+        return candidates[:5]
 
     def _generate_selection_diagnostics(
         self,

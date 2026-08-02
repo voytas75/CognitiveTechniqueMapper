@@ -13,7 +13,7 @@ class ChromaSearchClient(Protocol):
     """Minimal Chroma query surface required for candidate retrieval."""
 
     def query(
-        self, query_embeddings: Sequence[Sequence[float]], n_results: int = 5
+        self, query_embeddings: Sequence[Sequence[float]], n_results: int = 6
     ) -> Mapping[str, Sequence[Sequence[object]]]: ...
 
 
@@ -48,7 +48,7 @@ class TechniqueVectorSearch:
         if not stored:
             return []
         if query_embedding is None or self._embedder is None:
-            return stored[:5]
+            return stored[:6]
 
         scored_matches: List[Dict[str, Any]] = []
         for item in stored:
@@ -67,13 +67,13 @@ class TechniqueVectorSearch:
             key=lambda entry: _coerce_float(entry.get("score")) or 0.0,
             reverse=True,
         )
-        return scored_matches[:5]
+        return scored_matches[:6]
 
     def _search_chroma(self, query_embedding: Sequence[float]) -> List[Dict[str, Any]]:
         chroma = self._chroma
         if chroma is None:
             return []
-        results = chroma.query(query_embeddings=[query_embedding], n_results=5)
+        results = chroma.query(query_embeddings=[query_embedding], n_results=6)
         ids = _first_row(results.get("ids"))
         metadatas = _first_row(results.get("metadatas"))
         documents = _first_row(results.get("documents"))
