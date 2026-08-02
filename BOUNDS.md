@@ -5,7 +5,7 @@ This file and `PLAN.md` govern the Cognitive Technique Mapper scope. Conflicts r
 
 ## Scope controls
 - Implement only the first-release capabilities accepted in `PLAN.md`.
-- Preserve the primary outcome: one justified recommendation and exactly three candidates for a supplied problem, task, or statement.
+- Preserve the primary outcome: one justified recommendation and exactly five candidates for a supplied problem, task, or statement.
 - Later ideas, new integrations, and broad refactors require an explicit scope change.
 - Do not add speculative abstractions or product features while repairing quality or architecture.
 

@@ -1,14 +1,14 @@
 # Project Plan
 
 ## Goal
-Cognitive Technique Mapper is a local CLI for the primary user and, indirectly, AI agents. It accepts a problem, task, or statement and returns one justified cognitive-technique recommendation together with three candidate alternatives and paths to approach the problem.
+Cognitive Technique Mapper is a local CLI for the primary user and, indirectly, AI agents. It accepts a problem, task, or statement and returns one justified cognitive-technique recommendation together with five candidate alternatives and paths to approach the problem.
 
 ## Problem and users
 - **Problem:** People and AI agents need a structured way to consider alternative cognitive or problem-solving approaches for a stated task or problem.
 - **Primary users:** The repository owner first; AI agents may consume the CLI indirectly.
 
 ## First release — must have
-- [ ] `describe`, `analyze`, and `explain` flows produce one justified recommendation plus three candidates.
+- [ ] `describe`, `analyze`, and `explain` flows produce one justified recommendation plus five candidates.
 - [ ] Technique catalog lifecycle commands maintain the local technique data.
 - [ ] Feedback and history flows persist and expose user feedback and prior decisions.
 - [ ] `compare` and `simulate` flows remain available for evaluating alternatives.
@@ -22,7 +22,7 @@ Cognitive Technique Mapper is a local CLI for the primary user and, indirectly, 
 - Multi-user operation and multi-user hosting are not part of the first stable release.
 
 ## Definition of done
-- The local CLI accepts a problem and returns one justified recommendation plus three candidates.
+- The local CLI accepts a problem and returns one justified recommendation plus five candidates.
 - Local quality gates and CI are green.
 
 ## Technology decisions
