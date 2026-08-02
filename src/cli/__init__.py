@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import typer
+from typer.main import get_command
 
 from src.cli.commands.core import (
     analyze,
@@ -200,13 +201,14 @@ preferences_app = typer.Typer(
 )
 
 
-@settings_app.callback(invoke_without_command=True)
 def _settings_callback(ctx: typer.Context) -> None:
     if ctx.invoked_subcommand is None:
         settings_show()
 
 
 # Command registration -------------------------------------------------------
+
+settings_app.callback(invoke_without_command=True)(_settings_callback)
 
 app.command()(describe)
 app.command()(analyze)
@@ -251,7 +253,7 @@ app.add_typer(settings_app, name="settings")
 def main() -> None:
     """CLI entry point."""
 
-    app()
+    get_command(cast(Any, app))()
 
 
 __all__: list[str] = [
