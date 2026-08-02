@@ -101,6 +101,9 @@ class TechniqueSearchService:
             list[TechniqueSearchResult]: Ranked technique matches.
         """
 
+        if limit <= 0:
+            return []
+
         normalized = self._preprocessor.normalize(text)
         if not normalized:
             return []
