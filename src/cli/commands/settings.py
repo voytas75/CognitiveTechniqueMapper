@@ -226,7 +226,7 @@ def _find_recent_workflow_payload(
     history: list[dict[str, Any]], prompt: str
 ) -> Optional[tuple[str, str]]:
     for record in reversed(history):
-        if isinstance(record, dict) and record.get("workflow") == prompt:
+        if record.get("workflow") == prompt:
             try:
                 serialized = json.dumps(record, indent=2, ensure_ascii=False)
             except TypeError:
