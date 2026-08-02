@@ -31,7 +31,9 @@ class StubCollection:
         )
         if self.fail_once:
             self.fail_once = False
-            raise Exception("Collection expecting embedding with dimension of 12, got 3072")
+            raise Exception(
+                "Collection expecting embedding with dimension of 12, got 3072"
+            )
 
     def delete(self, ids: list[str]) -> None:  # pragma: no cover - API compatibility
         pass

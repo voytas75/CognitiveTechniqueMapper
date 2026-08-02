@@ -100,7 +100,9 @@ def test_remove_deletes_from_all_sources(catalog: TechniqueCatalogService) -> No
     assert _read_dataset(catalog.dataset_path) == []
 
 
-def test_export_writes_dataset(catalog: TechniqueCatalogService, tmp_path: Path) -> None:
+def test_export_writes_dataset(
+    catalog: TechniqueCatalogService, tmp_path: Path
+) -> None:
     catalog.add({"name": "Exported", "description": "Catalog entry"})
     output_path = tmp_path / "out.json"
 
@@ -112,7 +114,9 @@ def test_export_writes_dataset(catalog: TechniqueCatalogService, tmp_path: Path)
     assert exported[0]["name"] == "Exported"
 
 
-def test_import_replace_overwrites_catalog(catalog: TechniqueCatalogService, tmp_path: Path) -> None:
+def test_import_replace_overwrites_catalog(
+    catalog: TechniqueCatalogService, tmp_path: Path
+) -> None:
     catalog.add({"name": "Old", "description": "To replace"})
     import_file = tmp_path / "replace.json"
     import_file.write_text(
@@ -129,14 +133,18 @@ def test_import_replace_overwrites_catalog(catalog: TechniqueCatalogService, tmp
         encoding="utf-8",
     )
 
-    summary = catalog.import_from_file(import_file, mode="replace", rebuild_embeddings=False)
+    summary = catalog.import_from_file(
+        import_file, mode="replace", rebuild_embeddings=False
+    )
 
     assert summary["total"] == 1
     names = [item["name"] for item in catalog.list()]
     assert names == ["New Technique"]
 
 
-def test_import_append_merges_catalog(catalog: TechniqueCatalogService, tmp_path: Path) -> None:
+def test_import_append_merges_catalog(
+    catalog: TechniqueCatalogService, tmp_path: Path
+) -> None:
     catalog.add({"name": "Existing", "description": "Original"})
     import_file = tmp_path / "append.json"
     import_file.write_text(
@@ -157,7 +165,9 @@ def test_import_append_merges_catalog(catalog: TechniqueCatalogService, tmp_path
         encoding="utf-8",
     )
 
-    summary = catalog.import_from_file(import_file, mode="append", rebuild_embeddings=False)
+    summary = catalog.import_from_file(
+        import_file, mode="append", rebuild_embeddings=False
+    )
 
     assert summary["total"] == 2
     records = {item["name"]: item for item in catalog.list()}

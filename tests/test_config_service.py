@@ -88,9 +88,7 @@ def test_get_embedding_config_requires_model(tmp_path: Path, monkeypatch) -> Non
     (config_dir / "database.yaml").write_text(
         "database: {sqlite_path: ':memory:'}\n", encoding="utf-8"
     )
-    (config_dir / "models.yaml").write_text(
-        "embeddings: {}\n", encoding="utf-8"
-    )
+    (config_dir / "models.yaml").write_text("embeddings: {}\n", encoding="utf-8")
     (config_dir / "providers.yaml").write_text("providers: {}\n", encoding="utf-8")
 
     monkeypatch.setenv("CTM_CONFIG_PATH", str(config_dir))
