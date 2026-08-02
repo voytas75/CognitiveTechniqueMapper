@@ -8,7 +8,9 @@ from typing import Any, Callable, Dict, Mapping, MutableMapping, Optional
 import src.cli as cli
 
 Handler = Callable[[Dict[str, Any], "RecordingOrchestrator"], Dict[str, Any]]
-DefaultHandler = Callable[[str, Dict[str, Any], "RecordingOrchestrator"], Dict[str, Any]]
+DefaultHandler = Callable[
+    [str, Dict[str, Any], "RecordingOrchestrator"], Dict[str, Any]
+]
 
 
 @dataclass
@@ -147,7 +149,9 @@ def mute_console(
         monkeypatch.setattr(cli.console, "log", lambda *args, **kwargs: None, raising=False)  # type: ignore[arg-type]
 
 
-def patch_runtime(monkeypatch: Any, orchestrator: RecordingOrchestrator, state: cli.AppState) -> None:
+def patch_runtime(
+    monkeypatch: Any, orchestrator: RecordingOrchestrator, state: cli.AppState
+) -> None:
     """Patch runtime helpers to operate on the supplied orchestrator and state."""
 
     state.save = lambda path=cli.STATE_PATH: None  # type: ignore[assignment]
@@ -160,7 +164,9 @@ def patch_runtime(monkeypatch: Any, orchestrator: RecordingOrchestrator, state: 
 def build_default_handlers() -> Dict[str, Handler]:
     """Return handlers covering the primary CLI workflows for tests."""
 
-    def detect_handler(context: Dict[str, Any], _: RecordingOrchestrator) -> Dict[str, Any]:
+    def detect_handler(
+        context: Dict[str, Any], _: RecordingOrchestrator
+    ) -> Dict[str, Any]:
         return {
             "recommendation": {
                 "suggested_technique": "Decisional Balance",
@@ -180,24 +186,34 @@ def build_default_handlers() -> Dict[str, Handler]:
             "preference_summary": "Prefers structured analysis.",
         }
 
-    def summarize_handler(context: Dict[str, Any], _: RecordingOrchestrator) -> Dict[str, Any]:
+    def summarize_handler(
+        context: Dict[str, Any], _: RecordingOrchestrator
+    ) -> Dict[str, Any]:
         assert "technique_summary" in context
         return {"plan": {"milestones": ["Gather data", "Evaluate"]}}
 
-    def simulate_handler(context: Dict[str, Any], _: RecordingOrchestrator) -> Dict[str, Any]:
+    def simulate_handler(
+        context: Dict[str, Any], _: RecordingOrchestrator
+    ) -> Dict[str, Any]:
         assert context["recommendation"]
         return {
             "simulation": {
                 "simulation_overview": "Simulation overview",
                 "scenario_variations": [
-                    {"name": "Best case", "outcome": "Success", "guidance": "Stay on plan"}
+                    {
+                        "name": "Best case",
+                        "outcome": "Success",
+                        "guidance": "Stay on plan",
+                    }
                 ],
                 "cautions": ["Time pressure"],
                 "recommended_follow_up": ["Review outcomes"],
             }
         }
 
-    def compare_handler(context: Dict[str, Any], _: RecordingOrchestrator) -> Dict[str, Any]:
+    def compare_handler(
+        context: Dict[str, Any], _: RecordingOrchestrator
+    ) -> Dict[str, Any]:
         assert context["matches"]
         return {
             "comparison": {
@@ -216,7 +232,9 @@ def build_default_handlers() -> Dict[str, Handler]:
             }
         }
 
-    def feedback_handler(context: Dict[str, Any], orchestrator: RecordingOrchestrator) -> Dict[str, Any]:
+    def feedback_handler(
+        context: Dict[str, Any], orchestrator: RecordingOrchestrator
+    ) -> Dict[str, Any]:
         if context.get("action") == "record":
             orchestrator.data.setdefault("feedback_records", []).append(context)
             preference_service = orchestrator.data.get("preference_service")
@@ -245,7 +263,9 @@ def make_cli_runtime() -> tuple[RecordingOrchestrator, cli.AppState]:
 
     orchestrator = RecordingOrchestrator(
         handlers=build_default_handlers(),
-        default=lambda workflow, _context, _self: {"config": {}} if workflow == "config_update" else {},
+        default=lambda workflow, _context, _self: (
+            {"config": {}} if workflow == "config_update" else {}
+        ),
     )
     state = cli.AppState()
     state.preference_service = StubPreferenceService(repository=None)

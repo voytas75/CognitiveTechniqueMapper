@@ -24,14 +24,18 @@ def test_app_state_save_and_load(tmp_path: Path) -> None:
     assert loaded.last_recommendation["technique"] == "Decisional Balance"
 
 
-def test_apply_log_override_handles_invalid_level(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_apply_log_override_handles_invalid_level(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     captured: list[str] = []
     monkeypatch.setattr(cli, "set_runtime_level", lambda level: captured.append(level))
 
     cli._apply_log_override("debug")
     assert captured == ["debug"]
 
-    monkeypatch.setattr(cli, "set_runtime_level", lambda level: (_ for _ in ()).throw(ValueError("bad")))
+    monkeypatch.setattr(
+        cli, "set_runtime_level", lambda level: (_ for _ in ()).throw(ValueError("bad"))
+    )
     with pytest.raises(typer.BadParameter):
         cli._apply_log_override("trace")
 
@@ -85,7 +89,9 @@ def test_render_helpers_emit_console_output(monkeypatch: pytest.MonkeyPatch) -> 
     cli._render_simulation_output(
         {
             "simulation_overview": "Overview",
-            "scenario_variations": [{"name": "Best", "outcome": "Success", "guidance": "Stay"}],
+            "scenario_variations": [
+                {"name": "Best", "outcome": "Success", "guidance": "Stay"}
+            ],
             "cautions": ["Time"],
             "recommended_follow_up": ["Review"],
         }
@@ -111,7 +117,9 @@ def test_render_helpers_emit_console_output(monkeypatch: pytest.MonkeyPatch) -> 
     assert printed  # ensure console output occurred
 
 
-def test_active_preference_summary_and_category(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_active_preference_summary_and_category(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     class StubPreferenceService:
         def preference_summary(self) -> str:
             return "Prefers structure"

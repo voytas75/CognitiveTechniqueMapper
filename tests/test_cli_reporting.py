@@ -39,7 +39,9 @@ def test_render_report_markdown_contains_sections() -> None:
     }
     state.last_simulation = {
         "simulation_overview": "Overview",
-        "scenario_variations": [{"name": "Best", "outcome": "Success", "guidance": "Stay"}],
+        "scenario_variations": [
+            {"name": "Best", "outcome": "Success", "guidance": "Stay"}
+        ],
         "cautions": ["Time pressure"],
         "recommended_follow_up": ["Review"],
     }
