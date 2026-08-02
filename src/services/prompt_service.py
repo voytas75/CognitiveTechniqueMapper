@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Mapping, cast
 
 import yaml
 
@@ -75,16 +75,16 @@ class PromptService:
                 f"Prompt registry must be a mapping, got {type(raw_mapping).__name__}"
             )
 
-        mapping = raw_mapping
+        mapping = cast(Mapping[object, object], raw_mapping)
         normalized: Dict[str, Path] = {}
         for name, relative in mapping.items():
             if not isinstance(name, str):
                 raise ValueError(
                     f"Prompt registry keys must be strings, got {type(name).__name__}"
                 )
-            if not isinstance(relative, (str, os.PathLike)):
+            if not isinstance(relative, str):
                 raise ValueError(
-                    "Prompt registry entries must map to string or path values, "
+                    "Prompt registry entries must map to string values, "
                     f"got {type(relative).__name__} for '{name}'"
                 )
 
