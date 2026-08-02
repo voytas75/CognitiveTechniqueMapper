@@ -10,17 +10,30 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Iterable, List
+from typing import TYPE_CHECKING, Iterable, List, Protocol, Sequence
 
 from ..db.sqlite_client import SQLiteClient
 from .embedding_gateway import EmbeddingGateway
 from .technique_utils import compose_embedding_text
 
-try:
-    from ..db.chroma_client import ChromaClient, EmbeddingRecord
-except RuntimeError:
-    ChromaClient = None  # type: ignore
-    EmbeddingRecord = None  # type: ignore
+if TYPE_CHECKING:
+    from ..db.chroma_client import EmbeddingRecord
+
+
+class _ChromaEmbeddingStore(Protocol):
+    """Operations required from the optional Chroma integration."""
+
+    def upsert_embeddings(self, embeddings: Iterable["EmbeddingRecord"]) -> None:
+        """Insert or update embedding records."""
+        ...
+
+    def list_ids(self) -> list[str]:
+        """Return stored embedding identifiers."""
+        ...
+
+    def delete(self, ids: Sequence[str]) -> None:
+        """Delete embedding records by identifier."""
+        ...
 
 
 logger = logging.getLogger(__name__)
@@ -35,7 +48,7 @@ class TechniqueDataInitializer:
         self,
         sqlite_client: SQLiteClient,
         embedder: EmbeddingGateway,
-        chroma_client: ChromaClient | None = None,
+        chroma_client: _ChromaEmbeddingStore | None = None,
         dataset_path: Path | str = DEFAULT_DATASET_PATH,
     ) -> None:
         """Initialize the initializer with its dependencies.
@@ -60,7 +73,7 @@ class TechniqueDataInitializer:
 
         seeded = self._seed_sqlite(dataset)
 
-        if seeded and self._chroma and EmbeddingRecord:
+        if seeded and self._chroma:
             records = self._build_embedding_records(dataset)
             if records:
                 self._chroma.upsert_embeddings(records)
@@ -85,7 +98,7 @@ class TechniqueDataInitializer:
         dataset = self._load_dataset()
         self._sqlite.replace_all(dataset)
 
-        if self._chroma and EmbeddingRecord and rebuild_embeddings:
+        if self._chroma and rebuild_embeddings:
             try:
                 existing_ids = self._chroma.list_ids()
             except Exception as exc:  # pragma: no cover - defensive path
@@ -126,7 +139,7 @@ class TechniqueDataInitializer:
 
     def _build_embedding_records(
         self, dataset: Iterable[dict]
-    ) -> List[EmbeddingRecord]:
+    ) -> List["EmbeddingRecord"]:
         """Build embedding records for Chroma synchronization.
 
         Args:
@@ -136,7 +149,7 @@ class TechniqueDataInitializer:
             list[EmbeddingRecord]: Embedding records ready for upsert.
         """
 
-        records: List[EmbeddingRecord] = []
+        records: List["EmbeddingRecord"] = []
         texts: List[str] = []
         metadata_list: List[dict] = []
         identifiers: List[str] = []
@@ -167,7 +180,7 @@ class TechniqueDataInitializer:
             identifiers, embeddings, metadata_list, documents
         ):
             records.append(
-                EmbeddingRecord(
+                self._create_embedding_record(
                     identifier=identifier,
                     embedding=embedding_vector,
                     metadata=metadata,
@@ -175,6 +188,25 @@ class TechniqueDataInitializer:
                 )
             )
         return records
+
+    @staticmethod
+    def _create_embedding_record(
+        *,
+        identifier: str,
+        embedding: Sequence[float],
+        metadata: dict[str, str],
+        document: str,
+    ) -> "EmbeddingRecord":
+        """Create a Chroma record only when embedding sync is requested."""
+
+        from ..db.chroma_client import EmbeddingRecord
+
+        return EmbeddingRecord(
+            identifier=identifier,
+            embedding=embedding,
+            metadata=metadata,
+            document=document,
+        )
 
     def _compose_embedding_text(self, item: dict) -> str:
         """Compose embedding text for a dataset entry.
