@@ -28,7 +28,10 @@ class FeedbackRepository:
                 """,
                 (workflow, message, rating, created_at),
             )
-            return cursor.lastrowid
+            row_id = cursor.lastrowid
+            if row_id is None:
+                raise RuntimeError("Feedback insert did not return a row ID.")
+            return row_id
 
     def fetch_recent(self, limit: int = 5) -> list[dict[str, Any]]:
         with self._sqlite.connection as conn:
