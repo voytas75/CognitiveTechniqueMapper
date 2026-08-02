@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Mapping, Optional, cast
 
 from ..core.llm_gateway import LLMGateway
 from .prompt_service import PromptService
@@ -135,7 +135,11 @@ class ComparisonService:
     @staticmethod
     def _coerce_list(value: Any) -> List[str]:
         if isinstance(value, list):
-            return [str(item).strip() for item in value if str(item).strip()]
+            return [
+                str(item).strip()
+                for item in cast(list[object], value)
+                if str(item).strip()
+            ]
         if isinstance(value, str):
             return [segment.strip() for segment in value.split("\n") if segment.strip()]
         return []
@@ -144,21 +148,24 @@ class ComparisonService:
     def _coerce_points(value: Any) -> List[Dict[str, Any]]:
         points: List[Dict[str, Any]] = []
         if isinstance(value, list):
-            for entry in value:
-                if isinstance(entry, dict):
+            for entry in cast(list[object], value):
+                if isinstance(entry, Mapping) and all(
+                    isinstance(key, str) for key in entry
+                ):
+                    point = cast(Mapping[str, object], entry)
                     points.append(
                         {
-                            "technique": entry.get("technique"),
-                            "strengths": entry.get("strengths"),
-                            "risks": entry.get("risks"),
-                            "best_for": entry.get("best_for"),
+                            "technique": point.get("technique"),
+                            "strengths": point.get("strengths"),
+                            "risks": point.get("risks"),
+                            "best_for": point.get("best_for"),
                         }
                     )
                 else:
                     points.append(
                         {
                             "technique": None,
-                            "strengths": str(entry),
+                            "strengths": str(cast(object, entry)),
                             "risks": None,
                             "best_for": None,
                         }
