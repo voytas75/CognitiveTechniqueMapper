@@ -263,6 +263,33 @@ def test_feedback_workflow_dispatches_actions() -> None:
     assert summary["summary"] == "None"
 
 
+def test_feedback_workflow_validates_record_context() -> None:
+    service = StubFeedbackService()
+    workflow = FeedbackWorkflow(feedback_service=service)
+
+    with pytest.raises(ValueError):
+        workflow.run({"action": "record", "message": 42})
+
+    workflow.run(
+        {
+            "action": "record",
+            "message": "Useful",
+            "workflow": 42,
+            "rating": "5",
+            "technique": ["Decisional Balance"],
+            "category": {"name": "Decision"},
+        }
+    )
+
+    assert service.recorded[0] == {
+        "workflow": "detect_technique",
+        "message": "Useful",
+        "rating": None,
+        "technique": None,
+        "category": None,
+    }
+
+
 def test_config_update_workflow_reads_configuration(tmp_path: Path) -> None:
     config_dir = tmp_path / "config"
     config_dir.mkdir()
