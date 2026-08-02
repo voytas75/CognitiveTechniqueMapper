@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Quality gates (Python 3.12)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install locked development environment
+        run: uv sync --all-extras --frozen
+
+      - name: Ruff lint
+        run: uv run --all-extras --frozen ruff check src tests
+
+      - name: Ruff format check
+        run: uv run --all-extras --frozen ruff format --check src tests
+
+      - name: Pyright
+        run: uv run --all-extras --frozen pyright
+
+      - name: Tests with coverage gate
+        run: >-
+          uv run --all-extras --frozen pytest -n auto --cov=src
+          --cov-fail-under=85 --disable-warnings -q
