@@ -1,5 +1,7 @@
 """Rich renderers for CLI outputs."""
 
+# TODO: Split workflow-result renderers from catalog renderers before this module grows further.
+
 from __future__ import annotations
 
 from typing import Any, Mapping, Optional, cast
@@ -276,7 +278,7 @@ def render_simulation_output(simulation: Mapping[str, object]) -> None:
     console.print(Panel("\n".join(lines), title="Simulation"))
 
 
-def render_comparison_output(comparison: dict[str, Any]) -> None:
+def render_comparison_output(comparison: Mapping[str, object]) -> None:
     """Render comparison workflow results."""
 
     if not comparison:
@@ -291,7 +293,7 @@ def render_comparison_output(comparison: dict[str, Any]) -> None:
     if alternative:
         lines.append(f"\n[bold]Top alternative:[/]\n{alternative}")
 
-    points = comparison.get("comparison_points") or []
+    points = _object_records(comparison.get("comparison_points"))
     if points:
         lines.append("\n[bold]Comparison points:[/]")
         for point in points:
@@ -307,7 +309,7 @@ def render_comparison_output(comparison: dict[str, Any]) -> None:
             if best_for:
                 lines.append(f"  Best for: {best_for}")
 
-    guidance = comparison.get("decision_guidance") or []
+    guidance = _list_items(comparison.get("decision_guidance"))
     if guidance:
         lines.append("\n[bold]Decision guidance:[/]")
         for idx, tip in enumerate(guidance, start=1):

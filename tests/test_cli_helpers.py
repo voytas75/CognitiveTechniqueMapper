@@ -171,6 +171,31 @@ def test_render_simulation_skips_malformed_entries(
     assert "Recommended follow-up" not in content
 
 
+def test_render_comparison_skips_malformed_entries(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    printed: list[Any] = []
+
+    def capture(value: Any, **_: Any) -> None:
+        printed.append(value)
+
+    monkeypatch.setattr(renderers.console, "print", capture)
+    renderers.render_comparison_output(
+        {
+            "current_recommendation": "Structured review",
+            "comparison_points": [
+                {"technique": "Valid alternative", "strengths": "Fast"},
+                "malformed point",
+            ],
+            "decision_guidance": "not a list",
+        }
+    )
+
+    content = str(printed[0].renderable)
+    assert "Valid alternative" in content
+    assert "Decision guidance" not in content
+
+
 def test_active_preference_summary_and_category(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
