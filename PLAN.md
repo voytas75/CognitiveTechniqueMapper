@@ -42,5 +42,9 @@ Cognitive Technique Mapper is a local CLI for the primary user and, indirectly, 
 - `chromadb` is available only through the optional `chroma` extra and remains enabled only through the local `PersistentClient` integration. Version `1.5.9` is subject to critical advisory `GHSA-f4j7-r4q5-qw2c`; no patched version is currently available.
 - This risk is accepted only for local use. Do not run or expose a Chroma server, and re-evaluate immediately when upstream publishes a patch or before any non-local deployment decision.
 
+## Accepted synchronization limitation
+- SQLite, `data/techniques.json`, and optional Chroma do not use a distributed transaction. A synchronization failure must abort and be reported; after resolving its cause, the operator may rerun `refresh` to converge the local stores.
+- Do not add a transaction coordinator, outbox, or background recovery mechanism without a separate explicit approval.
+
 ## Open decisions
 - No open first-release scope decisions. A future public API requires a new security and deployment decision record.
