@@ -8,6 +8,7 @@ import pytest
 import typer
 
 import src.cli as cli
+import src.cli.renderers as renderers
 
 
 def test_app_state_save_and_load(tmp_path: Path) -> None:
@@ -115,6 +116,32 @@ def test_render_helpers_emit_console_output(monkeypatch: pytest.MonkeyPatch) -> 
     )
 
     assert printed  # ensure console output occurred
+
+
+def test_render_selection_diagnostics_skips_nonobject_comparisons(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    printed: list[Any] = []
+
+    def capture(value: Any, **_: Any) -> None:
+        printed.append(value)
+
+    monkeypatch.setattr(renderers.console, "print", capture)
+
+    renderers.render_selection_diagnostics(
+        {
+            "summary": "Structured review",
+            "comparisons": [
+                {"technique": "Valid Candidate", "score_reason": "Strong fit"},
+                "malformed comparison",
+            ],
+            "follow_up": ["Clarify goals", 2],
+        }
+    )
+
+    content = str(printed[0].renderable)
+    assert "Valid Candidate" in content
+    assert "Clarify goals" in content
 
 
 def test_active_preference_summary_and_category(

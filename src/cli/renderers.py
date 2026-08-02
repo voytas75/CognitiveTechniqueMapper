@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Mapping, Optional, cast
 
 from rich.panel import Panel
 from rich.table import Table
@@ -83,12 +83,33 @@ def render_candidate_matches(matches: Any) -> None:
     console.print(Panel("\n".join(lines), title="Candidate Matches"))
 
 
-def render_selection_diagnostics(diagnostics: dict[str, Any]) -> None:
+def _object_record(value: object) -> dict[str, object] | None:
+    """Return a JSON-like object with text keys, if valid."""
+
+    if not isinstance(value, dict) or not all(isinstance(key, str) for key in value):
+        return None
+    return cast(dict[str, object], value)
+
+
+def _object_records(value: object) -> list[dict[str, object]]:
+    """Return only valid JSON-like objects from a list payload."""
+
+    if not isinstance(value, list):
+        return []
+    records: list[dict[str, object]] = []
+    for raw_entry in cast(list[object], value):
+        record = _object_record(raw_entry)
+        if record is not None:
+            records.append(record)
+    return records
+
+
+def render_selection_diagnostics(diagnostics: Mapping[str, object]) -> None:
     """Render LLM-provided diagnostics that contrast candidates."""
 
     summary = diagnostics.get("summary") or diagnostics.get("overview")
     preference_impact = diagnostics.get("preference_impact")
-    comparisons = diagnostics.get("comparisons") or []
+    comparisons = _object_records(diagnostics.get("comparisons"))
     follow_up = diagnostics.get("follow_up") or diagnostics.get("next_questions")
 
     lines: list[str] = []
@@ -116,7 +137,7 @@ def render_selection_diagnostics(diagnostics: dict[str, Any]) -> None:
     if follow_up:
         lines.append("\n[bold]Follow-up prompts:[/]")
         if isinstance(follow_up, list):
-            for idx, item in enumerate(follow_up, start=1):
+            for idx, item in enumerate(cast(list[object], follow_up), start=1):
                 lines.append(f"{idx}. {item}")
         else:
             lines.append(str(follow_up))
