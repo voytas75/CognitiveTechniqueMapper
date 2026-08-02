@@ -5,7 +5,12 @@ from __future__ import annotations
 import logging
 from typing import Any, Optional
 
-from src.cli.io import console
+from src.cli.service_factories import (
+    create_catalog_service,
+    create_initializer,
+    create_optional_chroma_client,
+    create_search_service,
+)
 from src.cli.state import PROJECT_ROOT, AppState
 from src.core.feedback_manager import FeedbackManager
 from src.core.llm_gateway import LLMGateway
@@ -26,8 +31,6 @@ from src.services.plan_generator import PlanGenerator
 from src.services.preference_service import PreferenceService
 from src.services.prompt_service import PromptService
 from src.services.simulation_service import SimulationService
-from src.services.technique_catalog import TechniqueCatalogService
-from src.services.technique_search import TechniqueSearchService
 from src.services.technique_selector import TechniqueSelector
 from src.workflows.compare_candidates import CompareCandidatesWorkflow
 from src.workflows.config_update import ConfigUpdateWorkflow
@@ -70,9 +73,6 @@ _DEFAULT_FEEDBACK_WORKFLOW = FeedbackWorkflow
 _DEFAULT_CONFIG_UPDATE_WORKFLOW = ConfigUpdateWorkflow
 _DEFAULT_SIMULATE_WORKFLOW = SimulateTechniqueWorkflow
 _DEFAULT_COMPARE_WORKFLOW = CompareCandidatesWorkflow
-_DEFAULT_TECHNIQUE_CATALOG = TechniqueCatalogService
-_DEFAULT_TECHNIQUE_SEARCH_SERVICE = TechniqueSearchService
-_UNSET_CHROMA_CLIENT = object()
 
 
 def compose_plan_summary(recommendation: dict[str, Any]) -> str:
@@ -274,162 +274,16 @@ def refresh_runtime() -> None:
     set_runtime((new_orchestrator, refreshed_state))
 
 
-# TODO: Split runtime factory construction into a dedicated module as explicit
-# dependency injection replaces legacy CLI compatibility overrides.
-def create_catalog_service(
-    *,
-    config_service_cls: Any = _DEFAULT_CONFIG_SERVICE,
-    sqlite_client_cls: Any = _DEFAULT_SQLITE_CLIENT,
-    embedding_gateway_cls: Any = _DEFAULT_EMBEDDING_GATEWAY,
-    technique_catalog_service_cls: Any = _DEFAULT_TECHNIQUE_CATALOG,
-    chroma_client_cls: Any = _DEFAULT_CHROMA_CLIENT,
-) -> tuple[TechniqueCatalogService, SQLiteClient]:
-    """Instantiate a catalog service with explicit, overrideable dependencies.
-
-    Args:
-        config_service_cls: Factory for application configuration.
-        sqlite_client_cls: Factory for the SQLite catalog client.
-        embedding_gateway_cls: Factory for the embedding gateway.
-        technique_catalog_service_cls: Factory for the catalog service.
-        chroma_client_cls: Chroma client class, or ``None`` to disable Chroma.
-
-    Returns:
-        Configured catalog service and its SQLite client.
-    """
-
-    config_service = config_service_cls()
-    db_config = config_service.database_config
-
-    sqlite_client = sqlite_client_cls(
-        db_config.get("sqlite_path", "./data/techniques.db")
-    )
-    sqlite_client.initialize_schema()
-
-    chroma_client = _initialize_chroma_client(
-        db_config.get("chromadb_path", "./embeddings"),
-        db_config.get("chromadb_collection", "techniques"),
-        client_cls=chroma_client_cls,
-    )
-
-    embedder = embedding_gateway_cls(config_service=config_service)
-    dataset_path = PROJECT_ROOT / "data" / "techniques.json"
-    catalog = technique_catalog_service_cls(
-        sqlite_client=sqlite_client,
-        embedder=embedder,
-        dataset_path=dataset_path,
-        chroma_client=chroma_client,
-    )
-    return catalog, sqlite_client
-
-
-def create_initializer(
-    *,
-    config_service_cls: Any = _DEFAULT_CONFIG_SERVICE,
-    sqlite_client_cls: Any = _DEFAULT_SQLITE_CLIENT,
-    embedding_gateway_cls: Any = _DEFAULT_EMBEDDING_GATEWAY,
-    initializer_cls: Any = _DEFAULT_INITIALIZER,
-    chroma_client_cls: Any = _DEFAULT_CHROMA_CLIENT,
-) -> tuple[TechniqueDataInitializer, SQLiteClient]:
-    """Create a dataset initializer with explicit, overrideable dependencies.
-
-    Args:
-        config_service_cls: Factory for application configuration.
-        sqlite_client_cls: Factory for the SQLite catalog client.
-        embedding_gateway_cls: Factory for the embedding gateway.
-        initializer_cls: Factory for the dataset initializer.
-        chroma_client_cls: Chroma client class, or ``None`` to disable Chroma.
-
-    Returns:
-        Configured dataset initializer and its SQLite client.
-    """
-
-    config_service = config_service_cls()
-    db_config = config_service.database_config
-
-    sqlite_client = sqlite_client_cls(
-        db_config.get("sqlite_path", "./data/techniques.db")
-    )
-    sqlite_client.initialize_schema()
-
-    chroma_client = _initialize_chroma_client(
-        db_config.get("chromadb_path", "./embeddings"),
-        db_config.get("chromadb_collection", "techniques"),
-        client_cls=chroma_client_cls,
-    )
-
-    embedder = embedding_gateway_cls(config_service=config_service)
-    dataset_path = PROJECT_ROOT / "data" / "techniques.json"
-    initializer = initializer_cls(
-        sqlite_client=sqlite_client,
-        embedder=embedder,
-        chroma_client=chroma_client,
-        dataset_path=dataset_path,
-    )
-    return initializer, sqlite_client
-
-
-def create_search_service(
-    *,
-    config_service_cls: Any = _DEFAULT_CONFIG_SERVICE,
-    sqlite_client_cls: Any = _DEFAULT_SQLITE_CLIENT,
-    embedding_gateway_cls: Any = _DEFAULT_EMBEDDING_GATEWAY,
-    technique_search_service_cls: Any = _DEFAULT_TECHNIQUE_SEARCH_SERVICE,
-    chroma_client_cls: Any = _DEFAULT_CHROMA_CLIENT,
-) -> tuple[TechniqueSearchService, SQLiteClient]:
-    """Instantiate a search service with explicit, overrideable dependencies.
-
-    Args:
-        config_service_cls: Factory for application configuration.
-        sqlite_client_cls: Factory for the SQLite catalog client.
-        embedding_gateway_cls: Factory for the embedding gateway.
-        technique_search_service_cls: Factory for the search service.
-        chroma_client_cls: Chroma client class, or ``None`` to disable Chroma.
-
-    Returns:
-        Configured search service and its SQLite client.
-    """
-
-    config_service = config_service_cls()
-    db_config = config_service.database_config
-
-    sqlite_client = sqlite_client_cls(
-        db_config.get("sqlite_path", "./data/techniques.db")
-    )
-    sqlite_client.initialize_schema()
-
-    chroma_client = _initialize_chroma_client(
-        db_config.get("chromadb_path", "./embeddings"),
-        db_config.get("chromadb_collection", "techniques"),
-        client_cls=chroma_client_cls,
-    )
-
-    embedder = embedding_gateway_cls(config_service=config_service)
-    service = technique_search_service_cls(
-        sqlite_client=sqlite_client,
-        embedder=embedder,
-        chroma_client=chroma_client,
-    )
-    return service, sqlite_client
-
-
 def _initialize_chroma_client(
-    persist_directory: str,
-    collection_name: str,
-    *,
-    client_cls: Any = _UNSET_CHROMA_CLIENT,
+    persist_directory: str, collection_name: str
 ) -> Optional[Any]:
-    if client_cls is _UNSET_CHROMA_CLIENT:
-        client_cls = _resolve_chroma_client()
-    if client_cls is None:
-        return None
-    try:
-        return client_cls(
-            persist_directory=persist_directory,
-            collection_name=collection_name,
-        )
-    except Exception as exc:  # pragma: no cover - optional dependency path
-        console.print(f"[yellow]ChromaDB disabled: {exc}[/]")
-        return None
+    """Create a compatibility Chroma client honoring CLI monkeypatches."""
+
+    return create_optional_chroma_client(
+        persist_directory,
+        collection_name,
+        client_cls=_resolve_chroma_client(),
+    )
 
 
 def _resolve_chroma_client() -> Optional[Any]:
@@ -460,6 +314,7 @@ __all__ = [
     "compose_plan_summary",
     "create_catalog_service",
     "create_initializer",
+    "create_search_service",
     "get_orchestrator",
     "get_runtime",
     "get_state",

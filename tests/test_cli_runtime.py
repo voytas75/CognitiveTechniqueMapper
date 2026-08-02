@@ -302,3 +302,15 @@ def test_create_initializer_uses_explicit_dependencies(
         "chroma_client": None,
         "dataset_path": cli_runtime.PROJECT_ROOT / "data" / "techniques.json",
     }
+
+
+def test_runtime_reexports_extracted_service_factories() -> None:
+    """Runtime preserves its public factory contract after module extraction."""
+
+    from src.cli import service_factories
+
+    assert (
+        cli_runtime.create_catalog_service is service_factories.create_catalog_service
+    )
+    assert cli_runtime.create_initializer is service_factories.create_initializer
+    assert cli_runtime.create_search_service is service_factories.create_search_service
