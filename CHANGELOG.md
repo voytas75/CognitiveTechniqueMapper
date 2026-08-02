@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Replaced the stale locked dependency set with a tracked `uv.lock` and updated all currently fixable `pip-audit` findings. `chromadb` remains at `1.5.9` with CVE-2026-45829 / GHSA-f4j7-r4q5-qw2c pending an upstream fixed release; CTM uses only its local `PersistentClient` path.
 
 ### Fixed
+- Made analysis and preference-impact rendering ignore malformed list payloads and invalid preference values.
 - Made candidate-match rendering skip malformed matches or metadata while retaining valid identifier fallbacks.
 - Made comparison rendering skip malformed comparison points and ignore non-list decision guidance.
 - Made simulation rendering skip malformed scenario variations and ignore non-list cautions or follow-up payloads.

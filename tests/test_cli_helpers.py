@@ -225,6 +225,52 @@ def test_render_candidate_matches_skips_malformed_entries(
     assert "Fallback candidate" in content
 
 
+def test_render_analysis_ignores_nonlist_steps(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    printed: list[Any] = []
+
+    def capture(value: Any, **_: Any) -> None:
+        printed.append(value)
+
+    monkeypatch.setattr(renderers.console, "print", capture)
+    renderers.render_analysis_output(
+        recommendation={
+            "suggested_technique": "Review",
+            "why_it_fits": "Structured",
+            "steps": "not a list",
+        },
+        plan=None,
+    )
+
+    content = str(printed[0].renderable)
+    assert "How to apply" not in content
+
+
+def test_render_preference_impacts_skips_malformed_entries(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    printed: list[Any] = []
+
+    def capture(value: Any, **_: Any) -> None:
+        printed.append(value)
+
+    monkeypatch.setattr(renderers.console, "print", capture)
+    renderers.render_preference_impacts(
+        {
+            "categories": [
+                {"name": "Decision", "adjustment": 0.2, "count": 2},
+                "malformed entry",
+            ],
+            "techniques": "not a list",
+        }
+    )
+
+    content = str(printed[0].renderable)
+    assert "Decision" in content
+    assert "Techniques" not in content
+
+
 def test_active_preference_summary_and_category(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

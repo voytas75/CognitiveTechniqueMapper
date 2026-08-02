@@ -15,12 +15,12 @@ from src.services.technique_search import TechniqueSearchResult
 
 
 def render_analysis_output(
-    recommendation: dict[str, Any],
-    plan: Any,
+    recommendation: Mapping[str, object],
+    plan: object,
     *,
     preference_summary: str | None = None,
-    matches: Any = None,
-    diagnostics: Optional[dict[str, Any]] = None,
+    matches: object = None,
+    diagnostics: Mapping[str, object] | None = None,
 ) -> None:
     """Display structured recommendation and optional plan to the console."""
 
@@ -30,7 +30,7 @@ def render_analysis_output(
 
     technique = recommendation.get("suggested_technique") or "No recommendation"
     why_it_fits = recommendation.get("why_it_fits") or "No justification provided."
-    steps = recommendation.get("steps") or []
+    steps = _list_items(recommendation.get("steps"))
 
     lines = [
         f"[bold]Suggested:[/]\n{technique}",
@@ -180,25 +180,35 @@ def render_prompt_sample(
         console.print(Panel(body, title=title))
 
 
-def render_preference_impacts(impacts: dict[str, Any]) -> None:
+def render_preference_impacts(impacts: Mapping[str, object]) -> None:
     """Display preference-derived score adjustments."""
 
-    techniques = impacts.get("techniques") or []
-    categories = impacts.get("categories") or []
+    techniques = _object_records(impacts.get("techniques"))
+    categories = _object_records(impacts.get("categories"))
     if not techniques and not categories:
         console.print(
             Panel("No preference signals recorded yet.", title="Preference Impacts")
         )
         return
 
-    def _format_entry(entry: dict[str, Any]) -> str:
+    def _numeric_value(value: object) -> float | None:
+        if isinstance(value, bool):
+            return None
+        if isinstance(value, (int, float)):
+            return float(value)
+        if isinstance(value, str):
+            try:
+                return float(value)
+            except ValueError:
+                return None
+        return None
+
+    def _format_entry(entry: Mapping[str, object]) -> str:
         name = entry.get("name") or "Unknown"
-        adjustment = float(entry.get("adjustment") or 0.0)
-        count = int(entry.get("count") or 0)
-        average = entry.get("average_rating")
-        avg_display = (
-            f"{float(average):.2f}" if isinstance(average, (int, float)) else "n/a"
-        )
+        adjustment = _numeric_value(entry.get("adjustment")) or 0.0
+        count = int(_numeric_value(entry.get("count")) or 0)
+        average = _numeric_value(entry.get("average_rating"))
+        avg_display = f"{average:.2f}" if average is not None else "n/a"
         return f"- {name}: {adjustment:+0.3f} (signals: {count}, avg rating: {avg_display})"
 
     lines: list[str] = []
