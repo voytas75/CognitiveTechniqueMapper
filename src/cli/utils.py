@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import sys
-from typing import Any, Optional
+from typing import Any, Mapping, Optional, cast
 
 import typer
 
@@ -18,7 +18,7 @@ def _cli():
 def apply_log_override(log_level: Optional[str]) -> None:
     """Override logging level for the current invocation."""
 
-    if not log_level or not isinstance(log_level, str):
+    if not log_level:
         return
     try:
         _cli().set_runtime_level(log_level)
@@ -45,10 +45,19 @@ def infer_category_from_matches(
     if not technique or not isinstance(matches, list):
         return None
     target = technique.lower()
-    for match in matches:
-        if not isinstance(match, dict):
+    for raw_match in cast(list[object], matches):
+        if not isinstance(raw_match, Mapping) or not all(
+            isinstance(key, str) for key in raw_match
+        ):
             continue
-        metadata = match.get("metadata") or {}
+        match = cast(Mapping[str, object], raw_match)
+        raw_metadata = match.get("metadata")
+        metadata: Mapping[str, object] = (
+            cast(Mapping[str, object], raw_metadata)
+            if isinstance(raw_metadata, Mapping)
+            and all(isinstance(key, str) for key in raw_metadata)
+            else {}
+        )
         name = metadata.get("name") or match.get("id")
         if isinstance(name, str) and name.lower() == target:
             category = metadata.get("category") or match.get("category")

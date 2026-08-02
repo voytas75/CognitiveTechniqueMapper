@@ -9,6 +9,7 @@ import typer
 
 import src.cli as cli
 import src.cli.renderers as renderers
+from src.cli.utils import infer_category_from_matches
 
 
 def test_app_state_save_and_load(tmp_path: Path) -> None:
@@ -39,6 +40,14 @@ def test_apply_log_override_handles_invalid_level(
     )
     with pytest.raises(typer.BadParameter):
         cli._apply_log_override("trace")
+
+
+def test_infer_category_uses_match_id_when_metadata_is_malformed() -> None:
+    matches = [
+        {"id": "Decisional Balance", "metadata": "invalid", "category": "Decision"}
+    ]
+
+    assert infer_category_from_matches(matches, "decisional balance") == "Decision"
 
 
 def test_compose_plan_summary_formats_sections() -> None:
