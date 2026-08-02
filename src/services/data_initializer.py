@@ -10,9 +10,9 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, List, Protocol, Sequence
+from typing import TYPE_CHECKING, Iterable, List, Protocol, Sequence, cast
 
-from ..db.sqlite_client import SQLiteClient
+from ..db.sqlite_client import SQLiteClient, TechniqueRecord
 from .embedding_gateway import EmbeddingGateway
 from .technique_utils import compose_embedding_text
 
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 class _ChromaEmbeddingStore(Protocol):
     """Operations required from the optional Chroma integration."""
 
-    def upsert_embeddings(self, embeddings: Iterable["EmbeddingRecord"]) -> None:
+    def upsert_embeddings(self, records: Iterable["EmbeddingRecord"], /) -> None:
         """Insert or update embedding records."""
         ...
 
@@ -78,7 +78,7 @@ class TechniqueDataInitializer:
             if records:
                 self._chroma.upsert_embeddings(records)
 
-    def _seed_sqlite(self, dataset: List[dict]) -> bool:
+    def _seed_sqlite(self, dataset: List[TechniqueRecord]) -> bool:
         """Seed SQLite with the dataset if the techniques table is empty."""
 
         with self._sqlite.connection as conn:
@@ -119,7 +119,7 @@ class TechniqueDataInitializer:
             except Exception as exc:  # pragma: no cover - Chroma optional
                 logger.warning("Failed to upsert embeddings: %s", exc)
 
-    def _load_dataset(self) -> List[dict]:
+    def _load_dataset(self) -> List[TechniqueRecord]:
         """Load the technique dataset from disk.
 
         Returns:
@@ -132,13 +132,58 @@ class TechniqueDataInitializer:
         if not self._dataset_path.exists():
             return []
         with self._dataset_path.open("r", encoding="utf-8") as handle:
-            data = json.load(handle)
-            if not isinstance(data, list):
-                raise ValueError("Technique dataset is not a list of objects")
-            return data
+            raw_data: object = json.load(handle)
+        if not isinstance(raw_data, list):
+            raise ValueError("Technique dataset is not a list of objects")
+
+        dataset: list[TechniqueRecord] = []
+        for raw_entry in cast(list[object], raw_data):
+            record = self._parse_technique_record(raw_entry)
+            if record is None:
+                raise ValueError(
+                    "Technique dataset must contain valid technique objects"
+                )
+            dataset.append(record)
+        return dataset
+
+    @staticmethod
+    def _parse_technique_record(value: object) -> TechniqueRecord | None:
+        """Validate one JSON dataset entry against the persisted technique schema."""
+
+        if not isinstance(value, dict) or not all(
+            isinstance(key, str) for key in value
+        ):
+            return None
+        raw = cast(dict[str, object], value)
+        name = raw.get("name")
+        description = raw.get("description")
+        origin_year = raw.get("origin_year")
+        creator = raw.get("creator")
+        category = raw.get("category")
+        core_principles = raw.get("core_principles")
+        if (
+            not isinstance(name, str)
+            or not isinstance(description, str)
+            or (
+                origin_year is not None
+                and (not isinstance(origin_year, int) or isinstance(origin_year, bool))
+            )
+            or (creator is not None and not isinstance(creator, str))
+            or (category is not None and not isinstance(category, str))
+            or (core_principles is not None and not isinstance(core_principles, str))
+        ):
+            return None
+        return {
+            "name": name,
+            "description": description,
+            "origin_year": origin_year,
+            "creator": creator,
+            "category": category,
+            "core_principles": core_principles,
+        }
 
     def _build_embedding_records(
-        self, dataset: Iterable[dict]
+        self, dataset: Iterable[TechniqueRecord]
     ) -> List["EmbeddingRecord"]:
         """Build embedding records for Chroma synchronization.
 
@@ -151,12 +196,12 @@ class TechniqueDataInitializer:
 
         records: List["EmbeddingRecord"] = []
         texts: List[str] = []
-        metadata_list: List[dict] = []
+        metadata_list: List[dict[str, str]] = []
         identifiers: List[str] = []
         documents: List[str] = []
 
         for item in dataset:
-            identifier = item.get("name")
+            identifier = item["name"]
             if not identifier:
                 continue
             text = self._compose_embedding_text(item)
@@ -164,13 +209,17 @@ class TechniqueDataInitializer:
             identifiers.append(identifier)
             metadata_list.append(
                 {
-                    "name": item.get("name", ""),
-                    "category": item.get("category", ""),
-                    "creator": item.get("creator", ""),
-                    "origin_year": str(item.get("origin_year", "")),
+                    "name": item["name"],
+                    "category": item["category"] or "",
+                    "creator": item["creator"] or "",
+                    "origin_year": (
+                        str(item["origin_year"])
+                        if item["origin_year"] is not None
+                        else ""
+                    ),
                 }
             )
-            documents.append(item.get("description", ""))
+            documents.append(item["description"])
 
         if not texts:
             return []
@@ -208,14 +257,20 @@ class TechniqueDataInitializer:
             document=document,
         )
 
-    def _compose_embedding_text(self, item: dict) -> str:
-        """Compose embedding text for a dataset entry.
+    def _compose_embedding_text(self, item: TechniqueRecord) -> str:
+        """Compose embedding text for a validated dataset entry.
 
         Args:
-            item (dict): Technique metadata.
+            item (TechniqueRecord): Technique metadata.
 
         Returns:
             str: Structured text used for embedding generation.
         """
 
-        return compose_embedding_text(item)
+        return compose_embedding_text(
+            {
+                "description": item["description"],
+                "core_principles": item["core_principles"] or "",
+                "category": item["category"] or "",
+            }
+        )

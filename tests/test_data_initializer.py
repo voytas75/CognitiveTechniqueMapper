@@ -333,3 +333,18 @@ def test_load_dataset_validates_structure(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError):
         initializer._load_dataset()
+
+
+def test_load_dataset_rejects_incomplete_technique_entry(tmp_path: Path) -> None:
+    dataset_path = tmp_path / "incomplete.json"
+    dataset_path.write_text(json.dumps([{"name": "Incomplete"}]), encoding="utf-8")
+
+    initializer = TechniqueDataInitializer(
+        sqlite_client=SQLiteClient(tmp_path / "test.db"),
+        embedder=None,  # type: ignore[arg-type]
+        chroma_client=None,
+        dataset_path=dataset_path,
+    )
+
+    with pytest.raises(ValueError, match="valid technique objects"):
+        initializer.initialize()

@@ -10,7 +10,19 @@ from __future__ import annotations
 
 import sqlite3
 from pathlib import Path
-from typing import Any, Iterable, Optional
+from typing import Any, Iterable, Optional, TypedDict
+
+
+class TechniqueRecord(TypedDict):
+    """Canonical persisted representation of a cognitive technique."""
+
+    name: str
+    description: str
+    origin_year: int | None
+    creator: str | None
+    category: str | None
+    core_principles: str | None
+
 
 TECHNIQUES_TABLE_SCHEMA = """
 CREATE TABLE IF NOT EXISTS techniques (
@@ -108,23 +120,28 @@ class SQLiteClient:
                 query,
                 (name, description, origin_year, creator, category, core_principles),
             )
-            return cursor.lastrowid
+            row_id = cursor.lastrowid
+            if row_id is None:
+                raise RuntimeError(
+                    "SQLite did not return an identifier for the inserted technique"
+                )
+            return row_id
 
-    def bulk_insert(self, techniques: Iterable[dict]) -> None:
+    def bulk_insert(self, techniques: Iterable[TechniqueRecord]) -> None:
         """Insert multiple techniques in a single transaction.
 
         Args:
-            techniques (Iterable[dict]): Iterable of technique dictionaries.
+            techniques (Iterable[TechniqueRecord]): Iterable of validated technique records.
         """
 
-        rows = [
+        rows: list[tuple[str, str, int | None, str | None, str | None, str | None]] = [
             (
-                item.get("name"),
-                item.get("description"),
-                item.get("origin_year"),
-                item.get("creator"),
-                item.get("category"),
-                item.get("core_principles"),
+                item["name"],
+                item["description"],
+                item["origin_year"],
+                item["creator"],
+                item["category"],
+                item["core_principles"],
             )
             for item in techniques
         ]
@@ -137,17 +154,17 @@ class SQLiteClient:
                 rows,
             )
 
-    def replace_all(self, techniques: Iterable[dict]) -> None:
-        """Replace all technique rows with the supplied collection."""
+    def replace_all(self, techniques: Iterable[TechniqueRecord]) -> None:
+        """Replace all technique rows with validated technique records."""
 
-        rows = [
+        rows: list[tuple[str, str, int | None, str | None, str | None, str | None]] = [
             (
-                item.get("name"),
-                item.get("description"),
-                item.get("origin_year"),
-                item.get("creator"),
-                item.get("category"),
-                item.get("core_principles"),
+                item["name"],
+                item["description"],
+                item["origin_year"],
+                item["creator"],
+                item["category"],
+                item["core_principles"],
             )
             for item in techniques
         ]
