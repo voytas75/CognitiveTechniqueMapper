@@ -18,6 +18,7 @@ def render_analysis_output(
     recommendation: Mapping[str, object],
     plan: object,
     *,
+    problem_description: str,
     preference_summary: str | None = None,
     matches: object = None,
     diagnostics: Mapping[str, object] | None = None,
@@ -33,6 +34,7 @@ def render_analysis_output(
     steps = _list_items(recommendation.get("steps"))
 
     lines = [
+        f"[bold]Analyzing problem:[/]\n{problem_description}",
         f"[bold]Suggested:[/]\n{technique}",
         f"[bold]Why it fits:[/]\n{why_it_fits}",
     ]
@@ -49,7 +51,7 @@ def render_analysis_output(
         lines.append("\n[bold]Implementation plan:[/]")
         lines.append(str(plan))
 
-    console.print(Panel("\n".join(lines), title="Suggested Technique"))
+    console.print(Panel("\n".join(lines), title="Analysis"))
 
     if matches is not None:
         render_candidate_matches(matches)

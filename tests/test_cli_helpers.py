@@ -283,6 +283,7 @@ def test_render_analysis_ignores_nonlist_steps(
             "steps": "not a list",
         },
         plan=None,
+        problem_description="Example problem",
     )
 
     content = str(printed[0].renderable)

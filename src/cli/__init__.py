@@ -123,12 +123,14 @@ def _render_analysis_output(
     recommendation: dict[str, Any],
     plan: Any,
     *,
+    problem_description: str = "(not available)",
     preference_summary: str | None = None,
     matches: Any = None,
 ) -> None:
     render_analysis_output(
         recommendation,
         plan,
+        problem_description=problem_description,
         preference_summary=preference_summary,
         matches=matches,
     )

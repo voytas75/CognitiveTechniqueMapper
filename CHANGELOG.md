@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Moved the explicit `create_search_service`, `create_catalog_service`, and `create_initializer` factories into `src.cli.service_factories`; `src.cli.runtime` keeps compatibility re-exports while retaining only runtime orchestration.
 
 ### Changed
+- Bound every current analysis to its input problem description, show that full description first in `analyze`, and invalidate derived artifacts when `describe` captures a new problem.
 - Replaced tracked active YAML configuration with tracked credential-free `config.example/` templates; CTM now initializes a wholly absent default local `config/` once and never overwrites existing or custom configurations.
 - Deferred Chroma embedding-record imports until embedding synchronization is actually requested, keeping SQLite-only initialization independent of the optional Chroma integration.
 - Formally limited the FastAPI and optional GraphQL surfaces to loopback-only development use; REST exposes registered orchestrator workflows only and does not return raw workflow exceptions.

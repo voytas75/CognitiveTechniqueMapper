@@ -121,13 +121,13 @@ __all__ = ["history_clear", "history_show"]
 def _summarize_history_entry(entry: dict[str, Any]) -> tuple[str, str]:
     """Return a label and human-readable summary for a history entry."""
 
-    if "problem_description" in entry:
-        description = _coerce_string(entry.get("problem_description")) or "(empty)"
-        return "Describe", f"[bold]Problem:[/] {description}"
-
     recommendation = entry.get("recommendation")
     if isinstance(recommendation, dict) and recommendation:
         return _summarize_analysis_entry(entry, cast(dict[str, Any], recommendation))
+
+    if "problem_description" in entry:
+        description = _coerce_string(entry.get("problem_description")) or "(empty)"
+        return "Describe", f"[bold]Problem:[/] {description}"
 
     explanation = entry.get("explanation")
     if isinstance(explanation, dict) and explanation:
@@ -160,8 +160,13 @@ def _summarize_analysis_entry(
     raw_matches = entry.get("matches")
     matches = cast(list[object], raw_matches) if isinstance(raw_matches, list) else []
     preference_summary = _shorten_text(_coerce_string(entry.get("preference_summary")))
+    problem_description = _shorten_text(
+        _coerce_string(entry.get("problem_description"))
+    )
 
     lines: list[str] = []
+    if problem_description:
+        lines.append(f"[bold]Problem:[/] {problem_description}")
     if technique:
         lines.append(f"[bold]Technique:[/] {technique}")
     if reason:

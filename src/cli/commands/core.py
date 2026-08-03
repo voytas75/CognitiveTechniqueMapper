@@ -39,6 +39,20 @@ def _object(value: object) -> dict[str, Any]:
     return {}
 
 
+def _bound_problem_description(state: object) -> str:
+    """Return the problem description captured with the latest analysis."""
+
+    recommendation = _object(getattr(state, "last_recommendation", None))
+    if not recommendation:
+        raise typer.BadParameter("No recommendation available. Run `analyze` first.")
+    problem_description = recommendation.get("problem_description")
+    if not isinstance(problem_description, str) or not problem_description.strip():
+        raise typer.BadParameter(
+            "Latest recommendation has no bound problem description. Run `analyze` again."
+        )
+    return problem_description
+
+
 def describe(
     problem: str = typer.Argument(..., help="Describe your problem or challenge."),
     log_level: str | None = typer.Option(
@@ -54,6 +68,10 @@ def describe(
 
     state = _cli().get_state()
     state.problem_description = problem
+    state.last_recommendation = None
+    state.last_explanation = None
+    state.last_simulation = None
+    state.last_comparison = None
     state.context_history.append({"problem_description": problem})
     state.save()
     logger.info("Problem description captured (length=%s)", len(problem))
@@ -98,6 +116,7 @@ def analyze(
         console.print(f"[red]Analyze failed: {exc}[/]")
         raise typer.Exit(code=1) from exc
 
+    result["problem_description"] = state.problem_description
     recommendation = _object(result.get("recommendation"))
     plan_output: dict[str, Any] | None = result.get("plan")
 
@@ -121,6 +140,7 @@ def analyze(
     render_analysis_output(
         recommendation,
         result.get("plan"),
+        problem_description=_bound_problem_description(state),
         preference_summary=result.get("preference_summary"),
         matches=result.get("matches") if show_candidates else None,
         diagnostics=result.get("diagnostics") if show_diagnostics else None,
@@ -140,6 +160,7 @@ def explain(
     state = _cli().get_state()
     if not state.last_recommendation:
         raise typer.BadParameter("No recommendation available. Run `analyze` first.")
+    analysis_problem_description = _bound_problem_description(state)
 
     apply_log_override(log_level)
 
@@ -149,7 +170,7 @@ def explain(
     try:
         explanation = state.explanation_service.explain(
             state.last_recommendation or {},
-            problem_description=state.problem_description,
+            problem_description=analysis_problem_description,
         )
     except RuntimeError as exc:
         console.print(f"[red]Explain failed: {exc}[/]")
@@ -182,6 +203,7 @@ def simulate(
     state = cli_module.get_state()
     if not state.last_recommendation:
         raise typer.BadParameter("No recommendation available. Run `analyze` first.")
+    analysis_problem_description = _bound_problem_description(state)
 
     recommendation = _object(state.last_recommendation.get("recommendation"))
     if not recommendation:
@@ -191,8 +213,8 @@ def simulate(
     preference_summary = active_preference_summary()
     context = {
         "recommendation": recommendation,
-        "problem_description": state.problem_description,
-        "scenario": scenario or state.problem_description,
+        "problem_description": analysis_problem_description,
+        "scenario": scenario or analysis_problem_description,
         "preference_summary": preference_summary,
     }
     orchestrator = cli_module.get_orchestrator()
@@ -236,6 +258,7 @@ def compare(
     state = cli_module.get_state()
     if not state.last_recommendation:
         raise typer.BadParameter("No recommendation available. Run `analyze` first.")
+    _bound_problem_description(state)
 
     recommendation = _object(state.last_recommendation.get("recommendation"))
     matches = state.last_recommendation.get("matches") or []
@@ -391,6 +414,7 @@ def report(
     state = _cli().get_state()
     if not state.last_recommendation:
         raise typer.BadParameter("No recommendation available. Run `analyze` first.")
+    _bound_problem_description(state)
 
     payload = build_report_payload(state)
     markdown = render_report_markdown(payload)

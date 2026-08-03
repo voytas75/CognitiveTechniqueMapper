@@ -6,8 +6,9 @@ from tests.helpers.cli import make_cli_runtime
 
 def test_build_report_payload_includes_state() -> None:
     _orchestrator, state = make_cli_runtime()
-    state.problem_description = "Need a decision framework"
+    state.problem_description = "Newer unsolved problem"
     state.last_recommendation = {
+        "problem_description": "Problem used for analysis",
         "recommendation": {"suggested_technique": "Decisional Balance"},
         "plan": {"milestones": ["Step1"]},
     }
@@ -17,7 +18,7 @@ def test_build_report_payload_includes_state() -> None:
 
     payload = build_report_payload(state)
 
-    assert payload["problem_description"] == "Need a decision framework"
+    assert payload["problem_description"] == "Problem used for analysis"
     assert payload["recommendation"]["suggested_technique"] == "Decisional Balance"
     assert payload["recommendation"]["plan"] == {"milestones": ["Step1"]}
 
