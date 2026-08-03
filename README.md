@@ -37,6 +37,31 @@ uv run --frozen python -m src.cli explain
 uv run --frozen uvicorn src.api:app --reload --host 127.0.0.1
 ```
 
+## Agent CLI
+
+The primary sequential workflow has a non-interactive JSON mode. Successful
+commands write one JSON object to stdout; structured failures write one JSON
+object to stderr and return a non-zero exit code.
+
+```bash
+# Give each concurrent agent its own session state file.
+export CTM_STATE_PATH=/tmp/ctm-agent-a.json
+
+# Preferred input path for a problem description.
+printf '%s' '{"action":"describe","problem_description":"Prioritize two projects."}' \
+  | uv run --frozen python -m src.cli describe --stdin-json
+
+uv run --frozen python -m src.cli analyze --json
+uv run --frozen python -m src.cli explain --json
+uv run --frozen python -m src.cli simulate --json
+uv run --frozen python -m src.cli compare --json
+uv run --frozen python -m src.cli report --json
+```
+
+`describe --stdin-json` accepts only an object whose `action` is `"describe"`.
+The `--json` mode is also available for `feedback`; human-oriented views and
+the explicit `interactive-flow` command remain separate operator surfaces.
+
 ## Features
 
 - Configurable workflows (`describe`, `analyze`, `explain`, `simulate`, `compare`, `feedback`, `interactive-flow`) that blend SQLite data, vector search, and LLM reasoning through `litellm`.

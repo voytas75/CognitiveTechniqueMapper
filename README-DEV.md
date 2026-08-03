@@ -43,6 +43,27 @@ uv run --frozen python -m src.cli explain
 uv run --frozen uvicorn src.api:app --reload --host 127.0.0.1
 ```
 
+## Agent CLI Contract
+
+The CLI is the supported local automation surface. For an isolated agent run,
+set `CTM_STATE_PATH` before starting the process; the default `data/state.json`
+is shared state and is not suitable for concurrent agents.
+
+- `describe --stdin-json` reads one JSON object from stdin with exactly the
+  `action: "describe"` discriminator and a non-empty `problem_description`.
+- `describe`, `analyze`, `explain`, `simulate`, `compare`, `feedback`, and
+  `report` accept `--json` and emit one JSON object on stdout on success.
+- Machine-mode validation or workflow failures emit one JSON object on stderr
+  and return a non-zero exit code. Provider exception details remain in server
+  logs rather than the machine response.
+- `doctor`, `techniques status`, `settings show`, `history show --raw`, and
+  `preferences export` are existing read-oriented JSON commands.
+- `interactive-flow` is intentionally interactive. Destructive history or
+  preference reset commands require explicit `--force` for automation.
+
+The process-level tests in `tests/test_cli_agent_process.py` verify stdin JSON,
+stdout/stderr separation, and isolation between two `CTM_STATE_PATH` files.
+
 ## Local API Contract
 - The FastAPI and optional GraphQL surfaces are loopback-only development tools; do not expose them beyond `127.0.0.1` without a separate authentication, authorization, CORS, deployment, and threat-model slice.
 - `/workflows` lists the authoritative HTTP contract. Only registered orchestrator workflows may be executed through `POST /workflow/{name}`.

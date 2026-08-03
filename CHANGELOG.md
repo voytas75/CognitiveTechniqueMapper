@@ -6,10 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- Added the read-only `doctor` command, including safe `--fix` bootstrapping of
+  a wholly missing default configuration directory without rebuilding embeddings.
+- Added non-interactive JSON output for the primary CLI workflow:
+  `describe`, `analyze`, `explain`, `simulate`, `compare`, `feedback`, and
+  `report`.
+- Added `describe --stdin-json` with an explicit `describe` action discriminator
+  and process-level regression tests for isolated `CTM_STATE_PATH` sessions.
+
 ### Security
 - Replaced the stale locked dependency set with a tracked `uv.lock` and updated all currently fixable `pip-audit` findings. `chromadb` remains at `1.5.9` with CVE-2026-45829 / GHSA-f4j7-r4q5-qw2c pending an upstream fixed release; CTM uses only its local `PersistentClient` path.
 
 ### Fixed
+- Made GraphQL workflow failures return generic client errors instead of raw
+  internal exception messages.
 - Made Markdown report rendering skip malformed structured entries and ignore non-list report collections.
 - Made analysis and preference-impact rendering ignore malformed list payloads and invalid preference values.
 - Made candidate-match rendering skip malformed matches or metadata while retaining valid identifier fallbacks.
