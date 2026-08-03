@@ -56,11 +56,13 @@ uv run --frozen python -m src.cli explain --json
 uv run --frozen python -m src.cli simulate --json
 uv run --frozen python -m src.cli compare --json
 uv run --frozen python -m src.cli report --json
+uv run --frozen python -m src.cli techniques list --json
+uv run --frozen python -m src.cli techniques search "decision support" --json
 ```
 
 `describe --stdin-json` accepts only an object whose `action` is `"describe"`.
-The `--json` mode is also available for `feedback`; human-oriented views and
-the explicit `interactive-flow` command remain separate operator surfaces.
+The `--json` mode is also available for `feedback`; the explicit
+`interactive-flow` command remains a separate human-oriented surface.
 
 ## Features
 

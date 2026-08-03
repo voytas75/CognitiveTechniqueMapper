@@ -56,8 +56,9 @@ is shared state and is not suitable for concurrent agents.
 - Machine-mode validation or workflow failures emit one JSON object on stderr
   and return a non-zero exit code. Provider exception details remain in server
   logs rather than the machine response.
-- `doctor`, `techniques status`, `settings show`, `history show --raw`, and
-  `preferences export` are existing read-oriented JSON commands.
+- `doctor`, `techniques status`, `techniques list --json`, `techniques search
+  --json`, `settings show`, `history show --raw`, and `preferences export` are
+  read-oriented JSON commands.
 - `interactive-flow` is intentionally interactive. Destructive history or
   preference reset commands require explicit `--force` for automation.
 

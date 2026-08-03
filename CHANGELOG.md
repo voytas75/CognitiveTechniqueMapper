@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Added non-interactive JSON output for the primary CLI workflow:
   `describe`, `analyze`, `explain`, `simulate`, `compare`, `feedback`, and
   `report`.
+- Added JSON views for `techniques list` and `techniques search`.
 - Added `describe --stdin-json` with an explicit `describe` action discriminator
   and process-level regression tests for isolated `CTM_STATE_PATH` sessions.
 
