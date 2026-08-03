@@ -64,6 +64,8 @@ core/__pycache__/
 chromadb/
 build/
 config/config.json
+# Active local configuration is bootstrapped from tracked config.example/ templates.
+config/*.yaml
 .uv-cache
 data/techniques.db
 

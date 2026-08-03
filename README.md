@@ -41,7 +41,7 @@ uv run --frozen uvicorn src.api:app --reload --host 127.0.0.1
 
 - Configurable workflows (`describe`, `analyze`, `explain`, `simulate`, `compare`, `feedback`, `interactive-flow`) that blend SQLite data, vector search, and LLM reasoning through `litellm`.
 - Shareable Markdown reports plus preference-aware recommendations backed by feedback loops and history inspection commands.
-- YAML-driven configuration (`config/settings.yaml`, `config/models.yaml`, `config/providers.yaml`) for providers, models, and storage paths.
+- YAML-driven configuration for providers, models, and storage paths. Tracked `config.example/` templates initialize ignored local `config/*.yaml` on first use without overwriting existing settings.
 - Technique catalog lifecycle commands (`techniques list|add|update|import|export|refresh`) that keep SQLite and optional Chroma embeddings synchronized.
 - Lightweight local-only FastAPI surface for registered orchestrator workflows, health checks, and optional GraphQL access; CLI-only flows such as `explain` remain outside the HTTP contract.
 

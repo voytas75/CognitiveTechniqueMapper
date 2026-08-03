@@ -35,6 +35,7 @@ Cognitive Technique Mapper is a local CLI for the primary user and, indirectly, 
 - **Runtime/language:** Python 3.12+ with `uv` and Typer CLI.
 - **Data and retrieval:** SQLite with optional local Chroma embeddings.
 - **LLM integration:** LiteLLM with project-managed provider/model configuration.
+- **Configuration:** Tracked `config.example/` templates bootstrap ignored local `config/*.yaml` only when the default config directory is absent; existing or custom configurations are never overwritten.
 - **HTTP surface:** Optional FastAPI/GraphQL loopback-only development utility; no public bind without a separate approved security/deployment slice.
 - **Dependencies:** Approval-only for every new dependency.
 
@@ -47,5 +48,4 @@ Cognitive Technique Mapper is a local CLI for the primary user and, indirectly, 
 - Do not add a transaction coordinator, outbox, or background recovery mechanism without a separate explicit approval.
 
 ## Open decisions
-- Configuration-file lifecycle: decide whether missing configuration must fail fast, bootstrap from tracked templates, or use an explicit initialization command. No behavior change is approved until this decision is made.
 - A future public API requires a new security and deployment decision record.

@@ -15,6 +15,7 @@ This file and `PLAN.md` govern the Cognitive Technique Mapper scope. Conflicts r
 - Until `GHSA-f4j7-r4q5-qw2c` has an upstream patch, Chroma is permitted only as a local `PersistentClient` after explicit extra installation; do not run or expose a Chroma server.
 - Do not introduce a distributed transaction, outbox, or background recovery mechanism across SQLite, `data/techniques.json`, and Chroma. On synchronization failure, abort, report the error, and require an explicit operator retry after remediation.
 - New dependencies are approval-only.
+- `config.example/` contains tracked, credential-free templates. Active `config/*.yaml` and `.env` are local-only; bootstrap only a wholly absent default `config/` directory, never overwrite an existing or `CTM_CONFIG_PATH` configuration.
 - Configuration secrets remain in environment variables or untracked local configuration; never commit credentials.
 
 ## Change budget

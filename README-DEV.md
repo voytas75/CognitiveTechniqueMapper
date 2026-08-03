@@ -20,7 +20,7 @@ All runtime credentials are loaded from environment variables (optionally via `.
 - `OPENAI_API_KEY` — Direct OpenAI key when bypassing Azure or using fallback models.
 - `ANTHROPIC_API_KEY` — Required for workflows mapped to Anthropic models.
 
-Model/provider wiring lives under `config/models.yaml` and `config/providers.yaml`. Settings such as database paths or logging defaults live in `config/settings.yaml`. Always validate edits by running `python -m src.cli settings show`.
+Tracked `config.example/` holds credential-free defaults for models, providers, database paths, and logging. On first use CTM copies all templates into ignored local `config/*.yaml` only when the default `config/` directory is wholly absent; it never overwrites an existing config or a path selected with `CTM_CONFIG_PATH`. Model/provider wiring then lives in local `config/models.yaml` and `config/providers.yaml`; database paths and logging defaults live in local `config/database.yaml` and `config/settings.yaml`. Always validate edits by running `python -m src.cli settings show`.
 
 ## Getting Started
 ```bash
