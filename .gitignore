@@ -66,6 +66,10 @@ build/
 config/config.json
 # Active local configuration is bootstrapped from tracked config.example/ templates.
 config/*.yaml
+# Operator planning and supporting documentation stay local to this workspace.
+PLAN.md
+BOUNDS.md
+/docs/
 .uv-cache
 data/techniques.db
 

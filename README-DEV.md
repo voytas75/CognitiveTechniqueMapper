@@ -1,7 +1,7 @@
 # Cognitive Technique Mapper — Developer Guide
 
 ## Current Status
-- Implemented Typer-based local CLI with a local-only FastAPI wrapper for registered workflow automation; first-release acceptance remains pending a controlled live-provider smoke of `describe` → `analyze` → `explain`.
+- Implemented Typer-based local CLI with a local-only FastAPI wrapper for registered workflow automation; a controlled Azure live-provider smoke of `describe` → `analyze` → `explain` completed locally on 2026-08-03.
 - SQLite catalog seeded from `data/techniques.json`; local Chroma embeddings are optional and require the explicit `chroma` extra.
 - Preference tracking, history, feedback loops, and Markdown reporting already implemented; new work typically adds workflows, prompts, or catalog management tooling.
 
@@ -75,4 +75,4 @@ uv run --frozen uvicorn src.api:app --reload --host 127.0.0.1
 - **Config drift:** Run `uv run --frozen python -m src.cli settings show` to inspect current values; use `settings update-workflow`/`settings update-provider` for adjustments.
 - **Provider issues:** When parameters are rejected (e.g., unsupported temperature), edit `config/models.yaml` or set `litellm.drop_params = True` in the relevant config block.
 
-For additional CLI-specific contribution notes, see [docs/cli-contrib.md](docs/cli-contrib.md). Keep `CHANGELOG.md` updated with ISO-8601 dates for every notable change.
+Keep `CHANGELOG.md` updated with ISO-8601 dates for every notable change.
