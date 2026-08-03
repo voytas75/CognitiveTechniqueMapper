@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import importlib
 from typing import Any
 from unittest.mock import patch
 
+import pytest
 from fastapi.testclient import TestClient
 
 from src.cli import runtime as runtime_module
@@ -140,4 +142,25 @@ def test_local_api_hides_internal_workflow_errors() -> None:
 
     assert response.status_code == 500
     assert response.json() == {"detail": "Workflow execution failed."}
+    assert "provider secret" not in response.text
+
+
+def test_graphql_hides_internal_workflow_errors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """GraphQL must not expose workflow exception text to loopback clients."""
+    api_module = importlib.import_module("src.api.app")
+    monkeypatch.setattr(api_module, "_orchestrator", FailingOrchestrator())
+    client = _client(FailingOrchestrator())
+
+    response = client.post(
+        "/graphql",
+        json={
+            "query": '{ runWorkflow(name: "detect_technique", context: {}) }',
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["data"] is None
+    assert response.json()["errors"][0]["message"] == "Workflow execution failed."
     assert "provider secret" not in response.text

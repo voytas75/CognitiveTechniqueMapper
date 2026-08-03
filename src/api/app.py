@@ -193,8 +193,11 @@ else:
                     strawberry.scalars.JSON,
                     _orchestrator.execute(name, workflow_context),
                 )
-            except KeyError as exc:  # pragma: no cover – mapping error
-                raise ValueError(str(exc)) from exc
+            except KeyError:
+                raise ValueError("Unknown workflow.") from None
+            except Exception:
+                logger.exception("graphql_workflow_failed", extra={"workflow": name})
+                raise ValueError("Workflow execution failed.") from None
 
     _schema = strawberry.Schema(query=Query)
     _graphql_router = GraphQLRouter(_schema)
