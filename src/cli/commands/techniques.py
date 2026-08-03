@@ -31,7 +31,11 @@ def _cli():
     return sys.modules["src.cli"]
 
 
-def techniques_list() -> None:
+def techniques_list(
+    json_output: bool = typer.Option(
+        False, "--json", help="Emit a machine-readable JSON result."
+    ),
+) -> None:
     """Display techniques stored in the knowledge base."""
 
     catalog, sqlite_client = _cli()._create_catalog_service()
@@ -40,7 +44,10 @@ def techniques_list() -> None:
     finally:
         sqlite_client.close()
 
-    render_technique_table(entries)
+    if json_output is True:
+        console.print_json(data={"ok": True, "techniques": entries})
+    else:
+        render_technique_table(entries)
 
 
 def techniques_add(
@@ -351,6 +358,9 @@ def techniques_search(
         "--log-level",
         help="Override logging level for this invocation.",
     ),
+    json_output: bool = typer.Option(
+        False, "--json", help="Emit a machine-readable JSON result."
+    ),
 ) -> None:
     """Search techniques without modifying the active problem description."""
 
@@ -365,7 +375,16 @@ def techniques_search(
     finally:
         sqlite_client.close()
 
-    render_technique_search_results(matches, mode=str(mode.value))
+    if json_output is True:
+        console.print_json(
+            data={
+                "ok": True,
+                "mode": mode.value,
+                "matches": [match.as_dict() for match in matches],
+            }
+        )
+    else:
+        render_technique_search_results(matches, mode=str(mode.value))
 
 
 __all__ = [

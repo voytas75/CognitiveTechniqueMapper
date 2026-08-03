@@ -14,7 +14,7 @@ from src.cli.commands import techniques as techniques_module
 from src.cli.commands.doctor import apply_safe_fixes, inspect_doctor
 from src.core.config_loader import CONFIG_FILENAMES
 from src.services.config_service import WorkflowModelConfig
-from src.services.technique_search import TechniqueSearchMode
+from src.services.technique_search import TechniqueSearchMode, TechniqueSearchResult
 from tests.helpers.cli import RecordingOrchestrator, mute_console
 
 
@@ -245,6 +245,50 @@ def test_techniques_commands(
         description="Updated",
     )
     cli.techniques_remove(name="Balanced Decision")
+
+
+def test_techniques_agent_views_emit_json(
+    monkeypatch: pytest.MonkeyPatch, patched_console: None
+) -> None:
+    """Catalog list and search have machine-readable read-only views."""
+    catalog = StubCatalog()
+    sqlite_client = StubSQLiteClient()
+    search_service = StubSearchService()
+    search_service.results = [
+        [
+            TechniqueSearchResult(
+                metadata=dict(catalog.entries[0]),
+                score=0.9,
+                breakdown={"keyword": 0.9},
+                highlights=["Matched terms: decision"],
+            )
+        ]
+    ]
+    monkeypatch.setattr(
+        cli, "_create_catalog_service", lambda: (catalog, sqlite_client)
+    )
+    monkeypatch.setattr(
+        cli, "_create_search_service", lambda: (search_service, sqlite_client)
+    )
+    captured: list[dict[str, Any]] = []
+    monkeypatch.setattr(
+        cli.console,
+        "print_json",
+        lambda *, data, **_: captured.append(data),
+        raising=False,
+    )
+
+    cli.techniques_list(json_output=True)
+    cli.techniques_search(
+        "decision",
+        mode=TechniqueSearchMode.KEYWORD,
+        limit=1,
+        log_level=None,
+        json_output=True,
+    )
+
+    assert captured[0] == {"ok": True, "techniques": catalog.entries}
+    assert captured[1]["matches"][0]["name"] == "Decisional Balance"
 
 
 def test_techniques_refresh(
