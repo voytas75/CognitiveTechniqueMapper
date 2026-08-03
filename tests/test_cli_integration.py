@@ -149,3 +149,29 @@ def test_primary_agent_flow_emits_json_without_prompts(
     assert json.loads(explained.output)["explanation"]["overview"].startswith(
         "Technique fits"
     )
+
+    simulated = runner.invoke(cli.app, ["simulate", "--json"])
+    compared = runner.invoke(cli.app, ["compare", "--json"])
+    feedback = runner.invoke(cli.app, ["feedback", "Helpful", "--json"])
+    reported = runner.invoke(cli.app, ["report", "--json"])
+
+    assert (
+        simulated.exit_code
+        == compared.exit_code
+        == feedback.exit_code
+        == reported.exit_code
+        == 0
+    )
+    assert (
+        json.loads(simulated.output)["simulation"]["simulation_overview"]
+        == "Simulation overview"
+    )
+    assert (
+        json.loads(compared.output)["comparison"]["best_alternative"]
+        == "Six Thinking Hats"
+    )
+    assert json.loads(feedback.output)["feedback"]["summary"] == "Captured"
+    assert (
+        json.loads(reported.output)["report"]["problem_description"]
+        == "Need a decision"
+    )

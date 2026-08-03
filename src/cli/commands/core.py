@@ -236,17 +236,26 @@ def simulate(
         "-l",
         help="Override logging level for this invocation.",
     ),
+    json_output: bool = typer.Option(
+        False, "--json", help="Emit a machine-readable JSON result."
+    ),
 ) -> None:
     """Simulate applying the recommended technique across scenario variations."""
 
     cli_module = _cli()
     state = cli_module.get_state()
     if not state.last_recommendation:
+        if json_output is True:
+            _agent_error("No recommendation available. Run `analyze` first.")
+            raise typer.Exit(code=1)
         raise typer.BadParameter("No recommendation available. Run `analyze` first.")
     analysis_problem_description = _bound_problem_description(state)
 
     recommendation = _object(state.last_recommendation.get("recommendation"))
     if not recommendation:
+        if json_output is True:
+            _agent_error("Current recommendation payload is empty.")
+            raise typer.Exit(code=1)
         raise typer.BadParameter("Current recommendation payload is empty.")
 
     apply_log_override(log_level)
@@ -261,6 +270,9 @@ def simulate(
     try:
         result = orchestrator.execute("simulate_technique", context)
     except RuntimeError as exc:
+        if json_output is True:
+            _agent_error("Simulation failed.")
+            raise typer.Exit(code=1) from exc
         console.print(f"[red]Simulation failed: {exc}[/]")
         raise typer.Exit(code=1) from exc
 
@@ -269,7 +281,10 @@ def simulate(
     state.context_history.append({"simulation": simulation})
     state.save()
     logger.info("Simulation workflow executed.")
-    render_simulation_output(simulation)
+    if json_output is True:
+        console.print_json(data={"ok": True, "simulation": simulation})
+    else:
+        render_simulation_output(simulation)
 
 
 def compare(
@@ -291,18 +306,27 @@ def compare(
         "-l",
         help="Override logging level for this invocation.",
     ),
+    json_output: bool = typer.Option(
+        False, "--json", help="Emit a machine-readable JSON result."
+    ),
 ) -> None:
     """Compare shortlisted techniques and highlight trade-offs."""
 
     cli_module = _cli()
     state = cli_module.get_state()
     if not state.last_recommendation:
+        if json_output is True:
+            _agent_error("No recommendation available. Run `analyze` first.")
+            raise typer.Exit(code=1)
         raise typer.BadParameter("No recommendation available. Run `analyze` first.")
     _bound_problem_description(state)
 
     recommendation = _object(state.last_recommendation.get("recommendation"))
     matches = state.last_recommendation.get("matches") or []
     if not recommendation or not matches:
+        if json_output is True:
+            _agent_error("Candidate shortlist unavailable. Re-run `analyze`.")
+            raise typer.Exit(code=1)
         raise typer.BadParameter(
             "Candidate shortlist unavailable. Re-run `analyze` to regenerate matches."
         )
@@ -320,6 +344,9 @@ def compare(
     try:
         result = orchestrator.execute("compare_candidates", context)
     except RuntimeError as exc:
+        if json_output is True:
+            _agent_error("Comparison failed.")
+            raise typer.Exit(code=1) from exc
         console.print(f"[red]Comparison failed: {exc}[/]")
         raise typer.Exit(code=1) from exc
 
@@ -328,7 +355,10 @@ def compare(
     state.context_history.append({"comparison": comparison})
     state.save()
     logger.info("Comparison workflow executed.")
-    render_comparison_output(comparison)
+    if json_output is True:
+        console.print_json(data={"ok": True, "comparison": comparison})
+    else:
+        render_comparison_output(comparison)
 
 
 def refresh(
@@ -384,6 +414,9 @@ def feedback(
         "-l",
         help="Override logging level for this invocation.",
     ),
+    json_output: bool = typer.Option(
+        False, "--json", help="Emit a machine-readable JSON result."
+    ),
 ) -> None:
     """Record user feedback and display the summary of recent entries."""
 
@@ -393,6 +426,9 @@ def feedback(
 
     apply_log_override(log_level)
     if rating is not None and (rating < 1 or rating > 5):
+        if json_output is True:
+            _agent_error("Rating must be between 1 and 5.")
+            raise typer.Exit(code=1)
         raise typer.BadParameter("Rating must be between 1 and 5.")
 
     if technique is None and state.last_recommendation:
@@ -422,13 +458,22 @@ def feedback(
         orchestrator.execute("feedback_loop", context)
         summary = orchestrator.execute("feedback_loop", {})
     except RuntimeError as exc:
+        if json_output is True:
+            _agent_error("Feedback failed.")
+            raise typer.Exit(code=1) from exc
         console.print(f"[red]Feedback failed: {exc}[/]")
         raise typer.Exit(code=1) from exc
 
     logger.info("Feedback recorded (rating=%s)", rating)
-    console.print(
-        Panel(summary.get("summary", "No summary available."), title="Feedback Summary")
-    )
+    if json_output is True:
+        console.print_json(data={"ok": True, "feedback": summary})
+    else:
+        console.print(
+            Panel(
+                summary.get("summary", "No summary available."),
+                title="Feedback Summary",
+            )
+        )
 
 
 def report(
@@ -446,6 +491,9 @@ def report(
         "-l",
         help="Override logging level for this invocation.",
     ),
+    json_output: bool = typer.Option(
+        False, "--json", help="Emit a machine-readable JSON result."
+    ),
 ) -> None:
     """Generate a Markdown report of the latest analysis artifacts."""
 
@@ -453,6 +501,9 @@ def report(
 
     state = _cli().get_state()
     if not state.last_recommendation:
+        if json_output is True:
+            _agent_error("No recommendation available. Run `analyze` first.")
+            raise typer.Exit(code=1)
         raise typer.BadParameter("No recommendation available. Run `analyze` first.")
     _bound_problem_description(state)
 
@@ -461,7 +512,14 @@ def report(
 
     if output:
         output.write_text(markdown, encoding="utf-8")
-        console.print(Panel(f"Report saved to {output}", title="Report"))
+        if json_output is True:
+            console.print_json(
+                data={"ok": True, "report": payload, "output": str(output)}
+            )
+        else:
+            console.print(Panel(f"Report saved to {output}", title="Report"))
+    elif json_output is True:
+        console.print_json(data={"ok": True, "report": payload, "markdown": markdown})
     else:
         console.print(markdown)
 
