@@ -11,3 +11,10 @@ def test_prompt_registry_paths_exist():
     for prompt_name, prompt_path in registry.items():
         path = Path(prompt_path)
         assert path.exists(), f"Prompt file missing for {prompt_name}"
+
+
+def test_detect_technique_prompt_requires_a_retrieved_candidate() -> None:
+    prompt = Path("prompts/detect_technique.txt").read_text(encoding="utf-8")
+
+    assert "suggested_technique must copy exactly one `name` from Candidates" in prompt
+    assert "Seek additional input" not in prompt
