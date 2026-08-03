@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import sqlite3
 import types
 from dataclasses import dataclass
 from pathlib import Path
@@ -9,6 +11,7 @@ import pytest
 
 import src.cli as cli
 from src.cli.commands import techniques as techniques_module
+from src.cli.commands.doctor import inspect_doctor
 from src.services.config_service import WorkflowModelConfig
 from src.services.technique_search import TechniqueSearchMode
 from tests.helpers.cli import RecordingOrchestrator, mute_console
@@ -430,3 +433,34 @@ def test_techniques_search(
     assert search_service.requests[0]["mode"] == TechniqueSearchMode.HYBRID
     assert search_service.requests[0]["limit"] == 3
     assert captured, "Expected renderer output"
+
+
+def test_doctor_reports_consistent_config_and_catalog(tmp_path: Path) -> None:
+    config = tmp_path / "config"
+    config.mkdir()
+    payloads = [
+        "app: {}\n",
+        "database: {sqlite_path: data/techniques.db}\n",
+        "workflows: {}\n",
+        "providers: {}\n",
+    ]
+    for name, payload in zip(
+        ("settings.yaml", "database.yaml", "models.yaml", "providers.yaml"), payloads
+    ):
+        (config / name).write_text(payload, encoding="utf-8")
+    data = tmp_path / "data"
+    data.mkdir()
+    names = {"Decisional Balance", "SWOT"}
+    (data / "techniques.json").write_text(
+        json.dumps([{"name": name} for name in names])
+    )
+    with sqlite3.connect(data / "techniques.db") as connection:
+        connection.execute("CREATE TABLE techniques (name TEXT)")
+        connection.executemany(
+            "INSERT INTO techniques VALUES (?)", [(name,) for name in names]
+        )
+
+    report = inspect_doctor(
+        project_root=tmp_path, config_path=config, chroma_names_loader=lambda _: names
+    )
+    assert report["ok"] and report["config"]["ok"] and report["stores"]["consistent"]

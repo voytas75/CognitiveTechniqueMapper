@@ -20,6 +20,7 @@ from src.cli.commands.core import (
     report,
     simulate,
 )
+from src.cli.commands.doctor import doctor
 from src.cli.commands.history import history_clear, history_show
 from src.cli.commands.preferences import (
     preferences_export,
@@ -251,6 +252,7 @@ preferences_app.callback(invoke_without_command=True)(_preferences_callback)
 techniques_app.callback(invoke_without_command=True)(_techniques_callback)
 
 app.command()(describe)
+app.command()(doctor)
 app.command()(analyze)
 app.command()(explain)
 app.command()(simulate)
@@ -339,6 +341,7 @@ __all__: list[str] = [
     "_create_search_service",
     # Commands
     "describe",
+    "doctor",
     "analyze",
     "explain",
     "simulate",
