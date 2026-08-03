@@ -11,7 +11,8 @@ import pytest
 
 import src.cli as cli
 from src.cli.commands import techniques as techniques_module
-from src.cli.commands.doctor import inspect_doctor
+from src.cli.commands.doctor import apply_safe_fixes, inspect_doctor
+from src.core.config_loader import CONFIG_FILENAMES
 from src.services.config_service import WorkflowModelConfig
 from src.services.technique_search import TechniqueSearchMode
 from tests.helpers.cli import RecordingOrchestrator, mute_console
@@ -464,3 +465,16 @@ def test_doctor_reports_consistent_config_and_catalog(tmp_path: Path) -> None:
         project_root=tmp_path, config_path=config, chroma_names_loader=lambda _: names
     )
     assert report["ok"] and report["config"]["ok"] and report["stores"]["consistent"]
+
+
+def test_doctor_fix_bootstraps_only_a_missing_default_config(tmp_path: Path) -> None:
+    templates = tmp_path / "config.example"
+    templates.mkdir()
+    for name in CONFIG_FILENAMES:
+        (templates / name).write_text("{}\n", encoding="utf-8")
+
+    result = apply_safe_fixes(tmp_path, tmp_path / "config", custom_config=False)
+
+    assert result["errors"] == []
+    assert result["applied"] == ["bootstrapped_default_config"]
+    assert all((tmp_path / "config" / name).is_file() for name in CONFIG_FILENAMES)

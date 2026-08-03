@@ -2,7 +2,9 @@
 
 import json
 import os
+import shutil
 import sqlite3
+import tempfile
 from pathlib import Path
 from typing import Any, Callable, cast
 
@@ -89,11 +91,53 @@ def inspect_doctor(
     }
 
 
-def doctor() -> None:
-    """Report read-only configuration and catalog health as JSON."""
-    report = inspect_doctor()
+def apply_safe_fixes(
+    project_root: Path, config_path: Path, *, custom_config: bool
+) -> dict[str, list[str]]:
+    """Bootstrap only a wholly absent default configuration directory."""
+    result: dict[str, list[str]] = {"applied": [], "errors": []}
+    if custom_config or config_path.exists():
+        return result
+    templates = project_root / "config.example"
+    missing = [name for name in CONFIG_FILENAMES if not (templates / name).is_file()]
+    if missing:
+        result["errors"].append(f"missing config templates: {', '.join(missing)}")
+        return result
+    staging = Path(tempfile.mkdtemp(prefix=".config.doctor-", dir=config_path.parent))
+    try:
+        for name in CONFIG_FILENAMES:
+            shutil.copy2(templates / name, staging / name)
+        staging.replace(config_path)
+        result["applied"].append("bootstrapped_default_config")
+    except OSError as exc:
+        result["errors"].append(f"config bootstrap failed: {exc}")
+    finally:
+        shutil.rmtree(staging, ignore_errors=True)
+    return result
+
+
+def doctor(
+    fix: bool = typer.Option(
+        False, "--fix", help="Apply safe configuration-only fixes."
+    ),
+) -> None:
+    """Report health and optionally bootstrap only a missing default config."""
+    root = PROJECT_CONFIG_PATH.parent
+    custom_path = os.environ.get("CTM_CONFIG_PATH")
+    config = Path(custom_path) if custom_path else root / "config"
+    fix_result = (
+        apply_safe_fixes(root, config, custom_config=bool(custom_path))
+        if fix
+        else {"applied": [], "errors": []}
+    )
+    report = inspect_doctor(project_root=root, config_path=config)
+    report["fix"] = {"requested": fix, **fix_result}
+    if not report["stores"]["consistent"]:
+        report["manual_actions"] = [
+            "python -m src.cli techniques refresh --rebuild-embeddings"
+        ]
     console.print_json(data=report)
-    if not report["ok"]:
+    if not report["ok"] or fix_result["errors"]:
         raise typer.Exit(code=1)
 
 
