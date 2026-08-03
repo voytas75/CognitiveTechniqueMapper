@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -124,3 +125,27 @@ def test_end_to_end_cli_flow(
 
     result = runner.invoke(cli.app, ["settings", "show"])
     assert result.exit_code == 0
+
+
+def test_primary_agent_flow_emits_json_without_prompts(
+    cli_session: tuple[CliRunner, cli.AppState, Any, Path],
+) -> None:
+    """The core sequential flow has a JSON-only contract for an agent."""
+    runner, _, _, _ = cli_session
+
+    described = runner.invoke(cli.app, ["describe", "Need a decision", "--json"])
+    analyzed = runner.invoke(cli.app, ["analyze", "--json"])
+    explained = runner.invoke(cli.app, ["explain", "--json"])
+
+    assert described.exit_code == analyzed.exit_code == explained.exit_code == 0
+    assert json.loads(described.output) == {
+        "ok": True,
+        "problem_description": "Need a decision",
+    }
+    assert (
+        json.loads(analyzed.output)["analysis"]["recommendation"]["suggested_technique"]
+        == "Decisional Balance"
+    )
+    assert json.loads(explained.output)["explanation"]["overview"].startswith(
+        "Technique fits"
+    )

@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import sys
 from pathlib import Path
 from typing import Any, Mapping, Optional, cast
 
+import click
 import typer
 from rich.panel import Panel
 
@@ -53,6 +55,11 @@ def _bound_problem_description(state: object) -> str:
     return problem_description
 
 
+def _agent_error(message: str) -> None:
+    """Emit one machine-readable error object to stderr."""
+    click.echo(json.dumps({"ok": False, "error": message}), err=True)
+
+
 def describe(
     problem: str = typer.Argument(..., help="Describe your problem or challenge."),
     log_level: str | None = typer.Option(
@@ -60,6 +67,9 @@ def describe(
         "--log-level",
         "-l",
         help="Override logging level for this invocation (e.g., DEBUG, INFO).",
+    ),
+    json_output: bool = typer.Option(
+        False, "--json", help="Emit a machine-readable JSON result."
     ),
 ) -> None:
     """Store the user's problem description for subsequent workflows."""
@@ -75,7 +85,10 @@ def describe(
     state.context_history.append({"problem_description": problem})
     state.save()
     logger.info("Problem description captured (length=%s)", len(problem))
-    console.print(Panel(f"[bold]Problem captured:[/]\n{problem}", title="Describe"))
+    if json_output is True:
+        console.print_json(data={"ok": True, "problem_description": problem})
+    else:
+        console.print(Panel(f"[bold]Problem captured:[/]\n{problem}", title="Describe"))
 
 
 def analyze(
@@ -95,12 +108,18 @@ def analyze(
         "-l",
         help="Override logging level for this invocation.",
     ),
+    json_output: bool = typer.Option(
+        False, "--json", help="Emit a machine-readable JSON result."
+    ),
 ) -> None:
     """Trigger the detect_technique workflow."""
 
     cli_module = _cli()
     state = cli_module.get_state()
     if not state.problem_description:
+        if json_output is True:
+            _agent_error("No problem description found. Use `describe` first.")
+            raise typer.Exit(code=1)
         raise typer.BadParameter("No problem description found. Use `describe` first.")
 
     apply_log_override(log_level)
@@ -113,6 +132,9 @@ def analyze(
     try:
         result = orchestrator.execute("detect_technique", context)
     except RuntimeError as exc:
+        if json_output is True:
+            _agent_error("Analyze failed.")
+            raise typer.Exit(code=1) from exc
         console.print(f"[red]Analyze failed: {exc}[/]")
         raise typer.Exit(code=1) from exc
 
@@ -137,14 +159,17 @@ def analyze(
     state.context_history.append(result)
     state.save()
     logger.info("Analysis completed.")
-    render_analysis_output(
-        recommendation,
-        result.get("plan"),
-        problem_description=_bound_problem_description(state),
-        preference_summary=result.get("preference_summary"),
-        matches=result.get("matches") if show_candidates else None,
-        diagnostics=result.get("diagnostics") if show_diagnostics else None,
-    )
+    if json_output is True:
+        console.print_json(data={"ok": True, "analysis": result})
+    else:
+        render_analysis_output(
+            recommendation,
+            result.get("plan"),
+            problem_description=_bound_problem_description(state),
+            preference_summary=result.get("preference_summary"),
+            matches=result.get("matches") if show_candidates else None,
+            diagnostics=result.get("diagnostics") if show_diagnostics else None,
+        )
 
 
 def explain(
@@ -154,17 +179,26 @@ def explain(
         "-l",
         help="Override logging level for this invocation.",
     ),
+    json_output: bool = typer.Option(
+        False, "--json", help="Emit a machine-readable JSON result."
+    ),
 ) -> None:
     """Explain the logic behind the last recommendation via the explain_logic workflow."""
 
     state = _cli().get_state()
     if not state.last_recommendation:
+        if json_output is True:
+            _agent_error("No recommendation available. Run `analyze` first.")
+            raise typer.Exit(code=1)
         raise typer.BadParameter("No recommendation available. Run `analyze` first.")
     analysis_problem_description = _bound_problem_description(state)
 
     apply_log_override(log_level)
 
     if not state.explanation_service:
+        if json_output is True:
+            _agent_error("Explanation service not initialized.")
+            raise typer.Exit(code=1)
         raise typer.BadParameter("Explanation service not initialized.")
 
     try:
@@ -173,6 +207,9 @@ def explain(
             problem_description=analysis_problem_description,
         )
     except RuntimeError as exc:
+        if json_output is True:
+            _agent_error("Explain failed.")
+            raise typer.Exit(code=1) from exc
         console.print(f"[red]Explain failed: {exc}[/]")
         raise typer.Exit(code=1) from exc
 
@@ -180,7 +217,10 @@ def explain(
     state.last_explanation = explanation.as_dict()
     state.context_history.append({"explanation": state.last_explanation})
     state.save()
-    render_explanation_output(explanation)
+    if json_output is True:
+        console.print_json(data={"ok": True, "explanation": state.last_explanation})
+    else:
+        render_explanation_output(explanation)
 
 
 def simulate(
