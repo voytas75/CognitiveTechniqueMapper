@@ -256,9 +256,15 @@ def get_orchestrator() -> Orchestrator:
     return orchestrator
 
 
-def get_state() -> AppState:
-    """Return the cached application state."""
+def get_state_without_runtime() -> AppState:
+    """Load persisted state without initializing catalogs, embeddings, or providers."""
+    if _runtime_cache is not None:
+        return _runtime_cache[1]
+    return AppState.load()
 
+
+def get_state() -> AppState:
+    """Return the application state with the full runtime initialized."""
     _, state = get_runtime()
     return state
 
@@ -321,6 +327,7 @@ __all__ = [
     "get_orchestrator",
     "get_runtime",
     "get_state",
+    "get_state_without_runtime",
     "initialize_runtime",
     "refresh_runtime",
     "set_runtime",

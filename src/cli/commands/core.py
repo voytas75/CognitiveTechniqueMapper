@@ -20,6 +20,8 @@ from src.cli.renderers import (
     render_simulation_output,
 )
 from src.cli.reporting import build_report_payload, render_report_markdown
+from src.cli.runtime import get_state as get_full_runtime_state
+from src.cli.runtime import get_state_without_runtime
 from src.cli.utils import (
     active_preference_summary,
     apply_log_override,
@@ -32,6 +34,14 @@ logger = logging.getLogger(__name__)
 
 def _cli() -> Any:
     return sys.modules["src.cli"]
+
+
+def _state_without_runtime() -> Any:
+    """Return test-injected state or load persisted state without services."""
+    cli_module = _cli()
+    if cli_module.get_state is not get_full_runtime_state:
+        return cli_module.get_state()
+    return get_state_without_runtime()
 
 
 # TODO: Split command groups into separate modules by workflow responsibility.
@@ -104,7 +114,7 @@ def describe(
 
     apply_log_override(log_level)
 
-    state = _cli().get_state()
+    state = _state_without_runtime()
     state.problem_description = problem
     state.last_recommendation = None
     state.last_explanation = None
@@ -143,7 +153,7 @@ def analyze(
     """Trigger the detect_technique workflow."""
 
     cli_module = _cli()
-    state = cli_module.get_state()
+    state = _state_without_runtime()
     if not state.problem_description:
         if json_output is True:
             _agent_error("No problem description found. Use `describe` first.")

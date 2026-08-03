@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import os
-import sqlite3
 import subprocess
 import sys
 from pathlib import Path
@@ -13,26 +12,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def _write_isolated_config(tmp_path: Path) -> Path:
-    """Create a seeded, no-provider config for process-level CLI tests."""
+    """Create an empty config that has no provider credentials."""
     config_path = tmp_path / "config"
     config_path.mkdir()
     database_path = tmp_path / "techniques.db"
-    with sqlite3.connect(database_path) as connection:
-        connection.execute(
-            "CREATE TABLE techniques (name TEXT, description TEXT, origin_year INTEGER, "
-            "creator TEXT, category TEXT, core_principles TEXT)"
-        )
-        connection.execute(
-            "INSERT INTO techniques VALUES (?, ?, ?, ?, ?, ?)",
-            (
-                "Seed",
-                "Prevents initialization-time embedding requests.",
-                None,
-                None,
-                None,
-                None,
-            ),
-        )
 
     (config_path / "database.yaml").write_text(
         "database:\n"
@@ -76,7 +59,7 @@ def _run_cli(
 
 
 def test_describe_stdin_json_isolated_state_and_clean_streams(tmp_path: Path) -> None:
-    """Agent input uses stdin JSON and does not leak across state files."""
+    """Describe works with an empty catalog without provider initialization."""
     first_state = tmp_path / "first-state.json"
     second_state = tmp_path / "second-state.json"
     config_path = _write_isolated_config(tmp_path)
