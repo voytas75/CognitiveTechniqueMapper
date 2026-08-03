@@ -1,26 +1,26 @@
 workflows:
   detect_technique:
-    model: "azure/gpt-5.4"
+    model: "gpt-4o-mini"
     temperature: 1
   diagnose_selection:
-    model: "azure/gpt-4.4"
+    model: "gpt-4o-mini"
     temperature: 0.4
   summarize_result:
-    model: "azure/gpt-4.1"
+    model: "gpt-4o-mini"
     temperature: 0.3
   explain_logic:
-    model: "azure/gpt-4.1"
+    model: "gpt-4o-mini"
     temperature: 0.4
   feedback_loop:
-    model: "azure/gpt-4.1"
+    model: "gpt-4o-mini"
     temperature: 0.5
   simulate_technique:
-    model: "azure/gpt-4.1"
+    model: "gpt-4o-mini"
     temperature: 0.4
   compare_candidates:
-    model: "azure/gpt-4.1"
+    model: "gpt-4o-mini"
     temperature: 0.5
 embeddings:
-  model: "azure/UDTEMBED3L"
+  model: "text-embedding-3-small"
 defaults:
-  provider: "azure_openai"
+  provider: "openai"

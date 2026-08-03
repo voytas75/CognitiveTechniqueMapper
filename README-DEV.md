@@ -13,12 +13,14 @@
 - Tests: `uv run --all-extras --frozen pytest -n auto --cov=src --cov-fail-under=85 --disable-warnings -q`.
 
 ## Configuration & Secrets
-All runtime credentials are loaded from environment variables (optionally via `.env`). Set at least the following before invoking workflows:
+All runtime credentials are loaded from environment variables (optionally via `.env`). The tracked default template uses direct OpenAI with `gpt-4o-mini` and `text-embedding-3-small`, so set:
 
-- `AZURE_API_BASE` — Azure OpenAI base URL when using Azure-backed models.
-- `AZURE_OPENAI_KEY` — API key for the Azure deployment.
-- `OPENAI_API_KEY` — Direct OpenAI key when bypassing Azure or using fallback models.
-- `ANTHROPIC_API_KEY` — Required for workflows mapped to Anthropic models.
+- `OPENAI_API_KEY` — API key for the default `config.example/` configuration.
+
+Alternative providers are opt-in through local configuration:
+
+- `AZURE_API_BASE` and `AZURE_OPENAI_KEY` — required after selecting `azure_openai` and Azure deployments in local `config/models.yaml`.
+- `ANTHROPIC_API_KEY` — required only for workflows explicitly mapped to Anthropic models.
 
 Tracked `config.example/` holds credential-free defaults for models, providers, database paths, and logging. On first use CTM copies all templates into ignored local `config/*.yaml` only when the default `config/` directory is wholly absent; it never overwrites an existing config or a path selected with `CTM_CONFIG_PATH`. Model/provider wiring then lives in local `config/models.yaml` and `config/providers.yaml`; database paths and logging defaults live in local `config/database.yaml` and `config/settings.yaml`. Always validate edits by running `python -m src.cli settings show`.
 
