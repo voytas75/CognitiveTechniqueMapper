@@ -133,7 +133,13 @@ def test_primary_agent_flow_emits_json_without_prompts(
     """The core sequential flow has a JSON-only contract for an agent."""
     runner, _, _, _ = cli_session
 
-    described = runner.invoke(cli.app, ["describe", "Need a decision", "--json"])
+    described = runner.invoke(
+        cli.app,
+        ["describe", "--stdin-json"],
+        input=json.dumps(
+            {"action": "describe", "problem_description": "Need a decision"}
+        ),
+    )
     analyzed = runner.invoke(cli.app, ["analyze", "--json"])
     explained = runner.invoke(cli.app, ["explain", "--json"])
 

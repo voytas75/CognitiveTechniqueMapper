@@ -61,7 +61,9 @@ def _agent_error(message: str) -> None:
 
 
 def describe(
-    problem: str = typer.Argument(..., help="Describe your problem or challenge."),
+    problem: str | None = typer.Argument(
+        None, help="Describe your problem or challenge."
+    ),
     log_level: str | None = typer.Option(
         None,
         "--log-level",
@@ -71,8 +73,34 @@ def describe(
     json_output: bool = typer.Option(
         False, "--json", help="Emit a machine-readable JSON result."
     ),
+    stdin_json: bool = typer.Option(
+        False,
+        "--stdin-json",
+        help="Read {action, problem_description} JSON from stdin.",
+    ),
 ) -> None:
     """Store the user's problem description for subsequent workflows."""
+
+    if stdin_json is True:
+        json_output = True
+        if problem is not None:
+            _agent_error("Do not combine a problem argument with --stdin-json.")
+            raise typer.Exit(code=1)
+        try:
+            payload = _object(json.load(sys.stdin))
+        except json.JSONDecodeError:
+            _agent_error("Invalid JSON input.")
+            raise typer.Exit(code=1) from None
+        if payload.get("action") != "describe":
+            _agent_error("Expected input action 'describe'.")
+            raise typer.Exit(code=1)
+        problem = payload.get("problem_description")
+
+    if not isinstance(problem, str) or not problem.strip():
+        if json_output is True:
+            _agent_error("Problem description is required.")
+            raise typer.Exit(code=1)
+        raise typer.BadParameter("Problem description is required.")
 
     apply_log_override(log_level)
 
