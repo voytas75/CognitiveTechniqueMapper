@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Optional, cast
 
+import click
 import typer
 from typer.main import get_command
 
@@ -188,7 +189,19 @@ def _create_search_service() -> tuple[TechniqueSearchService, SQLiteClient]:
 
 # Typer applications ---------------------------------------------------------
 
-app = typer.Typer(add_completion=False, help="Cognitive Technique Mapper CLI")
+app = typer.Typer(
+    add_completion=False,
+    help="Cognitive Technique Mapper CLI",
+    invoke_without_command=True,
+    no_args_is_help=False,
+    epilog=(
+        "First workflow:\n"
+        '  describe "Your problem"\n'
+        "  analyze --show-candidates\n"
+        "  explain\n\n"
+        "Use <command> --help for command-specific options."
+    ),
+)
 settings_app = typer.Typer(
     add_completion=False, help="Inspect and edit application configuration."
 )
@@ -201,6 +214,12 @@ history_app = typer.Typer(
 preferences_app = typer.Typer(
     add_completion=False, help="Inspect personalization preferences."
 )
+
+
+def _root_callback(ctx: click.Context) -> None:
+    """Show first-use guidance when the root CLI has no subcommand."""
+    if ctx.invoked_subcommand is None:
+        click.echo(ctx.get_help())
 
 
 def _settings_callback(ctx: typer.Context) -> None:
@@ -225,6 +244,7 @@ def _techniques_callback(ctx: typer.Context) -> None:
 
 # Command registration -------------------------------------------------------
 
+app.callback()(_root_callback)
 settings_app.callback(invoke_without_command=True)(_settings_callback)
 history_app.callback(invoke_without_command=True)(_history_callback)
 preferences_app.callback(invoke_without_command=True)(_preferences_callback)

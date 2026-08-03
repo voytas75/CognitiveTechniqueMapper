@@ -49,6 +49,20 @@ def test_group_commands_run_default_views(
     assert runner.invoke(cli.app, ["techniques"]).exit_code == 0
 
 
+def test_root_command_without_arguments_matches_help() -> None:
+    """The root CLI gives first-use guidance instead of a missing-command error."""
+    runner = CliRunner()
+    app: Any = cli.app
+
+    without_arguments = runner.invoke(app, [])
+    explicit_help = runner.invoke(app, ["--help"])
+
+    assert without_arguments.exit_code == 0
+    assert without_arguments.output == explicit_help.output
+    assert "First workflow:" in without_arguments.output
+    assert 'describe "Your problem"' in without_arguments.output
+
+
 def test_end_to_end_cli_flow(
     cli_session: tuple[CliRunner, cli.AppState, Any, Path],
 ) -> None:

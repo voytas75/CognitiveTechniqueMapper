@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Moved the explicit `create_search_service`, `create_catalog_service`, and `create_initializer` factories into `src.cli.service_factories`; `src.cli.runtime` keeps compatibility re-exports while retaining only runtime orchestration.
 
 ### Changed
+- Made a root CLI invocation without a subcommand render the same first-use help as `--help`, including the `describe` → `analyze` → `explain` path.
 - Required `detect_technique` to copy its recommendation exactly from the retrieved candidate names; weak retrieval now selects the best available candidate and states its limitation instead of emitting an invalid sentinel.
 - Bound every current analysis to its input problem description, show that full description first in `analyze`, and invalidate derived artifacts when `describe` captures a new problem.
 - Replaced tracked active YAML configuration with tracked credential-free `config.example/` templates; CTM now initializes a wholly absent default local `config/` once and never overwrites existing or custom configurations.
