@@ -1,5 +1,15 @@
 # Network dependency qualification checkpoint
 
+## Combined HIGH follow-up (local, unpublished)
+- LiteLLM 1.95.0 → 1.100.4; mandatory boto3 1.44.3, botocore 1.44.3, jmespath 1.1.0, s3transfer 0.19.3 added. Manifest floor >=1.100.4, no invented upper bound; later vulnerable branches are not excluded by the floor alone.
+- Transitive fsspec 2026.4.0 → 2026.6.0; no direct requirement added. Other package records, sources/markers and Python contract unchanged apart from project floor metadata.
+- Combined frozen all-extras Python 3.12, pip check, Ruff lint/format, configured Pyright, exact pytest -n auto coverage gate and real LiteLLM mock_response/fsspec memory smoke passed: 155 tests, 85.13% coverage.
+- Python socket guard selftested; three blocked boundaries observed (two intentional selftest, one additional unlabelled attempt), not zero attempts. Local LiteLLM cost map used; no OS/native/subprocess sandbox or live provider/store acceptance claim.
+- Four-file candidate includes manifest, lock, changelog and this existing checkpoint; independent review and budget acceptance required before separate staging/commit/push authorization. No release/version or remote alert-closure claim. Original checkout preserved; Chroma risk and other dependency exclusions unchanged.
+- Evidence: /home/voytas/.hermes/artifacts/github-security-next-implementation/ctm-high-combined (hash-sealed packet).
+
+## Historical network qualification
+
 Status: local qualification; publication pending independent review and separate approval.
 
 - Scope: uv.lock, CHANGELOG.md, and this checkpoint only; no staging, commit or push.

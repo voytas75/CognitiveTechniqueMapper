@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   and process-level regression tests for isolated `CTM_STATE_PATH` sessions.
 
 ### Security
+- Locally qualified combined candidate, pending independent review/publication: LiteLLM 1.95.0 → 1.100.4 with mandatory boto3, botocore, jmespath and s3transfer; manifest floor raised to >=1.100.4. Locked transitive fsspec 2026.4.0 → 2026.6.0. No release or remote alert-closure claim; a lower floor alone does not exclude later vulnerable release branches.
 - Locally qualified, pending independent review/publication: locked optional `strawberry-graphql` 0.323.2 → 0.327.2 and `graphql-core` 3.2.8 → 3.2.12. Manifest/Python support unchanged; frozen all-extras, static gates, 155 tests (85.13% coverage), and guarded in-process GraphQL query/loopback checks passed. No remote alert-closure claim.
 - 2026-11-14 — Qualified locally, pending independent review and publication: locked `oauthlib` 3.3.1 → 4.0.1 and, independently, `filelock` 3.29.0 → 4.2.1. Frozen all-extras installation, offline library operations and regression gates passed; live stores/providers and remote alert closure were not verified.
 - 2026-11-14 — Pending publication: upgraded locked `aiohttp` 3.14.3 → 3.14.4 and `urllib3` 2.7.0 → 2.8.0; upgraded `yarl` 1.23.0 → 1.25.1 as required by aiohttp. Locally qualified only; this does not claim closure of all security findings.

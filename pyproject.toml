@@ -9,7 +9,7 @@ description = "CLI tool that maps problem descriptions to cognitive techniques u
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "litellm>=1.35.9",
+    "litellm>=1.100.4",
     "pyyaml>=6.0.1",
     "typer>=0.12.3",
     "rich>=13.7",
